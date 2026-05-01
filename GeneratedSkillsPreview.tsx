@@ -146,7 +146,7 @@ export default function GeneratedSkillsPreview() {
                       {skill.label}
                     </span>
                   </div>
-                  <p className="text-sm leading-5 text-white/78">
+                  <p className="text-sm leading-5 text-white/80">
                     {skill.description}
                   </p>
                 </div>
@@ -185,7 +185,7 @@ export default function GeneratedSkillsPreview() {
                   className={`rounded-2xl px-3 py-2.5 ring-1 backdrop-blur ${skill.className}`}
                 >
                   <p className="text-sm font-black">{skill.name}</p>
-                  <p className="mt-0.5 text-[11px] font-medium text-white/62">
+                  <p className="mt-0.5 text-[11px] font-medium text-white/60">
                     {skill.detail}
                   </p>
                 </div>
@@ -197,7 +197,7 @@ export default function GeneratedSkillsPreview() {
             {platformSkills.map((skill) => (
               <div
                 key={skill}
-                className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-3 text-center text-[11px] font-bold leading-4 text-white/78 shadow-lg backdrop-blur"
+                className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-3 text-center text-[11px] font-bold leading-4 text-white/80 shadow-lg backdrop-blur"
               >
                 {skill}
               </div>
