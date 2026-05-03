@@ -7,20 +7,25 @@
     "start": "ts-node index.ts",
     "dev": "nodemon --exec ts-node index.ts",
     "build": "tsc",
-    "build:watch": "tsc --watch"
+    "build:watch": "tsc --watch",
+    "verify:crm": "bash scripts/crm-api-curl-matrix.sh"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@supabase/supabase-js": "^2.105.1",
+    "@types/uuid": "^10.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
+    "nodemon": "^3.0.0",
     "ts-node": "^10.9.0",
-    "nodemon": "^3.0.0"
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=20.0.0"

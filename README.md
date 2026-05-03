@@ -1,56 +1,65 @@
-# Express Server Template
+# Code Your Resume — CRM Express server
 
-A production-ready Express API server template with TypeScript, perfect for quickly spinning up new backend services.
+Local JSON vault API for companies, jobs, applications, job listing import (fetch + optional AI), technical skills studio routes (Supabase-backed), and related services.
+
+## Threat model (read before exposing this port)
+
+- **No user authentication** on `/api/data/*` or `/api/technical-skills/*` by default.
+- **Bind:** Listens on **`127.0.0.1`** by default so the CRM is not reachable from other machines on the LAN. For Docker / Railway / LAN testing, set **`HOST=0.0.0.0`** explicitly.
+- **`CRM_API_SECRET`:** Optional. When set, clients must send **`X-CRM-API-Key`** or **`Authorization: Bearer`** matching the secret. Use the **same** value in the Next.js app as **`CRM_API_SECRET`** so rewrites keep working.
+- **CORS:** In production, **`CORS_ORIGINS=*` is ignored** (unsafe); use a comma-separated allowlist. Dev may use `*` with Node not in production mode.
+- Secrets: **`SUPABASE_SERVICE_ROLE_KEY`**, **`ANTHROPIC_API_KEY`**, **`CURSOR_API_KEY`** — server-only; never expose to the browser.
+
+See **`SECURITY.md`** for disclosure and limitations.
 
 ## Features
 
-- ✅ **TypeScript** - Full type safety and modern JS features
-- ✅ **Express.js** - Fast, minimalist web framework
-- ✅ **CORS** - Configured for cross-origin requests
-- ✅ **Hot Reload** - Nodemon for development
-- ✅ **Health Checks** - Built-in health endpoints
-- ✅ **Error Handling** - Centralized error middleware
-- ✅ **Clean Structure** - Organized, scalable file structure
+- TypeScript, Express, CRM JSON under `CRM_DATA_DIR`
+- Job listing URL fetch with **`validatePublicJobListingUrl`** (blocks loopback, RFC1918, metadata IP **169.254.169.254**)
+- Optional Anthropic / Supabase integrations
 
 ## Quick Start
 
-### 1. Create a New Project from This Template
+### Install
 
-**Using GitHub CLI:**
-```bash
-gh repo create my-new-api --template trouthouse-tech/express-server-template --private --clone
-cd my-new-api
-```
-
-**Using degit:**
-```bash
-npx degit trouthouse-tech/express-server-template my-new-api
-cd my-new-api
-git init
-```
-
-### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 3. Run Development Server
+### Run (development)
+
 ```bash
 npm run dev
 ```
 
-Server will start on `http://localhost:3000`
+Default URL **http://127.0.0.1:3053** (override with **`PORT`**).
 
-### 4. Test It
+### Smoke test
+
 ```bash
-curl http://localhost:3000
-# {"status":"ok","message":"TroutHouseTech Express Server is running",...}
+curl http://127.0.0.1:3053/api/health
+```
+
+With **`CRM_API_SECRET`** set on the server:
+
+```bash
+CRM_API_SECRET=your-secret curl -H "X-CRM-API-Key: your-secret" http://127.0.0.1:3053/api/data/company/list
 ```
 
 ## Available Endpoints
 
 - `GET /` - Health check
 - `GET /api/health` - Health check with detailed info
+- **`/api/data/**`** — CRM JSON vault (companies, employees, jobs, job-applications). See [.cursor/architecture/009-crm-file-vault-api-data.md](.cursor/architecture/009-crm-file-vault-api-data.md). Default port **3053**; set `CRM_DATA_DIR` to your vault path.
+- **`POST /api/data/job/import-listing`** — Fetches a job’s `url`, writes scrape + optional AI ledger JSON under `JOB_LISTING_DATA_DIR` (default `<CRM_DATA_DIR>/../job-listing`), then updates the job snapshot (`description`, `listingImportedAt`, pointers). Optional `ANTHROPIC_API_KEY` for structured extract. Many SPA-only boards return little or no HTML to a server `fetch`; users remain responsible for target-site terms of use.
+
+### CRM smoke test
+
+With the server running:
+
+```bash
+CRM_BASE=http://127.0.0.1:3053 npm run verify:crm
+```
 
 ## Project Structure
 
@@ -76,11 +85,16 @@ express-server-template/
 
 ## Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the project root. See **`.env.example`** for all options. Highlights:
 
 ```env
-PORT=3000
+PORT=3053
 NODE_ENV=development
+HOST=127.0.0.1
+CRM_DATA_DIR=
+JOB_LISTING_DATA_DIR=
+CRM_API_SECRET=
+ANTHROPIC_API_KEY=
 ```
 
 ## Scripts
