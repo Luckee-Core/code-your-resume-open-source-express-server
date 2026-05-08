@@ -77,7 +77,7 @@ export default function GeneratedSkillsPreview() {
                   Matt Ruiz
                 </h1>
                 <p className="mt-1 text-sm text-slate-600">
-                  Founder, TroutHouseTech · Philadelphia, PA · Practical AI automation, mobile, web, and workflow tooling
+                  Founder, TroutHouseTech | Philadelphia, PA | Practical AI automation, mobile, web, and workflow tooling
                 </p>
               </div>
               <p className="max-w-xs text-right text-xs leading-relaxed text-slate-500">
@@ -111,7 +111,7 @@ export default function GeneratedSkillsPreview() {
                     <article key={`${entry.role}-${entry.organization}`}>
                       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                         <h3 className="text-sm font-semibold text-slate-950">
-                          {entry.role} · {entry.organization}
+                          {entry.role} | {entry.organization}
                         </h3>
                         <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
                           {entry.period}
