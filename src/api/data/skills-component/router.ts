@@ -2,6 +2,43 @@ import { Router, type Request, type Response } from 'express';
 import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
 import { runSkillsComponentGeneration } from '../../../services/skills-component-generation';
 
+type ProfessionalBackgroundSegments = {
+  education: string;
+  credibility_bio: string;
+  voice_style: string;
+  portfolio_github: string;
+};
+
+const parseProfessionalBackgroundSegments = (
+  raw: unknown,
+): ProfessionalBackgroundSegments | undefined | null => {
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return null;
+  }
+  const o = raw as Record<string, unknown>;
+  const education = o.education;
+  const credibilityBio = o.credibility_bio;
+  const voiceStyle = o.voice_style;
+  const portfolioGithub = o.portfolio_github;
+  if (
+    typeof education !== 'string' ||
+    typeof credibilityBio !== 'string' ||
+    typeof voiceStyle !== 'string' ||
+    typeof portfolioGithub !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    education,
+    credibility_bio: credibilityBio,
+    voice_style: voiceStyle,
+    portfolio_github: portfolioGithub,
+  };
+};
+
 /**
  * Router factory for the skills component generation API.
  *
@@ -26,10 +63,11 @@ export const createSkillsComponentRouter = (): Router => {
           .json({ success: false, error: 'Supabase client not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY' });
       }
 
-      const { skills, canvasWidthPx, canvasHeightPx } = req.body as {
+      const { skills, canvasWidthPx, canvasHeightPx, professionalBackgroundSegments } = req.body as {
         skills?: unknown;
         canvasWidthPx?: unknown;
         canvasHeightPx?: unknown;
+        professionalBackgroundSegments?: unknown;
       };
 
       if (
@@ -47,6 +85,15 @@ export const createSkillsComponentRouter = (): Router => {
 
       const parsedWidth = typeof canvasWidthPx === 'number' ? canvasWidthPx : undefined;
       const parsedHeight = typeof canvasHeightPx === 'number' ? canvasHeightPx : undefined;
+      const parsedProfessionalBackgroundSegments =
+        parseProfessionalBackgroundSegments(professionalBackgroundSegments);
+      if (parsedProfessionalBackgroundSegments === null) {
+        return res.status(400).json({
+          success: false,
+          error:
+            'professionalBackgroundSegments must contain string values for education, credibility_bio, voice_style, portfolio_github',
+        });
+      }
 
       console.log(`📥 POST /api/data/skills-component/generate — skills: ${sanitizedSkills.join(', ')}`);
 
@@ -54,6 +101,7 @@ export const createSkillsComponentRouter = (): Router => {
         skills: sanitizedSkills,
         canvasWidthPx: parsedWidth,
         canvasHeightPx: parsedHeight,
+        professionalBackgroundSegments: parsedProfessionalBackgroundSegments,
       });
 
       return res.status(200).json({ success: true, tsx: result.tsx });

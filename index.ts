@@ -25,6 +25,16 @@ import { createTechnicalSkillsRouter } from "./src/api/technical-skills/router";
 app.use("/api/technical-skills", requireCrmApiSecretWhenConfigured);
 app.use("/api/technical-skills", createTechnicalSkillsRouter());
 
+// Professional Background — education + narrative segments (Supabase-backed)
+import { createProfessionalBackgroundRouter } from "./src/api/professional-background/router";
+app.use("/api/professional-background", requireCrmApiSecretWhenConfigured);
+app.use("/api/professional-background", createProfessionalBackgroundRouter());
+
+// Job Studio — per-job coach chat (Supabase-backed)
+import { createJobStudioRouter } from "./src/api/job-studio/router";
+app.use("/api/job-studio", requireCrmApiSecretWhenConfigured);
+app.use("/api/job-studio", createJobStudioRouter());
+
 // Error handling middleware (must be after all routes)
 import { setupErrorHandling } from "./src/services/middleware";
 setupErrorHandling(app);

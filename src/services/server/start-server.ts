@@ -27,6 +27,7 @@ export const startServer = (app: Express, config: ServerConfig): void => {
     console.log(`Health Check: http://localhost:${port}/api/health`);
     console.log(`CRM Data API: http://localhost:${port}/api/data`);
     console.log(`Technical Skills: http://localhost:${port}/api/technical-skills`);
+    console.log(`Professional Background: http://localhost:${port}/api/professional-background`);
     console.log('='.repeat(50));
     console.log('');
   });

@@ -18,6 +18,12 @@ export type RunSkillsComponentGenerationInput = {
   skills: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
+  professionalBackgroundSegments?: {
+    education: string;
+    credibility_bio: string;
+    voice_style: string;
+    portfolio_github: string;
+  };
 };
 
 export type RunSkillsComponentGenerationResult = {
@@ -57,6 +63,7 @@ export const runSkillsComponentGeneration = async (
     skills,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
+    professionalBackgroundSegments,
   } = input;
 
   const targetRepo = process.env.CURSOR_TARGET_REPO?.trim();
@@ -69,7 +76,12 @@ export const runSkillsComponentGeneration = async (
   let exchangeId: string | undefined;
 
   try {
-    const prompt = buildSkillsComponentPrompt({ skills, canvasWidthPx, canvasHeightPx });
+    const prompt = buildSkillsComponentPrompt({
+      skills,
+      canvasWidthPx,
+      canvasHeightPx,
+      professionalBackgroundSegments,
+    });
 
     await insertResumeTsxRequest(supabase, {
       id: requestId,

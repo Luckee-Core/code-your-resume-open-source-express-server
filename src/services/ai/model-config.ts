@@ -32,6 +32,18 @@ const CONFIGS: Record<string, ModelConfig> = {
     temperature: 0.3,
     maxTokens: 8192,
   },
+  /** Technical Skills Studio coach — skill list chat + suggestions. */
+  technical_skills: {
+    model: HAIKU,
+    temperature: 0.25,
+    maxTokens: 8192,
+  },
+  /** Job Studio coach — per-job career chat (no CRM mutations). */
+  job_studio: {
+    model: HAIKU,
+    temperature: 0.28,
+    maxTokens: 8192,
+  },
 };
 
 /**

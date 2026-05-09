@@ -1,0 +1,36 @@
+[
+  {
+    "id": "848b2f20-ceb0-42c2-beb9-486bb29f5b83",
+    "companyId": "dd672430-54f1-43f6-a4ae-0ec8dc8a1903",
+    "type": "job",
+    "title": "Corporate Salesforce Trainer",
+    "url": "",
+    "status": "draft",
+    "description": "",
+    "listingImportedAt": "",
+    "latestScrapeRunId": "",
+    "latestAiExchangeId": "",
+    "responsibilities": [],
+    "requirements": [],
+    "niceToHaves": [],
+    "createdAt": "2026-05-07T19:43:04.944Z",
+    "updatedAt": "2026-05-07T19:43:04.944Z"
+  },
+  {
+    "id": "8a860607-3182-4bb1-90a5-782b6082098d",
+    "companyId": "5b12d3d5-b8b7-4080-832e-06038a29cc85",
+    "type": "job",
+    "title": "Senior Engineer - AI Evaluator",
+    "url": "https://jobs.ashbyhq.com/g2i/c07a8f96-dbcb-47f3-9d19-305b193d6d01",
+    "status": "draft",
+    "description": "G2i Inc. is seeking a Senior Engineer - AI Evaluator to join their team. This role involves evaluating and assessing AI systems and models, requiring deep technical expertise and experience with AI/ML technologies. The position is ideal for experienced engineers who want to contribute to advancing AI evaluation methodologies and practices.",
+    "listingImportedAt": "2026-05-07T20:33:23.387Z",
+    "latestScrapeRunId": "7e1c95fb-6b63-411d-b85f-1f7cfcd01cb2",
+    "latestAiExchangeId": "abc57789-f4cc-4eb2-9ca1-24018563582a",
+    "responsibilities": [],
+    "requirements": [],
+    "niceToHaves": [],
+    "createdAt": "2026-05-07T20:33:18.718Z",
+    "updatedAt": "2026-05-07T20:33:23.388Z"
+  }
+]

@@ -23,14 +23,33 @@ export const extractTsxFromConversation = async (
     .filter((m) => m.type === 'assistant_message')
     .reverse();
 
-  const codeBlockRegex = /```(?:tsx|typescript|ts|jsx|js)\n([\s\S]*?)```/;
+  const codeBlockRegex = /```(?:tsx|typescript|ts|jsx|js)?\r?\n([\s\S]*?)```/g;
+
+  const looksLikeResumeComponent = (text: string): boolean => {
+    return (
+      text.includes('"use client"') &&
+      text.includes('export default function GeneratedSkillsPreview')
+    );
+  };
 
   for (const message of assistantMessages) {
-    const match = codeBlockRegex.exec(message.text);
-    if (match) {
-      const tsx = match[1].trim();
-      console.log(`✅ Extracted TSX from agent conversation (${tsx.length} chars)`);
-      return tsx;
+    const blocks = [...message.text.matchAll(codeBlockRegex)];
+    for (let i = blocks.length - 1; i >= 0; i--) {
+      const candidate = (blocks[i][1] ?? '').trim();
+      if (!candidate) {
+        continue;
+      }
+      if (looksLikeResumeComponent(candidate)) {
+        console.log(`✅ Extracted TSX from fenced block (${candidate.length} chars)`);
+        return candidate;
+      }
+    }
+
+    // Fallback: sometimes the agent responds with plain code (no fences).
+    const plainCandidate = message.text.trim();
+    if (looksLikeResumeComponent(plainCandidate)) {
+      console.log(`✅ Extracted TSX from plain assistant message (${plainCandidate.length} chars)`);
+      return plainCandidate;
     }
   }
 

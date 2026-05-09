@@ -13,8 +13,8 @@ import type { CursorApiClient, Agent } from './cursor-api-client';
 export const pollAgentStatus = async (
   cursorClient: CursorApiClient,
   agentId: string,
-  maxWaitMs: number = 10 * 60 * 1000,
-  pollIntervalMs: number = 30000,
+  maxWaitMs: number = Number(process.env.CURSOR_AGENT_MAX_WAIT_MS || 20 * 60 * 1000),
+  pollIntervalMs: number = Number(process.env.CURSOR_AGENT_POLL_INTERVAL_MS || 15000),
 ): Promise<Agent> => {
   const startTime = Date.now();
 

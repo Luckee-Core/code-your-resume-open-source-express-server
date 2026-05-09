@@ -1,0 +1,26 @@
+[
+  {
+    "id": "dd672430-54f1-43f6-a4ae-0ec8dc8a1903",
+    "name": "Revature",
+    "website": "https://revature.com/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-07T19:42:41.259Z",
+    "updatedAt": "2026-05-07T19:42:41.259Z"
+  },
+  {
+    "id": "5b12d3d5-b8b7-4080-832e-06038a29cc85",
+    "name": "g2i",
+    "website": "https://www.g2i.co/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "G2i is a video-based hiring platform that connects companies with contract and full-time engineers from a curated pool of over 8,000 qualified professionals. The platform serves companies looking to hire faster, offering access to engineers located in the US, Canada, Latin America, and Europe across specialties including JavaScript, Python, iOS, Android, AI, and data science.\n\nThe company differentiates itself through speed and transparency. G2i aims to move from initial interview to a developer's first pull request in seven days. The platform provides video-recorded technical interviews and detailed technical assessments upfront, allowing hiring managers to see exactly what the company sees before making decisions. All financial terms are pre-negotiated and transparent, eliminating haggling over rates.\n\nG2i's matching process is customized to each client's needs. Companies specify location, price range, seniority level, and exact skill requirements, and G2i's AI-assisted technical team delivers profiles of engineers meeting at least 80% of those criteria. The platform includes a shared Slack channel for ongoing communication and typically delivers qualified profiles within three days.\n\nThe company reduces hiring risk through a seven-day free trial with every engineer. If performance doesn't meet expectations, clients pay nothing and G2i provides same-week backfill. Engineers can start as contractors and convert to full-time employees when appropriate, offering flexibility for changing business needs.\n\nG2i handles administrative overhead including compliance, international payments, background checks, laptop logistics, and errors and omissions insurance. The platform also trains its engineer pool monthly on AI-based coding tools and provides AI-certified badges to engineers demonstrating proficiency with these technologies.",
+    "websiteResearchCompletedAt": "2026-05-08T19:40:16.276Z",
+    "createdAt": "2026-05-07T20:33:07.166Z",
+    "updatedAt": "2026-05-08T19:40:16.276Z"
+  }
+]
