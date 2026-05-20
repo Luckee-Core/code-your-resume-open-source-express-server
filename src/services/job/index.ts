@@ -2,4 +2,5 @@ export { ensureJobListingDataDirAtStartup } from "./ensure-job-listing-data-dir-
 export { createJobFromListingUrlAndImport } from "./create-job-from-listing-url-and-import";
 export type { CreateJobFromListingUrlAndImportResult } from "./create-job-from-listing-url-and-import";
 export { runJobListingImport } from "./scrape-job-listing";
+export { runJobDescriptionImport } from "./run-job-description-import";
 export { validatePublicJobListingUrl } from "./validate-public-job-listing-url";

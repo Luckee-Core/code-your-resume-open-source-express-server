@@ -22,5 +22,101 @@
     "websiteResearchCompletedAt": "2026-05-08T19:40:16.276Z",
     "createdAt": "2026-05-07T20:33:07.166Z",
     "updatedAt": "2026-05-08T19:40:16.276Z"
+  },
+  {
+    "id": "5069bc33-4dee-44a4-b57c-14c78b1e5770",
+    "name": "Turing",
+    "website": "https://www.turing.com/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T13:49:35.055Z",
+    "updatedAt": "2026-05-20T13:49:35.055Z"
+  },
+  {
+    "id": "f03e4087-6bab-4a2f-b7f3-236105ee59c9",
+    "name": "Pepper",
+    "website": "https://www.usepepper.com/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T14:30:55.037Z",
+    "updatedAt": "2026-05-20T14:30:55.037Z"
+  },
+  {
+    "id": "18fc517f-681b-4bbe-85b4-4d379e85c923",
+    "name": "Softrip",
+    "website": "https://www.softrip.com/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T14:45:11.996Z",
+    "updatedAt": "2026-05-20T14:45:11.996Z"
+  },
+  {
+    "id": "54245d36-aedc-4e72-8c0d-9309bd1ac79a",
+    "name": "Genie Solution",
+    "website": "https://www.genie-solution.com/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T14:47:46.269Z",
+    "updatedAt": "2026-05-20T14:47:46.269Z"
+  },
+  {
+    "id": "28ce0ea7-f740-4648-8f3c-c2e69e94ba53",
+    "name": "Kolo",
+    "website": "https://hellokolo.com/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T14:57:25.488Z",
+    "updatedAt": "2026-05-20T14:57:25.488Z"
+  },
+  {
+    "id": "64d59110-f4ef-48ee-bfcf-65e404f26486",
+    "name": "Kaaj",
+    "website": "https://kaaj.ai/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T14:59:27.818Z",
+    "updatedAt": "2026-05-20T14:59:27.818Z"
+  },
+  {
+    "id": "dfba6075-31ae-4b96-ad3c-e3677765abf1",
+    "name": "Simply Bread",
+    "website": "https://www.simply-bread.co/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T15:12:29.349Z",
+    "updatedAt": "2026-05-20T15:12:29.349Z"
+  },
+  {
+    "id": "c1f81373-fc0b-4ef5-be41-861554b6fd91",
+    "name": "Skylined Dynamics",
+    "website": "https://www.skylinedynamics.org/",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-20T15:16:22.084Z",
+    "updatedAt": "2026-05-20T15:16:22.084Z"
   }
 ]
