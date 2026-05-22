@@ -7,11 +7,6 @@ export default function GeneratedCoverLetterPreview() {
     <main className="min-h-screen w-full bg-slate-100 px-4 py-6 font-sans text-slate-800 sm:px-8 sm:py-10">
       <section className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[720px] items-center justify-center sm:min-h-[calc(100vh-5rem)]">
         <article className="w-full rounded-sm border border-slate-200 bg-white px-8 py-10 shadow-sm sm:px-12 sm:py-14">
-          <div className="mb-8 flex items-center justify-between gap-4 border-b border-slate-200 pb-4 text-xs text-slate-500">
-            <span>Matt Ruiz</span>
-            <span>Founding Engineer outreach</span>
-          </div>
-
           <div className="space-y-5 text-sm leading-relaxed text-slate-700">
             <p>
               Hola hola, I'm Matt Ruiz, founder of TroutHouseTech in Philly. I'm
