@@ -1,5 +1,10 @@
 import type { CursorApiClient } from './cursor-api-client';
 
+export type ExtractTsxFromConversationOptions = {
+  /** Default `GeneratedSkillsPreview` for skills/resume generation. */
+  expectedComponentName?: string;
+};
+
 /**
  * Fetch the agent conversation and extract the TSX component code from the last
  * assistant message that contains a fenced code block.
@@ -9,13 +14,17 @@ import type { CursorApiClient } from './cursor-api-client';
  *
  * @param cursorClient - Authenticated Cursor API client
  * @param agentId - ID of the finished agent
+ * @param options - Optional expected default export function name
  * @returns Extracted TSX source string
  * @throws Error if no code block is found in the conversation
  */
 export const extractTsxFromConversation = async (
   cursorClient: CursorApiClient,
   agentId: string,
+  options?: ExtractTsxFromConversationOptions,
 ): Promise<string> => {
+  const expectedComponentName = options?.expectedComponentName ?? 'GeneratedSkillsPreview';
+
   console.log(`📥 Fetching conversation for agent ${agentId}`);
   const conversation = await cursorClient.getAgentConversation(agentId);
 
@@ -25,10 +34,10 @@ export const extractTsxFromConversation = async (
 
   const codeBlockRegex = /```(?:tsx|typescript|ts|jsx|js)?\r?\n([\s\S]*?)```/g;
 
-  const looksLikeResumeComponent = (text: string): boolean => {
+  const looksLikeExpectedComponent = (text: string): boolean => {
     return (
       text.includes('"use client"') &&
-      text.includes('export default function GeneratedSkillsPreview')
+      text.includes(`export default function ${expectedComponentName}`)
     );
   };
 
@@ -39,7 +48,7 @@ export const extractTsxFromConversation = async (
       if (!candidate) {
         continue;
       }
-      if (looksLikeResumeComponent(candidate)) {
+      if (looksLikeExpectedComponent(candidate)) {
         console.log(`✅ Extracted TSX from fenced block (${candidate.length} chars)`);
         return candidate;
       }
@@ -47,7 +56,7 @@ export const extractTsxFromConversation = async (
 
     // Fallback: sometimes the agent responds with plain code (no fences).
     const plainCandidate = message.text.trim();
-    if (looksLikeResumeComponent(plainCandidate)) {
+    if (looksLikeExpectedComponent(plainCandidate)) {
       console.log(`✅ Extracted TSX from plain assistant message (${plainCandidate.length} chars)`);
       return plainCandidate;
     }

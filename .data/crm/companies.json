@@ -118,5 +118,17 @@
     "websiteResearchCompletedAt": "",
     "createdAt": "2026-05-20T15:16:22.084Z",
     "updatedAt": "2026-05-20T15:16:22.084Z"
+  },
+  {
+    "id": "b50097ea-4fa2-4ebc-8e76-871a60abe684",
+    "name": "LegalOS",
+    "website": "https://www.legalos.ai",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-21T23:51:21.911Z",
+    "updatedAt": "2026-05-21T23:51:31.143Z"
   }
 ]

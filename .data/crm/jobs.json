@@ -151,5 +151,22 @@
     "niceToHaves": [],
     "createdAt": "2026-05-20T15:16:37.627Z",
     "updatedAt": "2026-05-20T15:19:11.937Z"
+  },
+  {
+    "id": "4f699801-5a30-4516-b2a1-9a008d17e35d",
+    "companyId": "b50097ea-4fa2-4ebc-8e76-871a60abe684",
+    "type": "job",
+    "title": "Founding Engineer",
+    "url": "https://www.ycombinator.com/companies/legalos/jobs/XY5Ek7M-founding-engineer",
+    "status": "draft",
+    "description": "LegalOS is an AI-native immigration law firm building modern legal infrastructure for work visa processing. We're hiring a Founding Engineer to help build the core product and AI workflows that make LegalOS scalable. You'll work directly with the CTO and CEO to turn complex immigration workflows into intuitive, reliable software used by clients, attorneys, and internal operations. This is a high-ownership role combining product engineering, systems thinking, and AI workflow building to transform LegalOS from a services-assisted workflow into a scalable, self-serve platform.",
+    "listingImportedAt": "2026-05-21T23:52:17.791Z",
+    "latestScrapeRunId": "cfdd48f2-93c0-4e93-b682-43d7145354cd",
+    "latestAiExchangeId": "731074e2-d00b-4e46-abaf-9946031adabe",
+    "responsibilities": [],
+    "requirements": [],
+    "niceToHaves": [],
+    "createdAt": "2026-05-21T23:52:09.700Z",
+    "updatedAt": "2026-05-21T23:52:17.792Z"
   }
 ]
