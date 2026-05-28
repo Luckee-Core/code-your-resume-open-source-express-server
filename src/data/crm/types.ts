@@ -66,6 +66,17 @@ export type JobApplication = {
   updatedAt: string;
 };
 
+/** Graphics Studio layout row (Supabase `image_graphics`; API type only). */
+export type ImageGraphic = {
+  id: string;
+  title: string;
+  canvasWidthPx: number;
+  canvasHeightPx: number;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 /** Links a CRM company + job with tenure dates (resume work history). */
 export type Employment = {
   id: string;

@@ -68,11 +68,22 @@ CREATE TABLE IF NOT EXISTS jobs (
   updated_at TIMESTAMPTZ NOT NULL
 );
 
+-- Graphics Studio (runtime: Supabase only — see docs/supabase-image-graphics-schema.sql)
+CREATE TABLE IF NOT EXISTS image_graphics (
+  id UUID PRIMARY KEY,
+  title TEXT NOT NULL DEFAULT 'Untitled graphic',
+  canvas_width_px INTEGER NOT NULL DEFAULT 960,
+  canvas_height_px INTEGER NOT NULL DEFAULT 540,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS job_applications (
   id UUID PRIMARY KEY,
   job_id UUID NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
   submitted_at TIMESTAMPTZ NOT NULL,
-  image_graphic_id TEXT NOT NULL,
+  image_graphic_id UUID NOT NULL REFERENCES image_graphics (id) ON DELETE RESTRICT,
   notes TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL

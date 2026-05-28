@@ -3,9 +3,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 let cached: SupabaseClient | null | undefined;
 
 /**
- * Returns a Supabase client when `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set;
- * otherwise `null`. CRM entities stay on the JSON vault; job-listing **AI ledger** writes require
- * this client when Anthropic import runs.
+ * Express-only Supabase client (service role), same pattern as mentorai-server / luckee.
+ * REST queries only (`.from().select()` etc.) — no Realtime subscriptions in this app.
+ *
+ * Returns `null` when `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` is unset.
  */
 export const getSupabaseCrmMirrorClient = (): SupabaseClient | null => {
   if (cached !== undefined) {

@@ -43,6 +43,7 @@ setupErrorHandling(app);
 import { startServer } from "./src/services/server";
 import { ensureCrmDataDirAtStartup } from "./src/services/crm";
 import { ensureJobListingDataDirAtStartup } from "./src/services/job/ensure-job-listing-data-dir-at-startup";
+import { getSupabaseCrmMirrorClient } from "./src/services/supabase/get-supabase-crm-mirror-client";
 
 void (async () => {
   try {
@@ -51,6 +52,9 @@ void (async () => {
   } catch (err) {
     console.error("❌ Failed to initialize CRM / job-listing data directories:", err);
     process.exit(1);
+  }
+  if (getSupabaseCrmMirrorClient()) {
+    console.log("✅ Supabase configured on Express (technical skills, job studio, …)");
   }
   startServer(app, {
     port: PORT,

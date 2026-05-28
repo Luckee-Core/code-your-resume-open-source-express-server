@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Persistence:** JSON files under `CRM_DATA_DIR` (default: `<cwd>/.data/crm`), same filenames as the Next app (`companies.json`, `employees.json`, `jobs.json`, `job-applications.json`).
+- **Persistence:** JSON files under `CRM_DATA_DIR` (default: `<cwd>/.data/crm`), including `companies.json`, `employees.json`, `jobs.json`, `job-applications.json`. **Graphics** use Supabase `image_graphics` only (`docs/supabase-image-graphics-schema.sql`).
 - **HTTP:** `app.use('/api/data', createApiDataRouter())`. Routes are **action paths** per entity: `/api/data/company/list`, `/api/data/company/create`, etc. (not `src/domains/crm`).
 - **Source layout:** HTTP wiring in `src/api/data/{entity}/`; vault read/write in `src/data/crm/`.
 
