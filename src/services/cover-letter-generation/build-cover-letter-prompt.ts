@@ -118,7 +118,7 @@ ${credibility_bio || '(empty)'}
 Voice/style notes (match this tone throughout):
 ${voice_style || '(empty)'}
 
-Portfolio/GitHub narrative:
+Portfolio/GitHub narrative (same TroutHouseTech work as credibility_bio — do not list products separately in the letter):
 ${portfolio_github || '(empty)'}
 
 ### Visual / structural target (must follow)
@@ -127,7 +127,7 @@ ${portfolio_github || '(empty)'}
 - **Typography:** Use \`font-sans\`, body text \`text-sm\` / \`leading-relaxed\`, slate/neutral palette. **No** gradients-as-backgrounds, **no** neon, **no** illustrations, **no** oversized display type.
 - **Required letter structure (all required):**
   1) **Line 1 only** — its own paragraph containing exactly \`Hola hola,\` and nothing else on that line (no role, no company, no name on line 1)
-  2) **Line 2+ (new paragraph)** — MUST start with \`My name is [Full Name],\` using the candidate's full name from credibility_bio. Then state clearly that you are **applying for** (or **interested in**) the **${jobTitle.trim()}** role at the company — you want to join their team, not sell them a service
+  2) **Line 2+ (new paragraph)** — MUST start with \`My name is [Full Name],\` using the candidate's full name from credibility_bio (name only — **no** "Founder", "Co-founder", or similar after the name). Then state clearly that you are **applying for** (or **interested in**) the **${jobTitle.trim()}** role at the company — you want to join their team, not sell them a service
   3) **Body** — 2–3 more short paragraphs: why you're a strong fit for the listed responsibilities/requirements, relevant experience as a builder/employee, brief close asking to talk about the role or next steps in the hiring process
   4) **Sign-off** — tone-appropriate closing from voice_style (not "Dear …")
   5) **Signature line** — same name as in the "My name is …" opener
@@ -137,7 +137,8 @@ ${portfolio_github || '(empty)'}
 
 ### Content rules — job applicant, not vendor
 
-- Paragraph 1 is only \`Hola hola,\`. Paragraph 2 MUST begin \`My name is [Full Name],\` (name from credibility_bio) and make clear you are **applying for the role** / want to **join the team**.
+- Paragraph 1 is only \`Hola hola,\`. Paragraph 2 MUST begin \`My name is [Full Name],\` (name from credibility_bio — no founder/co-founder title) and make clear you are **applying for the role** / want to **join the team**.
+- Do **not** describe yourself as a founder in the opening, header, or sign-off. Focus on relevant engineering and product-building experience instead.
 - Do NOT use "Dear Hiring Manager", "Dear {Company}", or any similar formal salutation.
 ${postingBulletsRule}
 - Honor **voice_style** for tone; prefer short sentences and plain words.
@@ -151,7 +152,8 @@ ${postingBulletsRule}
 - Questions that pitch services: "Have you looked into AI…?", "Are you exploring automation…?"
 - Agency/consulting framing: "I help teams reduce repetitive work", "I help companies with…", "my firm", "our services", "happy to help you with", "compare notes on where we could help"
 - Sales closes: "I'd be glad to compare notes", "let's explore how I can support", "reach out if you want to reduce…"
-- Treating TroutHouseTech (or similar) as something you're **selling** — if mentioned, only as your current work context or founder experience **relevant to why you'd be a good hire**, in one short clause max
+- Treating TroutHouseTech (or similar) as something you're **selling** — if mentioned, only as current work context **relevant to why you'd be a good hire**, in one short clause max (no "founder" label)
+- Listing TroutHouseTech products/apps twice — portfolio_github and TroutHouseTech are the same work; mention at most once in the letter body, not as a separate product list plus an experience paragraph
 
 **Also avoid** robotic phrases: "I'm reading this as", "low-friction conversation", "matches how I work", "broad mandate", "operating discipline", "I'd welcome the opportunity to".
 

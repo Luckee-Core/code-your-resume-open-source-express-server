@@ -9,6 +9,7 @@ import { createJobRequirementsApiRouter } from "./job-requirements/router";
 import { createJobNiceToHavesApiRouter } from "./job-nice-to-haves/router";
 import { createSkillsComponentRouter } from "./skills-component/router";
 import { createCoverLetterRouter } from "./cover-letter/router";
+import { createCompanyInterestRouter } from "./company-interest/router";
 
 /**
  * Aggregates CRM action routes under `/api/data`.
@@ -25,5 +26,6 @@ export const createApiDataRouter = (): Router => {
   router.use("/job-nice-to-haves", createJobNiceToHavesApiRouter());
   router.use("/skills-component", createSkillsComponentRouter());
   router.use("/cover-letter", createCoverLetterRouter());
+  router.use("/company-interest", createCompanyInterestRouter());
   return router;
 };
