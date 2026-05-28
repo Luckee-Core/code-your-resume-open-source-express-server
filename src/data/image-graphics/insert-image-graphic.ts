@@ -12,6 +12,7 @@ export const insertImageGraphic = async (
     title: string;
     canvasWidthPx: number;
     canvasHeightPx: number;
+    jobId?: string;
     metadata?: Record<string, unknown>;
     id?: string;
   },
@@ -21,6 +22,7 @@ export const insertImageGraphic = async (
   const { error } = await supabase.from("image_graphics").insert({
     id,
     title: input.title.trim() || "Untitled graphic",
+    job_id: input.jobId?.trim() ?? "",
     canvas_width_px: input.canvasWidthPx,
     canvas_height_px: input.canvasHeightPx,
     metadata: input.metadata ?? {},

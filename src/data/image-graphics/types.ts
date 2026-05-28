@@ -1,6 +1,7 @@
 export type ImageGraphic = {
   id: string;
   title: string;
+  jobId: string;
   canvasWidthPx: number;
   canvasHeightPx: number;
   metadata: Record<string, unknown>;
@@ -11,6 +12,7 @@ export type ImageGraphic = {
 export type ImageGraphicRow = {
   id: string;
   title: string;
+  job_id: string;
   canvas_width_px: number;
   canvas_height_px: number;
   metadata: unknown;

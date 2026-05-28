@@ -22,6 +22,7 @@ const isImageGraphicLike = (
   return (
     typeof o.id === "string" &&
     typeof o.title === "string" &&
+    typeof o.jobId === "string" &&
     typeof o.createdAt === "string" &&
     typeof o.updatedAt === "string" &&
     typeof o.metadata === "object" &&
@@ -39,6 +40,7 @@ export const normalizeImageGraphic = (value: unknown): ImageGraphic | null => {
   return {
     id: o.id,
     title: o.title.trim() || "Untitled graphic",
+    jobId: o.jobId.trim(),
     canvasWidthPx: clampCanvas(o.canvasWidthPx, DEFAULT_CANVAS_W),
     canvasHeightPx: clampCanvas(o.canvasHeightPx, DEFAULT_CANVAS_H),
     metadata: { ...o.metadata },

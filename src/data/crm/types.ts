@@ -70,6 +70,7 @@ export type JobApplication = {
 export type ImageGraphic = {
   id: string;
   title: string;
+  jobId: string;
   canvasWidthPx: number;
   canvasHeightPx: number;
   metadata: Record<string, unknown>;

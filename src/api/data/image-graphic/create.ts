@@ -6,6 +6,7 @@ type Body = {
   title?: unknown;
   canvasWidthPx?: unknown;
   canvasHeightPx?: unknown;
+  jobId?: unknown;
   metadata?: unknown;
   id?: unknown;
 };
@@ -21,6 +22,7 @@ export const handleImageGraphicCreate = async (req: Request, res: Response): Pro
     const title = typeof body.title === "string" ? body.title : "";
     const canvasWidthPx = typeof body.canvasWidthPx === "number" ? body.canvasWidthPx : 960;
     const canvasHeightPx = typeof body.canvasHeightPx === "number" ? body.canvasHeightPx : 540;
+    const jobId = typeof body.jobId === "string" ? body.jobId.trim() : "";
     const metadata =
       body.metadata && typeof body.metadata === "object" && !Array.isArray(body.metadata)
         ? (body.metadata as Record<string, unknown>)
@@ -30,6 +32,7 @@ export const handleImageGraphicCreate = async (req: Request, res: Response): Pro
       title,
       canvasWidthPx,
       canvasHeightPx,
+      jobId,
       metadata,
       id,
     });
