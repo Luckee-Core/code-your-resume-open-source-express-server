@@ -8,7 +8,8 @@
     "dev": "nodemon --exec ts-node index.ts",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "verify:crm": "bash scripts/crm-api-curl-matrix.sh"
+    "verify:crm": "bash scripts/crm-api-curl-matrix.sh",
+    "seed:sql": "ts-node scripts/generate-supabase-seed-from-json.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

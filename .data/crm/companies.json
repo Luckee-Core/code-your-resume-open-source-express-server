@@ -202,5 +202,29 @@
     "websiteResearchCompletedAt": "",
     "createdAt": "2026-05-28T11:02:06.968Z",
     "updatedAt": "2026-05-28T11:02:06.968Z"
+  },
+  {
+    "id": "04e7494b-a9f2-495b-a89f-8dcdfa0b08c6",
+    "name": "Kodex",
+    "website": "",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-28T15:49:07.221Z",
+    "updatedAt": "2026-05-28T15:49:07.221Z"
+  },
+  {
+    "id": "aa4967f6-c60a-4576-941c-5d7a3d5bee85",
+    "name": "Guidewire",
+    "website": "",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-28T16:00:06.609Z",
+    "updatedAt": "2026-05-28T16:00:06.609Z"
   }
 ]

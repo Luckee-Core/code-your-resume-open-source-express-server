@@ -35,8 +35,8 @@ export type RunSkillsComponentGenerationResult = {
 
 /** US Letter width at 96dpi. */
 const DEFAULT_CANVAS_WIDTH = 816;
-/** Fixed resume document height (~US Letter). */
-const DEFAULT_CANVAS_HEIGHT = 1050;
+/** Fixed resume document height (816×1150 preview canvas). */
+const DEFAULT_CANVAS_HEIGHT = 1150;
 
 /**
  * Run the full skills component generation pipeline:

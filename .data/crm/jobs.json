@@ -209,7 +209,7 @@
     "type": "job",
     "title": "Technical Lead",
     "url": "https://jobs.ashbyhq.com/sekai/655d5942-2f0c-4ce6-83df-8e8184222672/application",
-    "status": "draft",
+    "status": "applied",
     "description": "Sekai is seeking a Technical Lead to guide technical strategy, mentor engineering teams, and drive the development of innovative solutions. This role combines hands-on technical expertise with leadership responsibilities, requiring someone who can architect systems, make critical technical decisions, and foster a culture of technical excellence.",
     "listingImportedAt": "2026-05-27T22:21:35.928Z",
     "latestScrapeRunId": "b88f167a-0f74-4ab4-94ba-034ffd342464",
@@ -218,7 +218,7 @@
     "requirements": [],
     "niceToHaves": [],
     "createdAt": "2026-05-27T22:21:30.354Z",
-    "updatedAt": "2026-05-27T22:21:35.929Z"
+    "updatedAt": "2026-05-28T16:11:06.145Z"
   },
   {
     "id": "022bbf7f-7fc5-42e7-9a3d-469a8715e047",
@@ -226,7 +226,7 @@
     "type": "job",
     "title": "Senior / Staff Frontend Engineer",
     "url": "https://jobs.gem.com/air-labs-inc-/am9icG9zdDpTnSGpwN_4q74bz3aPVAfj",
-    "status": "draft",
+    "status": "applied",
     "description": "Air Labs is seeking an experienced Senior or Staff Frontend Engineer to build and own frontend experiences across their Creative Ops System platform. This is a remote, full-time role where you'll work closely with Product, Design, and fellow engineers to ship polished, high-performance UI that impacts how creative teams manage their work. You'll have real ownership over features from architecture through release, set high standards for code quality and performance, contribute to the design system, and mentor junior engineers in a fast-moving, high-trust environment.",
     "listingImportedAt": "2026-05-27T22:33:50.398Z",
     "latestScrapeRunId": "52c5a215-81cd-4e36-85b7-ff0beec1f8be",
@@ -235,7 +235,7 @@
     "requirements": [],
     "niceToHaves": [],
     "createdAt": "2026-05-27T22:33:23.643Z",
-    "updatedAt": "2026-05-27T22:33:55.073Z"
+    "updatedAt": "2026-05-28T16:11:01.435Z"
   },
   {
     "id": "314e9fd0-028c-4d3e-ba38-60adf48a518b",
@@ -243,7 +243,7 @@
     "type": "job",
     "title": "Full-Stack Software Developer",
     "url": "https://www.8090.ai/careers?ashby_jid=0cd9781c-e158-4b0c-9979-04ead270933a",
-    "status": "draft",
+    "status": "applied",
     "description": "8090 is seeking an exceptional full-stack software developer to join their team in building a Software Factory that delivers fully-managed, hosted software solutions. This is a customer-facing role requiring high technical competency, systems thinking, and the ability to design well-engineered solutions to ambiguous problems. The ideal candidate will have extensive full-stack web development experience with Python, TypeScript, React, and AWS, along with some combination of DevOps, data engineering, or ML/data science experience at scale. Engineers own the complete lifecycle of their software, from development through production support, and are expected to leverage AI tools to enhance their own practices and team productivity.",
     "listingImportedAt": "2026-05-28T10:50:41.972Z",
     "latestScrapeRunId": "cb251886-d280-438c-a1dd-ff4493dddf30",
@@ -252,7 +252,7 @@
     "requirements": [],
     "niceToHaves": [],
     "createdAt": "2026-05-28T10:50:19.527Z",
-    "updatedAt": "2026-05-28T10:50:47.568Z"
+    "updatedAt": "2026-05-28T16:10:57.524Z"
   },
   {
     "id": "4c27df7a-135e-4a60-8bca-64d2a3bf96b0",
@@ -260,7 +260,7 @@
     "type": "job",
     "title": "Senior Mobile Engineer",
     "url": "",
-    "status": "draft",
+    "status": "applied",
     "description": "Join Sudowrite as a Senior Mobile Engineer to revolutionize mobile writing interfaces. This is a real ownership role where you'll shape the product and future of mobile at Sudowrite. You'll work on a sophisticated React Native app built with Expo that features a custom document editing system, real-time collaboration via Y.js, AI text streaming, and native Swift bindings for Smart Dictation. You'll balance technical excellence with product thinking, shipping features that make writing on mobile feel natural rather than compromised. This role combines hands-on engineering with user discovery, product strategy, and dogfooding to create the best writing app on the planet.",
     "listingImportedAt": "2026-05-28T11:02:21.455Z",
     "latestScrapeRunId": "eb404256-3fb5-4478-a2e1-f66a3e0ef971",
@@ -269,6 +269,40 @@
     "requirements": [],
     "niceToHaves": [],
     "createdAt": "2026-05-28T11:02:17.861Z",
-    "updatedAt": "2026-05-28T11:02:27.092Z"
+    "updatedAt": "2026-05-28T16:10:52.937Z"
+  },
+  {
+    "id": "4fe4c4d7-3ca6-4744-b75b-72d6e351b924",
+    "companyId": "04e7494b-a9f2-495b-a89f-8dcdfa0b08c6",
+    "type": "job",
+    "title": "Software Engineer — Integrations",
+    "url": "https://jobs.ashbyhq.com/kodex/31e53827-080b-4266-945c-950005486081",
+    "status": "applied",
+    "description": "Kodex is seeking a Software Engineer specializing in Integrations to join their team. This role focuses on building and maintaining integration solutions that connect various systems and platforms, enabling seamless data flow and interoperability across the Kodex ecosystem.",
+    "listingImportedAt": "2026-05-28T15:49:32.547Z",
+    "latestScrapeRunId": "449094cf-200f-4c2c-8405-3ab0623dd7d4",
+    "latestAiExchangeId": "8c45bea0-36e2-4627-9354-5b880af5ac44",
+    "responsibilities": [],
+    "requirements": [],
+    "niceToHaves": [],
+    "createdAt": "2026-05-28T15:49:28.795Z",
+    "updatedAt": "2026-05-28T16:10:49.124Z"
+  },
+  {
+    "id": "a494eb6c-6186-40d1-a705-8766b532c118",
+    "companyId": "aa4967f6-c60a-4576-941c-5d7a3d5bee85",
+    "type": "job",
+    "title": "AI Product Engineer",
+    "url": "https://wd5.myworkdaysite.com/recruiting/guidewire/external/job/United-States---Remote/AI-Product-Engineer_JR_14653",
+    "status": "applied",
+    "description": "Join Guidewire's Product organization as an AI Product Engineer to embed AI and GenAI capabilities across the cloud platform, transforming how P&C insurers operate. You'll work at the intersection of insurance, data, and engineering to deliver secure, scalable AI-powered products. This role uniquely positions you as embedded with the Product team, co-authoring the roadmap with the autonomy of an AI-native startup while leveraging Guidewire's massive data and customer reach. You'll design agentic workflows, rapidly prototype AI features, and bridge the gap between frontier AI capabilities and regulated insurance environments.",
+    "listingImportedAt": "2026-05-28T16:00:28.612Z",
+    "latestScrapeRunId": "f142f54b-9f31-44de-ba97-fac84bc5aeff",
+    "latestAiExchangeId": "017ee1e1-1ba1-4d50-b968-379d9edbbb22",
+    "responsibilities": [],
+    "requirements": [],
+    "niceToHaves": [],
+    "createdAt": "2026-05-28T16:00:09.851Z",
+    "updatedAt": "2026-05-28T16:10:25.108Z"
   }
 ]
