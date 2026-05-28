@@ -132,7 +132,7 @@
     "updatedAt": "2026-05-21T23:51:31.143Z"
   },
   {
-    "id": "bf50f350-6d60-45e1-aa07-3391b3338de5",
+    "id": "8d08d006-fd79-4578-9a4c-0ff8002504b3",
     "name": "Stylitics",
     "website": "",
     "notes": "",
@@ -140,19 +140,67 @@
     "playwrightWebsiteUrlDiscoveryAttempted": false,
     "websiteResearchSummary": "",
     "websiteResearchCompletedAt": "",
-    "createdAt": "2026-05-27T19:51:42.471Z",
-    "updatedAt": "2026-05-27T19:51:42.471Z"
+    "createdAt": "2026-05-27T19:59:51.587Z",
+    "updatedAt": "2026-05-27T19:59:51.587Z"
   },
   {
-    "id": "0ca3b7e4-7175-4e98-a8c0-44c2cf00e5d4",
-    "name": "Kodex",
+    "id": "81a62bf3-4f43-4364-90aa-b1e9681e908f",
+    "name": "Afresh",
     "website": "",
     "notes": "",
     "websiteUrls": [],
     "playwrightWebsiteUrlDiscoveryAttempted": false,
     "websiteResearchSummary": "",
     "websiteResearchCompletedAt": "",
-    "createdAt": "2026-05-28T15:08:09.860Z",
-    "updatedAt": "2026-05-28T15:08:09.860Z"
+    "createdAt": "2026-05-27T20:16:05.298Z",
+    "updatedAt": "2026-05-27T20:16:05.298Z"
+  },
+  {
+    "id": "87fce2cf-715b-42f2-b70c-4834166d14de",
+    "name": "Sekai",
+    "website": "",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-27T22:21:22.353Z",
+    "updatedAt": "2026-05-27T22:21:22.353Z"
+  },
+  {
+    "id": "d617c4a7-cf2a-4d32-855b-1f382ba4224c",
+    "name": "Air Labs",
+    "website": "",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-27T22:33:00.229Z",
+    "updatedAt": "2026-05-27T22:33:00.229Z"
+  },
+  {
+    "id": "6d61093b-9581-45f9-80e3-f29ceedb8945",
+    "name": "8090",
+    "website": "",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-28T10:50:11.592Z",
+    "updatedAt": "2026-05-28T10:50:11.592Z"
+  },
+  {
+    "id": "8599c9f2-0c1d-47f8-8b69-efe2d3e3510a",
+    "name": "Sudowrite",
+    "website": "",
+    "notes": "",
+    "websiteUrls": [],
+    "playwrightWebsiteUrlDiscoveryAttempted": false,
+    "websiteResearchSummary": "",
+    "websiteResearchCompletedAt": "",
+    "createdAt": "2026-05-28T11:02:06.968Z",
+    "updatedAt": "2026-05-28T11:02:06.968Z"
   }
 ]

@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
-import { buildSkillsComponentPrompt } from './build-skills-component-prompt';
+import { buildCompanyInterestPrompt } from './build-company-interest-prompt';
 import {
   insertResumeTsxRequest,
   insertResumeTsxExchange,
@@ -14,19 +14,25 @@ import {
   updateResumeTsxRequestFailed,
 } from '../../data/resume-tsx-code-generation';
 
-export type RunSkillsComponentGenerationInput = {
-  skills: string[];
+export type RunCompanyInterestGenerationInput = {
+  jobId: string;
+  jobTitle: string;
+  companyName?: string;
+  responsibilities: string[];
+  requirements: string[];
+  niceToHaves?: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
-  professionalBackgroundSegments?: {
+  professionalBackgroundSegments: {
     education: string;
     credibility_bio: string;
     voice_style: string;
     portfolio_github: string;
   };
+  skills?: string[];
 };
 
-export type RunSkillsComponentGenerationResult = {
+export type RunCompanyInterestGenerationResult = {
   tsx: string;
   agentId: string;
   requestId: string;
@@ -35,37 +41,33 @@ export type RunSkillsComponentGenerationResult = {
 
 /** US Letter width at 96dpi. */
 const DEFAULT_CANVAS_WIDTH = 816;
-/** Fixed resume document height (~US Letter). */
-const DEFAULT_CANVAS_HEIGHT = 1050;
+/** Shorter than cover letter — half-page answer block. */
+const DEFAULT_CANVAS_HEIGHT = 480;
+
+const COMPANY_INTEREST_COMPONENT_NAME = 'GeneratedCompanyInterestPreview';
 
 /**
- * Run the full skills component generation pipeline:
- * 1. Build prompt from skills + canvas dimensions
- * 2. Insert ledger request (pending)
- * 3. Launch Cursor agent against the open-source repo
- * 4. Insert ledger exchange (running)
- * 5. Poll agent until finished
- * 6. Extract TSX from agent conversation
- * 7. Insert ledger response (tsx_code + summary)
- * 8. Update exchange (completed + metrics)
- * 9. Update request (completed)
- * 10. Return tsx string
- *
- * On any failure, updates exchange + request to failed before re-throwing.
+ * Run the company-interest generation pipeline: prompt → ledger → Cursor → extract TSX.
  *
  * @param supabase - Supabase service-role client for ledger writes
- * @param input - Skills list and optional canvas dimensions
+ * @param input - Job context, background segments, optional skills
  * @returns Generated TSX string and ledger IDs
  */
-export const runSkillsComponentGeneration = async (
+export const runCompanyInterestGeneration = async (
   supabase: SupabaseClient,
-  input: RunSkillsComponentGenerationInput,
-): Promise<RunSkillsComponentGenerationResult> => {
+  input: RunCompanyInterestGenerationInput,
+): Promise<RunCompanyInterestGenerationResult> => {
   const {
-    skills,
+    jobId,
+    jobTitle,
+    companyName,
+    responsibilities,
+    requirements,
+    niceToHaves,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
     professionalBackgroundSegments,
+    skills = [],
   } = input;
 
   const targetRepo = process.env.CURSOR_TARGET_REPO?.trim();
@@ -78,11 +80,17 @@ export const runSkillsComponentGeneration = async (
   let exchangeId: string | undefined;
 
   try {
-    const prompt = buildSkillsComponentPrompt({
-      skills,
+    const prompt = buildCompanyInterestPrompt({
+      jobId,
+      jobTitle,
+      companyName,
+      responsibilities,
+      requirements,
+      niceToHaves,
       canvasWidthPx,
       canvasHeightPx,
       professionalBackgroundSegments,
+      skills,
     });
 
     await insertResumeTsxRequest(supabase, {
@@ -93,7 +101,7 @@ export const runSkillsComponentGeneration = async (
       promptText: prompt,
     });
 
-    console.log(`🚀 Launching Cursor agent for skills: ${skills.join(', ')}`);
+    console.log(`🚀 Launching Cursor agent for company interest — job: ${jobTitle} (${jobId})`);
 
     const agent = await cursorClient.launchAgent({
       prompt: { text: prompt },
@@ -112,7 +120,9 @@ export const runSkillsComponentGeneration = async (
 
     const finalAgent = await pollAgentStatus(cursorClient, agent.id);
 
-    const tsx = await extractTsxFromConversation(cursorClient, agent.id);
+    const tsx = await extractTsxFromConversation(cursorClient, agent.id, {
+      expectedComponentName: COMPANY_INTEREST_COMPONENT_NAME,
+    });
 
     const responseId = randomUUID();
     await insertResumeTsxResponse(supabase, {
@@ -135,7 +145,7 @@ export const runSkillsComponentGeneration = async (
 
     await updateResumeTsxRequestCompleted(supabase, requestId);
 
-    console.log(`✅ Skills component generation complete (${durationSeconds}s)`);
+    console.log(`✅ Company interest generation complete (${durationSeconds}s)`);
 
     return { tsx, agentId: agent.id, requestId, exchangeId };
   } catch (error) {
