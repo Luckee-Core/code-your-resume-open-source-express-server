@@ -1,13 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { Employment } from "./types";
-import { readJsonArray, writeJsonArray } from "./crm-json-io";
-import { normalizeEmployment } from "./normalize-employment";
-
-const FILE = "employments.json";
+import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { getEmploymentFromSupabase } from "./supabase/get-employment-from-supabase";
+import { listEmploymentsFromSupabase } from "./supabase/list-employments-from-supabase";
 
 export const listEmploymentsFromStore = async (): Promise<Employment[]> => {
-  const rows = await readJsonArray<unknown>(FILE, []);
-  return rows.map((r) => normalizeEmployment(r));
+  return listEmploymentsFromSupabase(requireCrmSupabaseClient());
 };
 
 export const createEmploymentInStore = async (input: {
@@ -16,53 +14,84 @@ export const createEmploymentInStore = async (input: {
   startDate: string;
   endDate: string;
 }): Promise<Employment> => {
-  const rows = await readJsonArray<unknown>(FILE, []);
+  const supabase = requireCrmSupabaseClient();
+  const id = randomUUID();
   const now = new Date().toISOString();
-  const row: Employment = normalizeEmployment({
-    id: randomUUID(),
-    companyId: input.companyId.trim(),
-    jobId: input.jobId.trim(),
-    startDate: input.startDate.trim(),
-    endDate: typeof input.endDate === "string" ? input.endDate.trim() : "",
-    createdAt: now,
-    updatedAt: now,
+  const endDate = input.endDate.trim();
+
+  const { error } = await supabase.from("employments").insert({
+    id,
+    company_id: input.companyId.trim(),
+    job_id: input.jobId.trim(),
+    start_date: input.startDate.trim(),
+    end_date: endDate ? endDate : null,
+    created_at: now,
+    updated_at: now,
   });
-  rows.push(row);
-  await writeJsonArray(FILE, rows);
+
+  if (error) {
+    console.error("❌ createEmploymentInStore:", error.message);
+    throw new Error(error.message);
+  }
+
+  const row = await getEmploymentFromSupabase(supabase, id);
+  if (!row) {
+    throw new Error("Failed to load employment after insert");
+  }
   return row;
 };
 
 export const getEmploymentFromStore = async (id: string): Promise<Employment | null> => {
-  const rows = await readJsonArray<unknown>(FILE, []);
-  const raw = rows.find((r) => normalizeEmployment(r).id === id);
-  return raw !== undefined ? normalizeEmployment(raw) : null;
+  return getEmploymentFromSupabase(requireCrmSupabaseClient(), id);
 };
 
 export const updateEmploymentInStore = async (
   id: string,
   patch: Partial<Pick<Employment, "companyId" | "jobId" | "startDate" | "endDate">>,
 ): Promise<Employment | null> => {
-  const rows = await readJsonArray<unknown>(FILE, []);
-  const idx = rows.findIndex((r) => normalizeEmployment(r).id === id);
-  if (idx < 0) return null;
-  const cur = normalizeEmployment(rows[idx]);
-  const next: Employment = normalizeEmployment({
-    ...cur,
-    ...(patch.companyId !== undefined ? { companyId: patch.companyId } : {}),
-    ...(patch.jobId !== undefined ? { jobId: patch.jobId } : {}),
-    ...(patch.startDate !== undefined ? { startDate: patch.startDate } : {}),
-    ...(patch.endDate !== undefined ? { endDate: patch.endDate } : {}),
+  const supabase = requireCrmSupabaseClient();
+  const prev = await getEmploymentFromSupabase(supabase, id);
+  if (!prev) {
+    return null;
+  }
+
+  const endDate = patch.endDate !== undefined ? patch.endDate.trim() : prev.endDate;
+  const next: Employment = {
+    ...prev,
+    companyId: patch.companyId !== undefined ? patch.companyId.trim() : prev.companyId,
+    jobId: patch.jobId !== undefined ? patch.jobId.trim() : prev.jobId,
+    startDate: patch.startDate !== undefined ? patch.startDate.trim() : prev.startDate,
+    endDate,
     updatedAt: new Date().toISOString(),
-  });
-  rows[idx] = next;
-  await writeJsonArray(FILE, rows);
+  };
+
+  const { error } = await supabase
+    .from("employments")
+    .update({
+      company_id: next.companyId,
+      job_id: next.jobId,
+      start_date: next.startDate,
+      end_date: next.endDate.trim() ? next.endDate : null,
+      updated_at: next.updatedAt,
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("❌ updateEmploymentInStore:", error.message);
+    throw new Error(error.message);
+  }
+
   return next;
 };
 
 export const deleteEmploymentFromStore = async (id: string): Promise<boolean> => {
-  const rows = await readJsonArray<unknown>(FILE, []);
-  const next = rows.filter((r) => normalizeEmployment(r).id !== id);
-  if (next.length === rows.length) return false;
-  await writeJsonArray(FILE, next);
-  return true;
+  const supabase = requireCrmSupabaseClient();
+  const { data, error } = await supabase.from("employments").delete().eq("id", id).select("id");
+
+  if (error) {
+    console.error("❌ deleteEmploymentFromStore:", error.message);
+    throw new Error(error.message);
+  }
+
+  return (data?.length ?? 0) > 0;
 };

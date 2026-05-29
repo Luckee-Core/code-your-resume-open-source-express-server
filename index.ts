@@ -53,9 +53,14 @@ void (async () => {
     console.error("❌ Failed to initialize CRM / job-listing data directories:", err);
     process.exit(1);
   }
-  if (getSupabaseCrmMirrorClient()) {
-    console.log("✅ Supabase configured on Express (technical skills, job studio, …)");
+  const supabase = getSupabaseCrmMirrorClient();
+  if (!supabase) {
+    console.error(
+      "❌ SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required — CRM always uses Supabase.",
+    );
+    process.exit(1);
   }
+  console.log("✅ Supabase configured (CRM, graphics, technical skills, job studio, …)");
   startServer(app, {
     port: PORT,
     environment: process.env.NODE_ENV || "development",

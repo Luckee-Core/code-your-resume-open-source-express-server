@@ -1,9 +1,9 @@
 -- =============================================================================
 -- Code Your Resume CRM — full PostgreSQL mirror (optional)
 -- =============================================================================
--- Runtime today: Express reads/writes JSON under CRM_DATA_DIR (companies.json,
--- jobs.json, …) and JOB_LISTING_DATA_DIR (job-listing-*.json). This file is the
--- canonical DDL if you migrate to Postgres / Supabase.
+-- Runtime: Express reads/writes CRM core tables in Supabase (service role).
+-- Job listing scrape ledger may still use JSON under JOB_LISTING_DATA_DIR until fully mirrored.
+-- This file is the canonical DDL for your tenant project.
 --
 -- JSON on disk → tables (filenames in parentheses):
 --   companies.json              → companies
@@ -85,6 +85,16 @@ CREATE TABLE IF NOT EXISTS job_applications (
   submitted_at TIMESTAMPTZ NOT NULL,
   image_graphic_id UUID NOT NULL REFERENCES image_graphics (id) ON DELETE RESTRICT,
   notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS employments (
+  id UUID PRIMARY KEY,
+  company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
+  job_id UUID NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
+  start_date DATE NOT NULL,
+  end_date DATE,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );
