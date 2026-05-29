@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   title TEXT NOT NULL,
   url TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'draft' CHECK (
-    status IN ('draft', 'applied', 'closed', 'archived')
+    status IN ('draft', 'applied', 'interview', 'rejected', 'closed', 'archived')
   ),
   description TEXT NOT NULL DEFAULT '',
   listing_imported_at TIMESTAMPTZ,

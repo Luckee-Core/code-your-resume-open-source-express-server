@@ -1,7 +1,14 @@
 import type { Job, JobStatus, JobType } from "./types";
 
 const isJobStatus = (value: unknown): value is JobStatus => {
-  return value === "draft" || value === "applied" || value === "closed" || value === "archived";
+  return (
+    value === "draft" ||
+    value === "applied" ||
+    value === "interview" ||
+    value === "rejected" ||
+    value === "closed" ||
+    value === "archived"
+  );
 };
 
 const isJobType = (value: unknown): value is JobType => {

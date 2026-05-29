@@ -26,7 +26,13 @@ export type Employee = {
   updatedAt: string;
 };
 
-export type JobStatus = "draft" | "applied" | "closed" | "archived";
+export type JobStatus =
+  | "draft"
+  | "applied"
+  | "interview"
+  | "rejected"
+  | "closed"
+  | "archived";
 
 export type JobType = "job" | "contract";
 

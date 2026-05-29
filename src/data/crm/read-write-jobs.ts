@@ -5,7 +5,14 @@ import { getJobFromSupabase } from "./supabase/get-job-from-supabase";
 import { listJobsFromSupabase } from "./supabase/list-jobs-from-supabase";
 
 const isJobStatus = (value: unknown): value is JobStatus => {
-  return value === "draft" || value === "applied" || value === "closed" || value === "archived";
+  return (
+    value === "draft" ||
+    value === "applied" ||
+    value === "interview" ||
+    value === "rejected" ||
+    value === "closed" ||
+    value === "archived"
+  );
 };
 
 export const listJobsFromStore = async (): Promise<Job[]> => {
