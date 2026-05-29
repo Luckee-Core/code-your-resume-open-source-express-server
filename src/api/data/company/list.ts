@@ -5,7 +5,9 @@ export const handleCompanyList = async (_req: Request, res: Response): Promise<v
   try {
     const data = await listCompaniesFromStore();
     res.status(200).json({ success: true, data });
-  } catch {
-    res.status(500).json({ success: false, error: "Failed to list companies" });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to list companies";
+    console.error("❌ handleCompanyList:", msg);
+    res.status(500).json({ success: false, error: msg });
   }
 };

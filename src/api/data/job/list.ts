@@ -5,7 +5,9 @@ export const handleJobList = async (_req: Request, res: Response): Promise<void>
   try {
     const data = await listJobsFromStore();
     res.status(200).json({ success: true, data });
-  } catch {
-    res.status(500).json({ success: false, error: "Failed to list jobs" });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to list jobs";
+    console.error("❌ handleJobList:", msg);
+    res.status(500).json({ success: false, error: msg });
   }
 };

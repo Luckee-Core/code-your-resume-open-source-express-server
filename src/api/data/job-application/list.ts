@@ -5,7 +5,9 @@ export const handleJobApplicationList = async (_req: Request, res: Response): Pr
   try {
     const data = await listJobApplicationsFromStore();
     res.status(200).json({ success: true, data });
-  } catch {
-    res.status(500).json({ success: false, error: "Failed to list job applications" });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to list job applications";
+    console.error("❌ handleJobApplicationList:", msg);
+    res.status(500).json({ success: false, error: msg });
   }
 };

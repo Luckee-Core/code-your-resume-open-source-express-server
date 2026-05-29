@@ -8,7 +8,9 @@ export const handleEmploymentList = async (_req: Request, res: Response): Promis
   try {
     const data = await listEmploymentsFromStore();
     res.status(200).json({ success: true, data });
-  } catch {
-    res.status(500).json({ success: false, error: "Failed to list employments" });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to list employments";
+    console.error("❌ handleEmploymentList:", msg);
+    res.status(500).json({ success: false, error: msg });
   }
 };
