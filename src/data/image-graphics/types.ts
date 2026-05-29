@@ -1,3 +1,6 @@
+export const IMAGE_GRAPHIC_SELECT_COLUMNS =
+  "id, title, job_id, canvas_width_px, canvas_height_px, metadata, created_at, updated_at";
+
 export type ImageGraphic = {
   id: string;
   title: string;

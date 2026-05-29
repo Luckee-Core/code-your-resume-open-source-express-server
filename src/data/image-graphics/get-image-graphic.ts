@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ImageGraphic, ImageGraphicRow } from "./types";
+import { IMAGE_GRAPHIC_SELECT_COLUMNS, type ImageGraphic, type ImageGraphicRow } from "./types";
 import { mapImageGraphicRow } from "./map-image-graphic-row";
 
 /**
@@ -11,7 +11,7 @@ export const getImageGraphic = async (
 ): Promise<ImageGraphic | null> => {
   const { data, error } = await supabase
     .from("image_graphics")
-    .select("id, title, canvas_width_px, canvas_height_px, metadata, created_at, updated_at")
+    .select(IMAGE_GRAPHIC_SELECT_COLUMNS)
     .eq("id", id)
     .maybeSingle();
 
