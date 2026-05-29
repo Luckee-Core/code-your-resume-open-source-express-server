@@ -12,9 +12,25 @@ interface ServerConfig {
   host?: string;
 }
 
+const resolveListenHost = (configHost?: string): string => {
+  const explicit = configHost?.trim() || process.env.HOST?.trim();
+  if (explicit) {
+    return explicit;
+  }
+  // Railway/Docker must listen on all interfaces; 127.0.0.1 causes 502 from the edge proxy.
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.RAILWAY_ENVIRONMENT ||
+    process.env.RAILWAY_SERVICE_ID
+  ) {
+    return "0.0.0.0";
+  }
+  return "127.0.0.1";
+};
+
 export const startServer = (app: Express, config: ServerConfig): void => {
   const { port, environment } = config;
-  const host = config.host?.trim() || process.env.HOST?.trim() || "127.0.0.1";
+  const host = resolveListenHost(config.host);
 
   app.listen(port, host, () => {
     console.log('');

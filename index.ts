@@ -64,6 +64,7 @@ void (async () => {
   startServer(app, {
     port: PORT,
     environment: process.env.NODE_ENV || "development",
+    host: process.env.HOST,
   });
 })();
 
