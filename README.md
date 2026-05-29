@@ -138,6 +138,8 @@ app.use('/api/my-feature', createMyRouter());
 
 ## Deployment
 
+Requires **Node.js 22+** (native `WebSocket`; Supabase client initializes Realtime at startup). Local: `nvm use` (see `.nvmrc`). Railway/Nixpacks: `nixpacks.toml` pins major version 22.
+
 ### Build for Production
 ```bash
 npm run build

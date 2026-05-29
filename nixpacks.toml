@@ -1,0 +1,3 @@
+# Railway/Nixpacks: Node 22+ has global WebSocket (required by @supabase/supabase-js realtime client init).
+[variables]
+NIXPACKS_NODE_VERSION = "22"
