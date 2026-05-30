@@ -1,53 +1,11 @@
 import { Router, type Request, type Response } from 'express';
 import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
 import { runCoverLetterGeneration } from '../../../services/cover-letter-generation';
-
-type ProfessionalBackgroundSegments = {
-  education: string;
-  credibility_bio: string;
-  voice_style: string;
-  portfolio_github: string;
-};
-
-const parseStringArray = (raw: unknown): string[] | null => {
-  if (raw === undefined || raw === null) {
-    return [];
-  }
-  if (!Array.isArray(raw)) {
-    return null;
-  }
-  if (raw.some((item) => typeof item !== 'string')) {
-    return null;
-  }
-  return (raw as string[]).map((s) => s.trim()).filter(Boolean);
-};
-
-const parseProfessionalBackgroundSegments = (
-  raw: unknown,
-): ProfessionalBackgroundSegments | null => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return null;
-  }
-  const o = raw as Record<string, unknown>;
-  const education = o.education;
-  const credibilityBio = o.credibility_bio;
-  const voiceStyle = o.voice_style;
-  const portfolioGithub = o.portfolio_github;
-  if (
-    typeof education !== 'string' ||
-    typeof credibilityBio !== 'string' ||
-    typeof voiceStyle !== 'string' ||
-    typeof portfolioGithub !== 'string'
-  ) {
-    return null;
-  }
-  return {
-    education,
-    credibility_bio: credibilityBio,
-    voice_style: voiceStyle,
-    portfolio_github: portfolioGithub,
-  };
-};
+import {
+  assertHasBackgroundVoice,
+  JobGenerationContextError,
+  loadJobGenerationContext,
+} from '../../../services/generation';
 
 /**
  * Router factory for cover letter generation API.
@@ -60,7 +18,8 @@ export const createCoverLetterRouter = (): Router => {
   /**
    * POST /api/data/cover-letter/generate
    *
-   * Launches a Cursor agent to generate a TSX cover letter component.
+   * Body: { jobId: string }
+   * Loads job context server-side and launches a Cursor agent to generate TSX.
    */
   router.post('/generate', async (req: Request, res: Response) => {
     try {
@@ -75,94 +34,32 @@ export const createCoverLetterRouter = (): Router => {
           });
       }
 
-      const body = req.body as {
-        jobId?: unknown;
-        jobTitle?: unknown;
-        companyName?: unknown;
-        responsibilities?: unknown;
-        requirements?: unknown;
-        niceToHaves?: unknown;
-        skills?: unknown;
-        canvasWidthPx?: unknown;
-        canvasHeightPx?: unknown;
-        professionalBackgroundSegments?: unknown;
-      };
-
-      const jobId = typeof body.jobId === 'string' ? body.jobId.trim() : '';
-      const jobTitle = typeof body.jobTitle === 'string' ? body.jobTitle.trim() : '';
-
-      if (!jobId || !jobTitle) {
-        return res.status(400).json({
-          success: false,
-          error: 'jobId and jobTitle are required non-empty strings',
-        });
+      const jobId = typeof req.body?.jobId === 'string' ? req.body.jobId.trim() : '';
+      if (!jobId) {
+        return res.status(400).json({ success: false, error: 'jobId is required' });
       }
 
-      const parsedResponsibilities = parseStringArray(body.responsibilities);
-      const parsedRequirements = parseStringArray(body.requirements);
-      const parsedNiceToHaves = parseStringArray(body.niceToHaves);
-      const parsedSkills = parseStringArray(body.skills);
+      const context = await loadJobGenerationContext(supabase, jobId);
+      assertHasBackgroundVoice(context);
 
-      if (
-        parsedResponsibilities === null ||
-        parsedRequirements === null ||
-        parsedNiceToHaves === null ||
-        parsedSkills === null
-      ) {
-        return res.status(400).json({
-          success: false,
-          error:
-            'responsibilities, requirements, niceToHaves, and skills must be arrays of strings when provided',
-        });
-      }
-
-      const parsedProfessionalBackgroundSegments = parseProfessionalBackgroundSegments(
-        body.professionalBackgroundSegments,
-      );
-      if (!parsedProfessionalBackgroundSegments) {
-        return res.status(400).json({
-          success: false,
-          error:
-            'professionalBackgroundSegments is required and must contain string values for education, credibility_bio, voice_style, portfolio_github',
-        });
-      }
-
-      const credibility = parsedProfessionalBackgroundSegments.credibility_bio.trim();
-      const voice = parsedProfessionalBackgroundSegments.voice_style.trim();
-      if (!credibility && !voice) {
-        return res.status(400).json({
-          success: false,
-          error:
-            'professionalBackgroundSegments must include non-empty credibility_bio or voice_style',
-        });
-      }
-
-      const companyName =
-        typeof body.companyName === 'string' && body.companyName.trim()
-          ? body.companyName.trim()
-          : undefined;
-
-      const parsedWidth = typeof body.canvasWidthPx === 'number' ? body.canvasWidthPx : undefined;
-      const parsedHeight =
-        typeof body.canvasHeightPx === 'number' ? body.canvasHeightPx : undefined;
-
-      console.log(`📥 POST /api/data/cover-letter/generate — job: ${jobTitle} (${jobId})`);
+      console.log(`📥 POST /api/data/cover-letter/generate — job: ${context.jobTitle} (${context.jobId})`);
 
       const result = await runCoverLetterGeneration(supabase, {
-        jobId,
-        jobTitle,
-        companyName,
-        responsibilities: parsedResponsibilities,
-        requirements: parsedRequirements,
-        niceToHaves: parsedNiceToHaves,
-        skills: parsedSkills,
-        canvasWidthPx: parsedWidth,
-        canvasHeightPx: parsedHeight,
-        professionalBackgroundSegments: parsedProfessionalBackgroundSegments,
+        jobId: context.jobId,
+        jobTitle: context.jobTitle,
+        companyName: context.companyName,
+        responsibilities: context.responsibilities,
+        requirements: context.requirements,
+        niceToHaves: context.niceToHaves,
+        skills: context.skillPromptLines.length > 0 ? context.skillPromptLines : undefined,
+        professionalBackgroundSegments: context.professionalBackgroundSegments,
       });
 
       return res.status(200).json({ success: true, tsx: result.tsx });
     } catch (error: unknown) {
+      if (error instanceof JobGenerationContextError) {
+        return res.status(error.statusCode).json({ success: false, error: error.message });
+      }
       const msg = error instanceof Error ? error.message : 'Unknown error';
       console.error('❌ POST /api/data/cover-letter/generate:', msg);
       return res.status(500).json({ success: false, error: msg });

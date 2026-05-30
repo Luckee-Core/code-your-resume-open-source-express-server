@@ -18,3 +18,4 @@ ADRs document:
 5. [Edge Functions & Railway Boundaries](./005-edge-functions-railway-only.md) - Keep edge functions limited to Railway orchestration boundaries.
 6. [Logging & Error Response Standards](./006-logging-and-error-response-standards.md) - Use consistent logging and API error response behavior.
 7. [CRM file vault & `/api/data`](./009-crm-file-vault-api-data.md) - File-backed CRM JSON and action-style routes under `src/api/data/`.
+8. [Error log persistence](./010-error-log-persistence.md) - `thunk_errors`, `ui_errors`, `api_errors` under `src/data/{table}/`.

@@ -15,6 +15,7 @@ import {
 } from '../../data/resume-tsx-code-generation';
 
 export type RunSkillsComponentGenerationInput = {
+  jobId?: string;
   skills: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
@@ -62,6 +63,7 @@ export const runSkillsComponentGeneration = async (
   input: RunSkillsComponentGenerationInput,
 ): Promise<RunSkillsComponentGenerationResult> => {
   const {
+    jobId,
     skills,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
@@ -93,7 +95,9 @@ export const runSkillsComponentGeneration = async (
       promptText: prompt,
     });
 
-    console.log(`🚀 Launching Cursor agent for skills: ${skills.join(', ')}`);
+    console.log(
+      `🚀 Launching Cursor agent for skills${jobId ? ` (job ${jobId})` : ''}: ${skills.join(', ')}`,
+    );
 
     const agent = await cursorClient.launchAgent({
       prompt: { text: prompt },
