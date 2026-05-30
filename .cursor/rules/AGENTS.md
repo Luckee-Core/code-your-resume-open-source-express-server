@@ -43,13 +43,14 @@ BEFORE implementing ANY feature, you MUST:
   - `🤖` AI
   - `💾` DB
 
-## Quick Reference (Architecture + Express ADRs)
+## Quick Reference (Express ADRs)
+
 - Architecture entrypoint → `.cursor/architecture/README.md`
-- Domain architecture & file organization → `.cursor/architecture/001-file-and-domain-organization.md`
+- File & domain organization → `.cursor/architecture/001-file-and-domain-organization.md`
 - Router factory & handler pattern → `.cursor/architecture/002-router-factory-and-handler-pattern.md`
-- Handler flow, errors, and status codes → `.cursor/architecture/003-handler-structure-and-error-standards.md`
-- Data layer boundaries & CRUD rules → `.cursor/architecture/004-data-layer-crud-boundaries.md`
-- Managed clients & startup initialization → `.cursor/architecture/005-managed-clients-and-startup-init.md`
-- Edge functions Railway-only boundary → `.cursor/architecture/006-edge-functions-railway-only.md`
-- Logging and response standards → `.cursor/architecture/007-logging-and-observability-standards.md`
-- Utility extraction and purity rules → `.cursor/architecture/008-utils-extraction-and-purity.md`
+- Data layer & CRUD boundaries → `.cursor/architecture/003-data-layer-crud-boundaries.md`
+- Managed clients & startup init → `.cursor/architecture/004-managed-clients-and-startup-init.md`
+- Edge functions Railway-only → `.cursor/architecture/005-edge-functions-railway-only.md`
+- Logging & error response standards → `.cursor/architecture/006-logging-and-error-response-standards.md`
+- `/api/data` action API & file vault → `.cursor/architecture/009-crm-file-vault-api-data.md`
+- Error log persistence → `.cursor/architecture/010-error-log-persistence.md`
