@@ -1,5 +1,5 @@
-import { createJobInStore } from "../../data/crm/read-write-jobs";
-import { getCompanyFromStore } from "../../data/crm/read-write-companies";
+import { createJobInStore } from "../../data/crm";
+import { getCompanyFromStore } from "../../data/crm";
 import type { Job } from "../../data/crm/types";
 import { PLACEHOLDER_JOB_LISTING_TITLE } from "./job-listing-constants";
 import { runJobListingImport } from "./scrape-job-listing";

@@ -3,7 +3,7 @@ import {
   createPendingJobListingScrapeRun,
   updateJobListingScrapeRunById,
 } from "../../data/job-listing";
-import { updateJobInStore } from "../../data/crm/read-write-jobs";
+import { updateJobInStore } from "../../data/crm";
 import { persistJobListingAiLedger } from "./persist-job-listing-ai-ledger";
 import {
   JOB_LISTING_MAX_PLAINTEXT_CHARS,

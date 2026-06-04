@@ -48,6 +48,11 @@ export const createSkillsComponentRouter = (): Router => {
 
       const result = await runSkillsComponentGeneration(supabase, {
         jobId: context.jobId,
+        jobTitle: context.jobTitle,
+        companyName: context.companyName,
+        responsibilities: context.responsibilities,
+        requirements: context.requirements,
+        niceToHaves: context.niceToHaves,
         skills: context.skillPromptLines,
         professionalBackgroundSegments: context.professionalBackgroundSegments,
       });

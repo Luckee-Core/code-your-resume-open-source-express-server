@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { updateJobInStore } from "../../../data/crm/read-write-jobs";
+import { updateJobInStore } from "../../../data/crm";
 import type { Job, JobStatus, JobType } from "../../../data/crm/types";
 
 type Body = {

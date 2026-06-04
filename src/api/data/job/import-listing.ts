@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { getCompanyFromStore } from "../../../data/crm/read-write-companies";
-import { getJobFromStore } from "../../../data/crm/read-write-jobs";
+import { getCompanyFromStore } from "../../../data/crm";
+import { getJobFromStore } from "../../../data/crm";
 import { runJobListingImport } from "../../../services/job/scrape-job-listing";
 import { validatePublicJobListingUrl } from "../../../services/job/validate-public-job-listing-url";
 

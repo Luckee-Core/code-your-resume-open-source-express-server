@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { getJobFromStore } from "../../../data/crm/read-write-jobs";
+import { getJobFromStore } from "../../../data/crm";
 import type { Employment } from "../../../data/crm/types";
-import { getEmploymentFromStore, updateEmploymentInStore } from "../../../data/crm/read-write-employments";
+import { getEmploymentFromStore, updateEmploymentInStore } from "../../../data/crm";
 
 type Body = {
   id?: unknown;

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { getJobFromStore } from "../../../data/crm/read-write-jobs";
-import { createEmploymentInStore } from "../../../data/crm/read-write-employments";
+import { getJobFromStore } from "../../../data/crm";
+import { createEmploymentInStore } from "../../../data/crm";
 
 type Body = {
   companyId?: unknown;

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createCompanyInStore } from "../../../data/crm/read-write-companies";
+import { createCompanyInStore } from "../../../data/crm";
 
 type Body = { name?: unknown; website?: unknown; notes?: unknown };
 

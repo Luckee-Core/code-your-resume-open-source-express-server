@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { getCompanyFromStore } from "../../../data/crm/read-write-companies";
-import { getJobFromStore } from "../../../data/crm/read-write-jobs";
+import { getCompanyFromStore } from "../../../data/crm";
+import { getJobFromStore } from "../../../data/crm";
 import { runJobDescriptionImport } from "../../../services/job/run-job-description-import";
 
 type Body = {

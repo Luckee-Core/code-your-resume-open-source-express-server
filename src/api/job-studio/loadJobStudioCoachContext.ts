@@ -1,5 +1,6 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Job, JobApplication } from "../../data/crm/types";
+import { listSectionBodiesByJobId } from "../../data/job-listing-sections";
 
 export type JobStudioCoachContext = {
   jobTitle: string;
@@ -12,20 +13,6 @@ export type JobStudioCoachContext = {
   applicationsSummary: string;
 };
 
-const bulletBodies = async (
-  supabase: SupabaseClient | null,
-  jobId: string,
-  table: string,
-): Promise<string[]> => {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from(table).select("body").eq("job_id", jobId).order("sort_order");
-  if (error) {
-    console.warn(`⚠️ loadJobStudioCoachContext ${table}:`, error.message);
-    return [];
-  }
-  return (data ?? []).map((r: { body: string }) => r.body).filter(Boolean);
-};
-
 /**
  * Assemble CRM + Supabase bullet text for the Job Studio coach prompt.
  */
@@ -36,11 +23,13 @@ export const loadJobStudioCoachContext = async (
   applications: JobApplication[],
 ): Promise<JobStudioCoachContext> => {
   const jobId = job.id;
-  const [respBodies, reqBodies, nthBodies] = await Promise.all([
-    bulletBodies(supabase, jobId, "job_responsibilities"),
-    bulletBodies(supabase, jobId, "job_requirements"),
-    bulletBodies(supabase, jobId, "job_nice_to_have"),
-  ]);
+  const [respBodies, reqBodies, nthBodies] = supabase
+    ? await Promise.all([
+        listSectionBodiesByJobId(supabase, jobId, "job_responsibilities"),
+        listSectionBodiesByJobId(supabase, jobId, "job_requirements"),
+        listSectionBodiesByJobId(supabase, jobId, "job_nice_to_have"),
+      ])
+    : [[], [], []];
 
   const responsibilities = respBodies.length ? respBodies : job.responsibilities ?? [];
   const requirements = reqBodies.length ? reqBodies : job.requirements ?? [];

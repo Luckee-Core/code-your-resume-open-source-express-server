@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { deleteCompanyFromStore } from "../../../data/crm/read-write-companies";
+import { deleteCompanyFromStore } from "../../../data/crm";
 
 export const handleCompanyDelete = async (req: Request, res: Response): Promise<void> => {
   try {

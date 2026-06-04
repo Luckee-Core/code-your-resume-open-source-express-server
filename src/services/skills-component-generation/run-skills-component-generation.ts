@@ -16,6 +16,11 @@ import {
 
 export type RunSkillsComponentGenerationInput = {
   jobId?: string;
+  jobTitle: string;
+  companyName?: string;
+  responsibilities: string[];
+  requirements: string[];
+  niceToHaves?: string[];
   skills: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
@@ -36,7 +41,7 @@ export type RunSkillsComponentGenerationResult = {
 
 /** US Letter width at 96dpi. */
 const DEFAULT_CANVAS_WIDTH = 816;
-/** Fixed resume document height (816×1150 preview canvas). */
+/** Minimum resume canvas height at generation time; client preview grows to fit content. */
 const DEFAULT_CANVAS_HEIGHT = 1150;
 
 /**
@@ -64,6 +69,11 @@ export const runSkillsComponentGeneration = async (
 ): Promise<RunSkillsComponentGenerationResult> => {
   const {
     jobId,
+    jobTitle,
+    companyName,
+    responsibilities,
+    requirements,
+    niceToHaves,
     skills,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
@@ -81,6 +91,12 @@ export const runSkillsComponentGeneration = async (
 
   try {
     const prompt = buildSkillsComponentPrompt({
+      jobId: jobId?.trim() || 'unknown',
+      jobTitle,
+      companyName,
+      responsibilities,
+      requirements,
+      niceToHaves,
       skills,
       canvasWidthPx,
       canvasHeightPx,

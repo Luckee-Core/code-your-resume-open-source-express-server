@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-02-27
-- **Applies to:** `roads-platform-express-server` (Express)
+- **Applies to:** `code-your-resume-open-source-express-server`
 
 ## Context
 

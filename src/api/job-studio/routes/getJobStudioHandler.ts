@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
-import { getJobFromStore } from "../../../data/crm/read-write-jobs";
+import { getJobFromStore } from "../../../data/crm";
 import { loadJobStudioPayload } from "../loadJobStudioPayload";
 
 /**

@@ -1,66 +1,11 @@
-import { randomUUID } from "node:crypto";
-import type { Job, JobStatus, JobType } from "./types";
+import type { Job } from "./types";
+import { isJobStatus } from "./is-job-status";
 import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
 import { getJobFromSupabase } from "./supabase/get-job-from-supabase";
-import { listJobsFromSupabase } from "./supabase/list-jobs-from-supabase";
 
-const isJobStatus = (value: unknown): value is JobStatus => {
-  return (
-    value === "draft" ||
-    value === "applied" ||
-    value === "interview" ||
-    value === "rejected" ||
-    value === "closed" ||
-    value === "archived"
-  );
-};
-
-export const listJobsFromStore = async (): Promise<Job[]> => {
-  return listJobsFromSupabase(requireCrmSupabaseClient());
-};
-
-export const createJobInStore = async (input: {
-  companyId: string;
-  type?: JobType;
-  title: string;
-  url: string;
-  status: JobStatus;
-}): Promise<Job> => {
-  const supabase = requireCrmSupabaseClient();
-  const id = randomUUID();
-  const now = new Date().toISOString();
-  const status = isJobStatus(input.status) ? input.status : "draft";
-
-  const { error } = await supabase.from("jobs").insert({
-    id,
-    company_id: input.companyId,
-    title: input.title.trim(),
-    url: input.url.trim(),
-    status,
-    description: "",
-    listing_imported_at: null,
-    latest_scrape_run_id: null,
-    latest_ai_exchange_id: null,
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
-    console.error("❌ createJobInStore:", error.message);
-    throw new Error(error.message);
-  }
-
-  const row = await getJobFromSupabase(supabase, id);
-  if (!row) {
-    throw new Error("Failed to load job after insert");
-  }
-  return { ...row, type: input.type ?? "job" };
-};
-
-export const getJobFromStore = async (id: string): Promise<Job | null> => {
-  return getJobFromSupabase(requireCrmSupabaseClient(), id);
-};
-
+/**
+ * Updates an existing job row in Supabase CRM.
+ */
 export const updateJobInStore = async (
   id: string,
   patch: Partial<
@@ -124,16 +69,4 @@ export const updateJobInStore = async (
   }
 
   return next;
-};
-
-export const deleteJobFromStore = async (id: string): Promise<boolean> => {
-  const supabase = requireCrmSupabaseClient();
-  const { data, error } = await supabase.from("jobs").delete().eq("id", id).select("id");
-
-  if (error) {
-    console.error("❌ deleteJobFromStore:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data?.length ?? 0) > 0;
 };

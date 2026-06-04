@@ -1,0 +1,52 @@
+How you actually work: Walk us through a real recent project where agentic coding meaningfully changed how fast or how well you shipped. What did you build, what tools did you use (Cursor, Claude Code, something else?), and what was different about the workflow?*
+I recently closed a project for WomenHeart which is a nonprofit that has a React/React Native social app (called SisterMatch) for women with heart disease. 
+
+WH posts content on their Youtube, and different parts of their website. Women use the SisterMatch apps to find resources that help with their heart disease journey - such as the content posted by the WH team.
+
+The task: list the content on their apps.
+
+The solution: 
+1) Custom scrapersfor the three sources of information
+2) AI-native data types/tables/etc that are used to store scraped/parsed/transcribed data for easy access
+3) Simple AI prompts for summarizing/tagging/filtering content
+4) Simple AI prompts for translating from English to Spanish and other languages
+
+My workflow/coding is very heavily AI-infused. Since I've been coding heavily with React/React Native since 2020, I have many projects that I've used to build conventions/patterns/standards. Once I had the requirements set, I used previous scraper experience and API integrations (i.e., Apify/YouTube API/InnerTube) to aid Cursor (Composer 2/2.5) in planning out the different Express routes/flows. 
+
+I spend heavy amounts of time on the planning phase and require that Cursor give me specifics such as file names, anticipated folder hierarchy, types and some function signatures. Since I have a lot of example for AI to work off of, if I see that it gets these items correctly, I can be confident that the actual code will be built in a way that I want it to. 
+
+Once we have the data retrieval workflows, data handling/storage is simple and robust.
+
+Then, the prompts are simple. I use an ai_prompt table in Supabase/Postgres which is configured through a WYSIWYG editor (i.e., fancy words for a form for editing .md files). These prompts, and the dynamic data (i.e., formatted/parsed scraped data), are fed to the Anthropic API through a local client using the Haiku model (more than strong enough for text-driven tasks).
+
+AI-generated content is put into a queue/waiting for approval stage for the WomenHeart team to review and make live. Displaying in the app is simple and traditional code. 
+Have you built anything that runs inside a sandboxed iframe, browser extension, embedded widget, or third-party host (Shopify, Salesforce, Figma, Slack, ChatGPT, Claude, etc.)? If yes, what did you build and what was the trickiest part? If no, just say no.*
+No
+Describe a shitty system, process, or codebase at your last (or current) company. What did you do about it?*
+The WomenHeart admin panel, which is a backend panel they use to manage their SisterMatch environment/data/apps, was built by 10 devs over 3-4 years. So, many conventions and code in many different places. 
+
+As mentioned above, I have 30+ React/React Native/Express projects/repos that have helped me build a standardized and AI-friendly way of building codebases. 
+
+It was actually very easy to go feature-by-feature and 'clean up' how the data is being handled/displayed/etc. 
+Why this role specifically? ("Greenfield React with AI" is true but we want to know what's actually pulling you toward it.)*
+I believe that Cursor is the way. CC, Codex and OC are great but the power of the IDE still reigns in my opinion. So, first I think that is a match and an important one.
+
+Secondly, Leads. Everybody needs Leads and everybody's Leads are different. They breath differently. They live differently and they hang out in different ways/places. 
+
+All of the other things are great too but these two are the biggest magnets for me. 
+Compensation expectations (target base, current base if you're comfortable sharing) and earliest start date*
+$150k is what I'm looking for. In 2025 as a freelancer I made $100k. 
+Are you authorized to work in the US without sponsorship?*
+Yes,
+Have you worked on applications serving thousands or millions of customers? If so, please describe the product and your specific contributions.*
+https://pencilbible.com/ is the biggest app I worked on. When I helped them transition to an internal team (I was a contractor), they were at 300k users. 
+
+I built the initial MVP that reached this number. It was React Native and iOS only. 
+Anything about you we should know that won't show up on your resume?*
+I'm very business savvy. I've operated as fractional CTOs for a few startups over the years and can work with both execs and big corporate clients. 
+
+I'm not much of a suit wearer but I'm happy to toss on some slacks. 
+Did you use AI to help answer this questionnaire, and if so, which model and how heavily? (We're not testing you. We're curious. The best agentic-native engineers usually do.)*
+I have a custom app which helps me build the resume portion. It uses Cursor and Claude API to analyze my experience, my stack and how I talk to build a TSX component which can be downloaded into a resume. 
+
+The rest is all me typing but I'm working on a way to make this part automated too - just not there yet as it sounds robotic.

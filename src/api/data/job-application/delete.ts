@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { deleteJobApplicationFromStore } from "../../../data/crm/read-write-job-applications";
+import { deleteJobApplicationFromStore } from "../../../data/crm";
 
 export const handleJobApplicationDelete = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -3,7 +3,7 @@ import { getModelConfig } from "../ai/model-config";
 import { fetchJobListingDocument } from "../job/fetch-job-listing-document";
 import { htmlJobListingToPlainText } from "../job/html-job-listing-to-plain-text";
 import { validatePublicJobListingUrl } from "../job/validate-public-job-listing-url";
-import { getCompanyFromStore, updateCompanyInStore } from "../../data/crm/read-write-companies";
+import { getCompanyFromStore, updateCompanyInStore } from "../../data/crm";
 import type { Company } from "../../data/crm/types";
 
 const WEBSITE_MODEL = getModelConfig("website_business_overview");

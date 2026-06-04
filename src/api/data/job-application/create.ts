@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createJobApplicationInStore } from "../../../data/crm/read-write-job-applications";
+import { createJobApplicationInStore } from "../../../data/crm";
 
 type Body = {
   jobId?: unknown;

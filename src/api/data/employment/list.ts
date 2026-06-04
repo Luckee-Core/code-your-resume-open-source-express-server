@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { listEmploymentsFromStore } from "../../../data/crm/read-write-employments";
+import { listEmploymentsFromStore } from "../../../data/crm";
 
 /**
  * GET /api/data/employment/list — list all employment rows.

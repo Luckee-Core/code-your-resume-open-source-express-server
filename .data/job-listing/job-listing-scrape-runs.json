@@ -262,5 +262,49 @@
     "error": "",
     "startedAt": "2026-05-28T17:12:53.710Z",
     "completedAt": "2026-05-28T17:12:53.836Z"
+  },
+  {
+    "id": "dcd0895d-6dd3-4ad3-a300-37b87e0e4a99",
+    "jobId": "195bb177-815c-419b-ab1a-000d1ec9bab5",
+    "sourceUrl": "https://jobs.gem.com/bluesky/am9icG9zdDqvbyxqTXYO0Lf4V1a4dTg7",
+    "status": "completed",
+    "httpStatus": 200,
+    "plainText": "Bluesky Jobs",
+    "error": "",
+    "startedAt": "2026-06-01T17:19:52.237Z",
+    "completedAt": "2026-06-01T17:19:52.548Z"
+  },
+  {
+    "id": "3cc46035-31e2-420e-a013-427755124a03",
+    "jobId": "195bb177-815c-419b-ab1a-000d1ec9bab5",
+    "sourceUrl": "manual://pasted-description",
+    "status": "completed",
+    "httpStatus": null,
+    "plainText": "What if social media worked more like the web — open, flexible, and full of possibility? That’s the future Bluesky is building. Our app is already used daily by millions, but it’s just the beginning: underneath it is a protocol designed for an entire ecosystem of apps, all connected by the same social graph.\n\nWe’re looking for a product engineer who loves building consumer apps that feel smooth, polished, and delightful. You’ll join a small, fast-moving team where your code will reach millions, your design instincts will shape the user experience, and your ideas will help invent the future of social networks. \n\nAbout the role:\nYou’ll be joining the team responsible for Bluesky’s flagship app — a multi-platform, open-source social client already in the hands of millions. Your work will be immediately visible and will directly shape how people experience the future of social media.\nThis role is perfect for someone who loves consumer apps: sweating the details of interactions, building polished and delightful interfaces, and making complex flows feel simple. We’re a small, fast-moving team, so you’ll have the freedom to ship quickly, influence product direction, and push the boundaries of what a social app can feel like.\n\nKey responsibilities:  \nShip new features in a large, mature React Native application used daily by millions\nDebug and fix tricky issues with the help of remote instrumentation and strong problem-solving instincts\nBuild and maintain platform-native modules to make the app feel smooth and responsive across iOS, Android, and web\nCollaborate closely with designers and other engineers to refine flows and polish interactions\nContribute to the open-source ecosystem around Bluesky and the AT Protocol\n\nYou might be a good fit if:\nYou have strong programming fundamentals and software engineering skills\nYou’re deeply experienced with Typescript (5+ years)\nYou’ve shipped React Native apps to iOS, Android, and web\nYou care about UI/UX quality and sweat the details\nYou’ve worked across the full stack (frontend and backend)\nYou’ve built motion-rich interfaces (gestures, animations)\nYou have an intuitive understanding of how people use social apps\nYou thrive on small, fast-moving teams where you can own big pieces of work\nYou’re excited to help shape the future of social networking\n\nWe’re especially excited if you have the following:\nPrevious experience working at startups or on social media products\n\nWe're a fully remote team, though working hours overlap with PST (Pacific Standard Time). However, please note, there may be an on-site component to these interviews.\n\nTo learn more about us, check out:\nbsky.social\natproto.com\n\nAdditional Notes:\nThe anticipated base salary range for this position is $170,000 - $230,000, excluding equity. Equity will be considered in the total compensation package. Final base salary for this role will be based on the individual’s geographic location, as well as experience level, skill set, training, licenses and certifications.\n\nPlease include links to your portfolio or examples of past work in your cover letter or resume.",
+    "error": "",
+    "startedAt": "2026-06-01T17:22:39.873Z",
+    "completedAt": "2026-06-01T17:22:39.880Z"
+  },
+  {
+    "id": "bf916b31-1c7e-4a11-b127-a5b95fe7b5d6",
+    "jobId": "1fbee8ed-559a-47fe-bbc4-07b25f757abe",
+    "sourceUrl": "https://www.paraform.com/company/firecrawl/cmp38d5mp00060djpf35v4tg8",
+    "status": "completed",
+    "httpStatus": 200,
+    "plainText": "Senior Growth Engineer at Firecrawl",
+    "error": "",
+    "startedAt": "2026-06-01T17:51:08.920Z",
+    "completedAt": "2026-06-01T17:51:09.191Z"
+  },
+  {
+    "id": "c9e44506-fe95-4dca-baa2-531ea8b83346",
+    "jobId": "dde97470-9bd9-49c0-be95-63fa1a92a151",
+    "sourceUrl": "manual://pasted-description",
+    "status": "completed",
+    "httpStatus": null,
+    "plainText": "About the role\nWhat we’re building\nRespan is building the self-driving observability and evals platform for AI teams, used by 60+ YC companies and hundreds of AI teams.\n\nThe role\n\nYou will work on everything from the backend tracing pipeline and eval framework to the React dashboard that thousands of AI teams use daily. We are a small team, so you will own features end-to-end. This role is for someone who is comfortable jumping between Python and TypeScript, cares about both system design and user experience, and wants to ship things that matter every week.\n\nWhat you’ll do:\n\nBuild and ship product features across the full stack (React, Next.js, Python, PostgreSQL)\nDesign and implement APIs, data pipelines, and real-time systems\nCollaborate directly with founders and customers to scope and prioritize work\nOwn features from design through deployment and iteration\nContribute to infrastructure decisions and system architecture\nWhat you must have:\n\nStrong experience with TypeScript, React, and Node.js or Python\nComfortable building and deploying production web applications\nAbility to move fast and ship iteratively in an early-stage environment\nStrong plus:\n\nExperience with data-intensive applications or observability tools\nFamiliarity with PostgreSQL, ClickHouse, or similar databases\nBackground in developer tools or B2B SaaS\nGood instincts for product and user experience",
+    "error": "",
+    "startedAt": "2026-06-01T17:53:52.389Z",
+    "completedAt": "2026-06-01T17:53:52.396Z"
   }
 ]

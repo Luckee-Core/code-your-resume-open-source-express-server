@@ -1,6 +1,6 @@
 import { fetchJobListingDocument } from "../job/fetch-job-listing-document";
 import { validatePublicJobListingUrl } from "../job/validate-public-job-listing-url";
-import { getCompanyFromStore, updateCompanyInStore } from "../../data/crm/read-write-companies";
+import { getCompanyFromStore, updateCompanyInStore } from "../../data/crm";
 import type { Company } from "../../data/crm/types";
 
 export const SITE_PAGE_URL_DISCOVERY_RUN_DISABLED_MESSAGE =

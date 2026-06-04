@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { deleteEmploymentFromStore } from "../../../data/crm/read-write-employments";
+import { deleteEmploymentFromStore } from "../../../data/crm";
 
 /**
  * DELETE /api/data/employment/delete?id=

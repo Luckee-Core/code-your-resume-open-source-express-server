@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
 import { getAnthropicClient } from "../../../services/ai/get-anthropic-client";
-import { getJobFromStore } from "../../../data/crm/read-write-jobs";
-import { getCompanyFromStore } from "../../../data/crm/read-write-companies";
-import { listJobApplicationsFromStore } from "../../../data/crm/read-write-job-applications";
+import { getJobFromStore } from "../../../data/crm";
+import { getCompanyFromStore } from "../../../data/crm";
+import { listJobApplicationsFromStore } from "../../../data/crm";
 import { loadJobStudioCoachContext } from "../loadJobStudioCoachContext";
 import { processJobStudioChat } from "../processJobStudioChat";
 import { loadJobStudioPayload } from "../loadJobStudioPayload";

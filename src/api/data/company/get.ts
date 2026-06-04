@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { getCompanyFromStore } from "../../../data/crm/read-write-companies";
+import { getCompanyFromStore } from "../../../data/crm";
 
 export const handleCompanyGet = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -1,5 +1,5 @@
 import type { Job } from "../../data/crm/types";
-import { updateJobInStore } from "../../data/crm/read-write-jobs";
+import { updateJobInStore } from "../../data/crm";
 import { validatePublicJobListingUrl } from "./validate-public-job-listing-url";
 import { scrapeJobListingUrl } from "./scrape-job-listing-url";
 import { persistJobListingAiLedger } from "./persist-job-listing-ai-ledger";

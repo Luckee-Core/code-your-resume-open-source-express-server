@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createEmployeeInStore } from "../../../data/crm/read-write-employees";
+import { createEmployeeInStore } from "../../../data/crm";
 
 type Body = {
   companyId?: unknown;

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getCompanyFromStore } from '../../data/crm/read-write-companies';
-import { getJobFromStore } from '../../data/crm/read-write-jobs';
+import { getCompanyFromStore } from '../../data/crm';
+import { getJobFromStore } from '../../data/crm';
 import { getProfessionalBackground } from '../../data/professional-background/get-professional-background';
 import type { SegmentsRecord } from '../../data/professional-background/normalize-segments-from-json';
 import { listTechnicalSkills } from '../../data/technical-skills/list-technical-skills';

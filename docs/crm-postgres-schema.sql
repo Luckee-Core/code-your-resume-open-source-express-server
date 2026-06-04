@@ -89,6 +89,24 @@ CREATE TABLE IF NOT EXISTS job_applications (
   updated_at TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS job_questions (
+  id UUID PRIMARY KEY,
+  prompt TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS job_question_answers (
+  id UUID PRIMARY KEY,
+  job_id UUID NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
+  job_question_id UUID NOT NULL REFERENCES job_questions (id) ON DELETE RESTRICT,
+  answer TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  UNIQUE (job_id, job_question_id)
+);
+
 CREATE TABLE IF NOT EXISTS employments (
   id UUID PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
