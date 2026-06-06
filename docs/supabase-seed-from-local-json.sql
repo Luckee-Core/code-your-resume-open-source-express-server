@@ -1,8 +1,8 @@
 -- =============================================================================
 -- Supabase seed from local JSON vault
 -- Generated: 2026-05-28T15:51:46.557Z
--- CRM dir: /Users/matthewruiz/github/codeyourresume/code-your-resume-open-source-express-server/.data/crm
--- Job listing dir: /Users/matthewruiz/github/codeyourresume/code-your-resume-open-source-express-server/.data/job-listing
+-- CRM dir: .data/crm (relative to express-server repo root)
+-- Job listing dir: .data/job-listing
 --
 -- Prerequisite DDL (run first if tables are missing):
 --   docs/crm-postgres-schema.sql

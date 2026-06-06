@@ -18,4 +18,4 @@ export const JOB_LISTING_MAX_STORED_DESCRIPTION_CHARS = 50_000;
 
 /** User-Agent for outbound listing fetches. */
 export const JOB_LISTING_FETCH_USER_AGENT =
-  "CodeYourResumeJobListingBot/1.0 (+https://github.com/codeyourresume)";
+  "CodeYourResumeJobListingBot/1.0 (+https://github.com/Luckee-Core/code-your-resume-open-source)";

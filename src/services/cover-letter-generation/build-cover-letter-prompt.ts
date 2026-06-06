@@ -118,7 +118,7 @@ ${credibility_bio || '(empty)'}
 Voice/style notes (match this tone throughout):
 ${voice_style || '(empty)'}
 
-Portfolio/GitHub narrative (same TroutHouseTech work as credibility_bio — do not list products separately in the letter):
+Portfolio/GitHub narrative (same Acme Labs work as credibility_bio — do not list products separately in the letter):
 ${portfolio_github || '(empty)'}
 
 ### Visual / structural target (must follow)
@@ -152,8 +152,8 @@ ${postingBulletsRule}
 - Questions that pitch services: "Have you looked into AI…?", "Are you exploring automation…?"
 - Agency/consulting framing: "I help teams reduce repetitive work", "I help companies with…", "my firm", "our services", "happy to help you with", "compare notes on where we could help"
 - Sales closes: "I'd be glad to compare notes", "let's explore how I can support", "reach out if you want to reduce…"
-- Treating TroutHouseTech (or similar) as something you're **selling** — if mentioned, only as current work context **relevant to why you'd be a good hire**, in one short clause max (no "founder" label)
-- Listing TroutHouseTech products/apps twice — portfolio_github and TroutHouseTech are the same work; mention at most once in the letter body, not as a separate product list plus an experience paragraph
+- Treating Acme Labs (or similar) as something you're **selling** — if mentioned, only as current work context **relevant to why you'd be a good hire**, in one short clause max (no "founder" label)
+- Listing Acme Labs products/apps twice — portfolio_github and Acme Labs are the same work; mention at most once in the letter body, not as a separate product list plus an experience paragraph
 
 **Also avoid** robotic phrases: "I'm reading this as", "low-friction conversation", "matches how I work", "broad mandate", "operating discipline", "I'd welcome the opportunity to".
 

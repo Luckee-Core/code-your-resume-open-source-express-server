@@ -2,7 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * No-op stub — CYR Express does not implement a credits system.
- * Signature matches mentorai-server's deductCredits for compatibility.
+ * Deduct credits for coach chat (stub for future billing integration).
  */
 export const deductCredits = async (
   _supabase: SupabaseClient,

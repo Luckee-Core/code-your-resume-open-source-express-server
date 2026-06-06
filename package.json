@@ -1,7 +1,8 @@
 {
-  "name": "express-server-template",
+  "name": "code-your-resume-open-source-express-server",
   "version": "1.0.0",
-  "description": "Express API Server Template - Ready-to-use Express server with TypeScript",
+  "description": "Express API for Code Your Resume — Supabase CRM, studios, and job listing import",
+  "license": "MIT",
   "main": "index.ts",
   "scripts": {
     "start": "node dist/index.js",

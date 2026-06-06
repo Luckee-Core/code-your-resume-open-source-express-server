@@ -111,7 +111,7 @@ ${credibility_bio || '(empty)'}
 Voice/style notes (match this tone):
 ${voice_style || '(empty)'}
 
-Portfolio/GitHub narrative (same TroutHouseTech work as credibility_bio — mention at most once if relevant):
+Portfolio/GitHub narrative (same Acme Labs work as credibility_bio — mention at most once if relevant):
 ${portfolio_github || '(empty)'}
 
 ### Visual / structural target (must follow)
@@ -128,7 +128,7 @@ ${portfolio_github || '(empty)'}
 - **Answer the question:** Focus on **why this company and role** — product, mission, problems in the posting, team fit, or tech stack — not a recap of your entire career.
 - **Be specific:** Reference **at least one** concrete detail from responsibilities or requirements when provided.
 - **Job applicant, not vendor:** You want to **join** the team, not sell services. No consulting/agency framing.
-- **No founder identity:** Do not lead with "founder" or TroutHouseTech as a pitch. Past building experience may appear in **one clause** if it supports why you'd fit this role.
+- **No founder identity:** Do not lead with "founder" or Acme Labs as a pitch. Past building experience may appear in **one clause** if it supports why you'd fit this role.
 - **No duplicate product lists:** Do not enumerate a separate product portfolio; keep the answer tight.
 - **Truthfulness:** Do not invent facts unsupported by the background or posting.
 

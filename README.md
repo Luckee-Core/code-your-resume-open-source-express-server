@@ -1,168 +1,114 @@
-# Code Your Resume — CRM Express server
+# Code Your Resume — Express API
 
-Local JSON vault API for companies, jobs, applications, job listing import (fetch + optional AI), technical skills studio routes (Supabase-backed), and related services.
+Supabase-backed CRM API, graphics studio, technical skills studio, professional background, job studio, and job listing import for the [Code Your Resume](https://github.com/Luckee-Core/code-your-resume-open-source) Next.js app.
 
-## Threat model (read before exposing this port)
+**Companion web:** [code-your-resume-open-source](https://github.com/Luckee-Core/code-your-resume-open-source)  
+**Studio map:** [Luckee-Core/getting-started](https://github.com/Luckee-Core/getting-started)  
+**Wire contract:** [web repo `docs/wire-contract.md`](https://github.com/Luckee-Core/code-your-resume-open-source/blob/main/docs/wire-contract.md)  
+**OSS governance:** [mentorai-server `data/open-source/`](https://github.com/luckee/mentorai-server/tree/main/data/open-source)
 
-- **No user authentication** on `/api/data/*` or `/api/technical-skills/*` by default.
-- **Bind:** Listens on **`127.0.0.1`** by default so the CRM is not reachable from other machines on the LAN. For Docker / Railway / LAN testing, set **`HOST=0.0.0.0`** explicitly.
-- **`CRM_API_SECRET`:** Optional. When set, clients must send **`X-CRM-API-Key`** or **`Authorization: Bearer`** matching the secret. Use the **same** value in the Next.js app as **`CRM_API_SECRET`** so rewrites keep working.
-- **CORS:** In production, **`CORS_ORIGINS=*` is ignored** (unsafe); use a comma-separated allowlist. Dev may use `*` with Node not in production mode.
-- Secrets: **`SUPABASE_SERVICE_ROLE_KEY`**, **`ANTHROPIC_API_KEY`**, **`CURSOR_API_KEY`** — server-only; never expose to the browser.
-
-See **`SECURITY.md`** for disclosure and limitations.
-
-## Features
-
-- TypeScript, Express, CRM JSON under `CRM_DATA_DIR`
-- Job listing URL fetch with **`validatePublicJobListingUrl`** (blocks loopback, RFC1918, metadata IP **169.254.169.254**)
-- Optional Anthropic / Supabase integrations
-
-## Quick Start
-
-### Install
+## Quick start
 
 ```bash
+cp .env.example .env
+# Required: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 npm install
-```
-
-### Run (development)
-
-```bash
 npm run dev
 ```
 
-Default URL **http://127.0.0.1:3053** (override with **`PORT`**).
-
-### Smoke test
+Default URL **http://127.0.0.1:3053**. Apply Supabase SQL from `docs/` before CRM smoke tests (see runbook below).
 
 ```bash
 curl http://127.0.0.1:3053/api/health
-```
-
-With **`CRM_API_SECRET`** set on the server:
-
-```bash
-CRM_API_SECRET=your-secret curl -H "X-CRM-API-Key: your-secret" http://127.0.0.1:3053/api/data/company/list
-```
-
-## Available Endpoints
-
-- `GET /` - Health check
-- `GET /api/health` - Health check with detailed info
-- **`/api/data/**`** — CRM JSON vault (companies, employees, jobs, job-applications). See [.cursor/architecture/009-crm-file-vault-api-data.md](.cursor/architecture/009-crm-file-vault-api-data.md). Default port **3053**; set `CRM_DATA_DIR` to your vault path.
-- **`POST /api/data/job/import-listing`** — Fetches a job’s `url`, writes scrape + optional AI ledger JSON under `JOB_LISTING_DATA_DIR` (default `<CRM_DATA_DIR>/../job-listing`), then updates the job snapshot (`description`, `listingImportedAt`, pointers). Optional `ANTHROPIC_API_KEY` for structured extract. Many SPA-only boards return little or no HTML to a server `fetch`; users remain responsible for target-site terms of use.
-
-### CRM smoke test
-
-With the server running:
-
-```bash
 CRM_BASE=http://127.0.0.1:3053 npm run verify:crm
 ```
 
-## Project Structure
+## Supabase runbook
 
+Apply in order on a fresh Supabase project:
+
+1. `docs/crm-postgres-schema.sql`
+2. `docs/supabase-image-graphics-schema.sql`
+3. `docs/supabase-error-log-schema.sql`
+4. `docs/supabase-job-listing-ai-ledger-mirror.sql` (optional)
+5. `docs/supabase-job-listing-sections-mirror.sql` (optional)
+6. `docs/supabase-job-studio-schema.sql`
+7. `docs/supabase-user-background-studio-schema.sql` (optional)
+
+Optional demo seed: `npm run seed:sql` (reads synthetic fixtures from `.data/`).
+
+## Threat model
+
+- **No user authentication** on `/api/data/*` by default — local/trusted operator model.
+- **Bind:** `127.0.0.1` by default. Set `HOST=0.0.0.0` for Docker/Railway.
+- **`CRM_API_SECRET`:** Optional; clients send `X-CRM-API-Key` or `Authorization: Bearer`.
+- **CORS:** Production ignores `CORS_ORIGINS=*`; use explicit allowlist.
+- Server-only secrets: `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `CURSOR_API_KEY`.
+
+See [`SECURITY.md`](SECURITY.md).
+
+## Project structure
+
+```text
+index.ts                     # App wiring
+src/
+  api/
+    data/                      # CRM entity HTTP (/api/data/company/list, …)
+    job-studio/                # Per-job coach chat
+    technical-skills/          # Skills studio
+    professional-background/   # Background narrative
+    user-background-studio/    # ICP / background coach
+  data/                        # Supabase CRUD (one function per file)
+  services/                    # Orchestration, middleware, Supabase client
+docs/                          # SQL schemas and migrations
 ```
-express-server-template/
-├── index.ts                 # Main entry point
-├── src/
-│   └── services/
-│       ├── middleware/      # Express middleware
-│       │   ├── setup-early-middleware.ts
-│       │   ├── setup-error-handling.ts
-│       │   └── index.ts
-│       ├── health/          # Health check routes
-│       │   ├── create-health-router.ts
-│       │   └── index.ts
-│       └── server/          # Server startup logic
-│           ├── start-server.ts
-│           └── index.ts
-├── package.json
-├── tsconfig.json
-└── .gitignore
-```
 
-## Environment Variables
+Architecture: `.cursor/architecture/` — especially [009-api-data-entity-routers.md](.cursor/architecture/009-api-data-entity-routers.md).
 
-Create a `.env` file in the project root. See **`.env.example`** for all options. Highlights:
+## Key endpoints
+
+- `GET /api/health` — health check
+- `/api/data/**` — CRM actions (companies, jobs, employees, applications, …)
+- `/api/technical-skills/**` — technical skills studio
+- `/api/professional-background/**` — professional background
+- `/api/job-studio/**` — job studio coach
+- `/api/user-background-studio/**` — user background / ICP coach
+- `POST /api/data/job/import-listing` — fetch job URL, optional AI extract
+
+## Environment
+
+See `.env.example`. Required for core CRM:
 
 ```env
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=...
 PORT=3053
-NODE_ENV=development
 HOST=127.0.0.1
-CRM_DATA_DIR=
-JOB_LISTING_DATA_DIR=
-CRM_API_SECRET=
-ANTHROPIC_API_KEY=
 ```
 
 ## Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm start` - Start production server
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm run build:watch` - Watch mode compilation
-
-## Adding New Routes
-
-1. Create a new router in `src/services/`:
-
-```typescript
-// src/services/my-feature/create-my-router.ts
-import { Router, Request, Response } from 'express';
-
-export const createMyRouter = (): Router => {
-  const router = Router();
-  
-  router.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'My feature works!' });
-  });
-  
-  return router;
-};
-```
-
-2. Export it in `src/services/my-feature/index.ts`:
-
-```typescript
-export { createMyRouter } from './create-my-router';
-```
-
-3. Mount it in `index.ts`:
-
-```typescript
-import { createMyRouter } from './src/services/my-feature';
-app.use('/api/my-feature', createMyRouter());
-```
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Development with hot reload |
+| `npm run build` | Compile TypeScript |
+| `npm start` | Run compiled `dist/index.js` |
+| `npm run verify:crm` | CRM route smoke matrix |
+| `npm run seed:sql` | Generate seed SQL from demo JSON |
 
 ## Deployment
 
-Requires **Node.js 22+** (native `WebSocket`; Supabase client initializes Realtime at startup). Local: `nvm use` (see `.nvmrc`). Railway/Nixpacks: `nixpacks.toml` pins major version 22.
+Node.js **22+** required. Railway: `nixpacks.toml` pins major version 22.
 
-### Build for Production
 ```bash
 npm run build
-```
-
-### Run Production Build
-```bash
 NODE_ENV=production node dist/index.js
 ```
 
-## Architecture Principles
+## Contributing
 
-This template follows these conventions:
-- **One function per file** - Each file contains a single, focused function
-- **Factory pattern** - Routers are created via factory functions
-- **Index exports** - Every folder has an `index.ts` for clean imports
-- **Type safety** - Explicit types for all functions and routes
-- **Middleware separation** - Early middleware vs error handling
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Follow `.cursor/rules/AGENTS.md` and ADRs.
 
 ## License
 
-MIT
-
-## Author
-
-TroutHouseTech
+MIT — see [`LICENSE`](LICENSE).

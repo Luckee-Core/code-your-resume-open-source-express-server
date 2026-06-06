@@ -15,7 +15,7 @@ export const createHealthRouter = (): Router => {
   router.get('/', (req: Request, res: Response) => {
     res.json({
       status: 'ok',
-      message: 'TroutHouseTech Express Server is running',
+      message: 'Code Your Resume Express API is running',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
     });

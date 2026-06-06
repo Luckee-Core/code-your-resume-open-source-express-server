@@ -15,7 +15,7 @@ import { createHealthRouter } from "./src/services/health";
 app.use("/", createHealthRouter());
 app.use("/api/health", createHealthRouter());
 
-// CRM JSON vault + action API
+// CRM Supabase action API
 import { createApiDataRouter } from "./src/api/data/router";
 app.use("/api/data", requireCrmApiSecretWhenConfigured);
 app.use("/api/data", createApiDataRouter());
@@ -34,6 +34,11 @@ app.use("/api/professional-background", createProfessionalBackgroundRouter());
 import { createJobStudioRouter } from "./src/api/job-studio/router";
 app.use("/api/job-studio", requireCrmApiSecretWhenConfigured);
 app.use("/api/job-studio", createJobStudioRouter());
+
+// User Background Studio — ICP / background coach (Supabase-backed)
+import { createUserBackgroundStudioRouter } from "./src/api/user-background-studio/router";
+app.use("/api/user-background-studio", requireCrmApiSecretWhenConfigured);
+app.use("/api/user-background-studio", createUserBackgroundStudioRouter());
 
 // Error handling middleware (must be after all routes)
 import { setupErrorHandling } from "./src/services/middleware";

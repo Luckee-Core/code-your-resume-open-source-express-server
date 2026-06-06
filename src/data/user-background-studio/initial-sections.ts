@@ -1,5 +1,5 @@
 /**
- * Default User Background / experience sections — mirrors luckee-web User Background Studio categories.
+ * Default User Background / experience section categories.
  */
 export const INITIAL_USER_BACKGROUND_SECTIONS_JSON = [
   { key: 'technical_skills', title: 'Technical Skills', body: null as string | null },
