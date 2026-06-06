@@ -21,6 +21,7 @@ ADRs document:
 6. [006 – Logging & error response standards](./006-logging-and-error-response-standards.md) — Emoji logging and `{ success, error }` responses.
 9. [009 – `/api/data` entity routers](./009-api-data-entity-routers.md) — Supabase CRM, action routes under `src/api/data/`, job-listing JSON sidecar.
 10. [010 – Error log persistence](./010-error-log-persistence.md) — `thunk_errors`, `ui_errors`, `api_errors` tables.
+11. [011 – API docs catalog](./011-api-docs-catalog.md) — `GET /api-docs.json`, hand-maintained catalog for web `/docs/api`.
 
 ## How to use
 

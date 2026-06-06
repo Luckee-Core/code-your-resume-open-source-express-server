@@ -1,12 +1,13 @@
 /**
- * Cursor Cloud Agents API Client
- *
- * Provides methods to interact with Cursor's Cloud Agents API for programmatic code generation.
+ * Cursor Cloud Agents API Client (v1)
  *
  * @see https://cursor.com/docs/cloud-agent/api/endpoints
  */
 
-export type AgentStatus = 'CREATING' | 'RUNNING' | 'FINISHED' | 'STOPPED' | 'FAILED';
+import { formatCursorApiError } from '../../utils/cursor/format-cursor-api-error';
+import { toGithubRepoUrl } from '../../utils/cursor/to-github-repo-url';
+
+export type RunStatus = 'CREATING' | 'RUNNING' | 'FINISHED' | 'ERROR' | 'CANCELLED' | 'EXPIRED';
 
 export type LaunchAgentRequest = {
   prompt: {
@@ -33,32 +34,33 @@ export type LaunchAgentRequest = {
   };
 };
 
+/** Launched agent + initial run IDs returned from POST /v1/agents. */
 export type Agent = {
   id: string;
-  status: AgentStatus;
-  source: {
-    repository: string;
-    ref?: string;
-  };
-  target: {
-    branchName?: string;
-    url?: string;
-    prUrl?: string;
-    autoCreatePr?: boolean;
-    openAsCursorGithubApp?: boolean;
-    skipReviewerRequest?: boolean;
-  };
+  runId: string;
   summary?: string;
-  createdAt: string;
 };
 
-export type AgentConversation = {
+export type AgentRun = {
   id: string;
-  messages: Array<{
+  agentId: string;
+  status: RunStatus;
+  createdAt: string;
+  updatedAt: string;
+  durationMs?: number;
+  result?: string;
+};
+
+type CreateAgentResponse = {
+  agent: {
     id: string;
-    type: 'user_message' | 'assistant_message';
-    text: string;
-  }>;
+    latestRunId?: string;
+  };
+  run: {
+    id: string;
+    agentId: string;
+    status: RunStatus;
+  };
 };
 
 export class CursorApiClient {
@@ -99,10 +101,12 @@ export class CursorApiClient {
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      let errorMessage = `Cursor API request failed with status ${response.status}`;
+      const fallback = `Cursor API request failed with status ${response.status}`;
+      let errorMessage = fallback;
       try {
-        const errorData = await response.json() as Record<string, string>;
-        errorMessage = errorData.message || errorData.error || errorMessage;
+        const errorData: unknown = await response.json();
+        errorMessage = formatCursorApiError(errorData, fallback);
+        console.error('❌ Cursor API error response:', JSON.stringify(errorData));
       } catch { /* ignore JSON parse errors */ }
 
       if (response.status === 429) throw new Error(`Rate limit exceeded: ${errorMessage}`);
@@ -117,50 +121,38 @@ export class CursorApiClient {
   }
 
   /**
-   * Launch a new code generation agent.
+   * Launch a new code generation agent via Cursor v1 API.
    *
    * @param request - Agent configuration including prompt, source repo, and target options
-   * @returns Agent details including ID for polling
+   * @returns Agent and run IDs for polling
    */
   async launchAgent(request: LaunchAgentRequest): Promise<Agent> {
-    return this.request<Agent>('POST', '/v0/agents', request);
+    const repoUrl = toGithubRepoUrl(request.source.repository);
+    const response = await this.request<CreateAgentResponse>('POST', '/v1/agents', {
+      prompt: request.prompt,
+      repos: [
+        {
+          url: repoUrl,
+          startingRef: request.source.ref ?? 'main',
+        },
+      ],
+      autoCreatePR: request.target?.autoCreatePr ?? false,
+    });
+
+    return {
+      id: response.agent.id,
+      runId: response.run.id,
+    };
   }
 
   /**
-   * Get agent status and details.
+   * Get run status and final result text.
    *
-   * @param id - Agent ID
-   * @returns Agent details including current status
+   * @param agentId - Durable agent ID
+   * @param runId - Run ID from launchAgent
+   * @returns Run details including status and result when terminal
    */
-  async getAgent(id: string): Promise<Agent> {
-    return this.request<Agent>('GET', `/v0/agents/${id}`);
-  }
-
-  /**
-   * Get the full conversation history for an agent run.
-   *
-   * @param id - Agent ID
-   * @returns Conversation with all user and assistant messages
-   */
-  async getAgentConversation(id: string): Promise<AgentConversation> {
-    return this.request<AgentConversation>('GET', `/v0/agents/${id}/conversation`);
-  }
-
-  /**
-   * Stop a running agent.
-   *
-   * @param id - Agent ID
-   */
-  async stopAgent(id: string): Promise<{ id: string }> {
-    return this.request<{ id: string }>('POST', `/v0/agents/${id}/stop`);
-  }
-
-  /**
-   * Delete an agent.
-   *
-   * @param id - Agent ID
-   */
-  async deleteAgent(id: string): Promise<{ id: string }> {
-    return this.request<{ id: string }>('DELETE', `/v0/agents/${id}`);
+  async getRun(agentId: string, runId: string): Promise<AgentRun> {
+    return this.request<AgentRun>('GET', `/v1/agents/${agentId}/runs/${runId}`);
   }
 }

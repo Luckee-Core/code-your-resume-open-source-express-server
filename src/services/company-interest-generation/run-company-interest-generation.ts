@@ -118,9 +118,9 @@ export const runCompanyInterestGeneration = async (
       agentId: agent.id,
     });
 
-    const finalAgent = await pollAgentStatus(cursorClient, agent.id);
+    const finalRun = await pollAgentStatus(cursorClient, agent.id, agent.runId);
 
-    const tsx = await extractTsxFromConversation(cursorClient, agent.id, {
+    const tsx = await extractTsxFromConversation(cursorClient, agent.id, agent.runId, {
       expectedComponentName: COMPANY_INTEREST_COMPONENT_NAME,
     });
 
@@ -128,7 +128,7 @@ export const runCompanyInterestGeneration = async (
     await insertResumeTsxResponse(supabase, {
       id: responseId,
       tsxCode: tsx,
-      agentSummary: finalAgent.summary ?? null,
+      agentSummary: finalRun.result ?? null,
     });
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);

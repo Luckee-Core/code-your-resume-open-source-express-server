@@ -40,6 +40,10 @@ import { createUserBackgroundStudioRouter } from "./src/api/user-background-stud
 app.use("/api/user-background-studio", requireCrmApiSecretWhenConfigured);
 app.use("/api/user-background-studio", createUserBackgroundStudioRouter());
 
+// API documentation catalog (metadata only — no CRM secret)
+import { createApiDocsRouter } from "./src/services/api-docs";
+app.use(createApiDocsRouter());
+
 // Error handling middleware (must be after all routes)
 import { setupErrorHandling } from "./src/services/middleware";
 setupErrorHandling(app);

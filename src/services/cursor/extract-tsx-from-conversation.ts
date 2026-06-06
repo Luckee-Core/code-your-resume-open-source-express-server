@@ -6,31 +6,34 @@ export type ExtractTsxFromConversationOptions = {
 };
 
 /**
- * Fetch the agent conversation and extract the TSX component code from the last
- * assistant message that contains a fenced code block.
+ * Fetch the agent run result and extract the TSX component code from the assistant reply.
  *
- * Looks for ```tsx, ```typescript, or ```jsx blocks in reverse message order
- * so the most recent generated code is returned.
+ * Looks for ```tsx, ```typescript, or ```jsx blocks, or plain code matching the expected export.
  *
  * @param cursorClient - Authenticated Cursor API client
- * @param agentId - ID of the finished agent
+ * @param agentId - Durable agent ID
+ * @param runId - Run ID from launchAgent
  * @param options - Optional expected default export function name
  * @returns Extracted TSX source string
- * @throws Error if no code block is found in the conversation
+ * @throws Error if no code block is found in the run result
  */
 export const extractTsxFromConversation = async (
   cursorClient: CursorApiClient,
   agentId: string,
+  runId: string,
   options?: ExtractTsxFromConversationOptions,
 ): Promise<string> => {
   const expectedComponentName = options?.expectedComponentName ?? 'GeneratedSkillsPreview';
 
-  console.log(`📥 Fetching conversation for agent ${agentId}`);
-  const conversation = await cursorClient.getAgentConversation(agentId);
+  console.log(`📥 Fetching run result for agent ${agentId} run ${runId}`);
+  const run = await cursorClient.getRun(agentId, runId);
+  const resultText = run.result?.trim();
 
-  const assistantMessages = conversation.messages
-    .filter((m) => m.type === 'assistant_message')
-    .reverse();
+  if (!resultText) {
+    throw new Error(
+      'No assistant result found for agent run. The agent may not have output the component code directly.',
+    );
+  }
 
   const codeBlockRegex = /```(?:tsx|typescript|ts|jsx|js)?\r?\n([\s\S]*?)```/g;
 
@@ -41,28 +44,24 @@ export const extractTsxFromConversation = async (
     );
   };
 
-  for (const message of assistantMessages) {
-    const blocks = [...message.text.matchAll(codeBlockRegex)];
-    for (let i = blocks.length - 1; i >= 0; i--) {
-      const candidate = (blocks[i][1] ?? '').trim();
-      if (!candidate) {
-        continue;
-      }
-      if (looksLikeExpectedComponent(candidate)) {
-        console.log(`✅ Extracted TSX from fenced block (${candidate.length} chars)`);
-        return candidate;
-      }
+  const blocks = [...resultText.matchAll(codeBlockRegex)];
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const candidate = (blocks[i][1] ?? '').trim();
+    if (!candidate) {
+      continue;
     }
-
-    // Fallback: sometimes the agent responds with plain code (no fences).
-    const plainCandidate = message.text.trim();
-    if (looksLikeExpectedComponent(plainCandidate)) {
-      console.log(`✅ Extracted TSX from plain assistant message (${plainCandidate.length} chars)`);
-      return plainCandidate;
+    if (looksLikeExpectedComponent(candidate)) {
+      console.log(`✅ Extracted TSX from fenced block (${candidate.length} chars)`);
+      return candidate;
     }
   }
 
+  if (looksLikeExpectedComponent(resultText)) {
+    console.log(`✅ Extracted TSX from plain run result (${resultText.length} chars)`);
+    return resultText;
+  }
+
   throw new Error(
-    'No TSX code block found in agent conversation. The agent may not have output the component code directly.',
+    'No TSX code block found in agent run result. The agent may not have output the component code directly.',
   );
 };

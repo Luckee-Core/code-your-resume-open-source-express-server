@@ -20,8 +20,11 @@ Default URL **http://127.0.0.1:3053**. Apply Supabase SQL from `docs/` before CR
 
 ```bash
 curl http://127.0.0.1:3053/api/health
+curl -s http://127.0.0.1:3053/api-docs.json | head -c 200
 CRM_BASE=http://127.0.0.1:3053 npm run verify:crm
 ```
+
+Human-readable API reference: start this server and open **http://localhost:3000/docs/api** in the web app (catalog fetched from `GET /api-docs.json`).
 
 ## Supabase runbook
 

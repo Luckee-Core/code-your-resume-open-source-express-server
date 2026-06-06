@@ -1,50 +1,59 @@
-import type { CursorApiClient, Agent } from './cursor-api-client';
+import type { CursorApiClient, AgentRun } from './cursor-api-client';
+
+const TERMINAL_STATUSES = new Set<AgentRun['status']>(['FINISHED', 'ERROR', 'CANCELLED', 'EXPIRED']);
 
 /**
- * Poll a Cursor agent until it reaches a terminal state or times out.
+ * Poll a Cursor agent run until it reaches a terminal state or times out.
  *
  * @param cursorClient - Authenticated Cursor API client
- * @param agentId - Agent ID to poll
- * @param maxWaitMs - Maximum wait time in milliseconds (default: 10 minutes)
- * @param pollIntervalMs - Interval between polls in milliseconds (default: 30 seconds)
- * @returns Final agent state when FINISHED
- * @throws Error if agent fails, is stopped, or times out
+ * @param agentId - Durable agent ID
+ * @param runId - Run ID from launchAgent
+ * @param maxWaitMs - Maximum wait time in milliseconds (default: 20 minutes)
+ * @param pollIntervalMs - Interval between polls in milliseconds (default: 15 seconds)
+ * @returns Final run state when FINISHED
+ * @throws Error if run fails, is cancelled, or times out
  */
 export const pollAgentStatus = async (
   cursorClient: CursorApiClient,
   agentId: string,
+  runId: string,
   maxWaitMs: number = Number(process.env.CURSOR_AGENT_MAX_WAIT_MS || 20 * 60 * 1000),
   pollIntervalMs: number = Number(process.env.CURSOR_AGENT_POLL_INTERVAL_MS || 15000),
-): Promise<Agent> => {
+): Promise<AgentRun> => {
   const startTime = Date.now();
 
   while (true) {
-    const agent = await cursorClient.getAgent(agentId);
+    const run = await cursorClient.getRun(agentId, runId);
 
-    console.log(`🔍 Agent ${agentId} status: ${agent.status}`);
+    console.log(`🔍 Agent ${agentId} run ${runId} status: ${run.status}`);
 
-    if (agent.status === 'FINISHED') {
-      console.log(`✅ Agent ${agentId} finished successfully`);
-      return agent;
+    if (run.status === 'FINISHED') {
+      console.log(`✅ Agent ${agentId} run ${runId} finished successfully`);
+      return run;
     }
 
-    if (agent.status === 'FAILED') {
-      const errorMsg = agent.summary || 'Agent failed without error message';
-      console.error(`❌ Agent ${agentId} failed: ${errorMsg}`);
+    if (run.status === 'ERROR') {
+      const errorMsg = run.result || 'Agent run failed without error message';
+      console.error(`❌ Agent ${agentId} run ${runId} failed: ${errorMsg}`);
       throw new Error(`Code generation failed: ${errorMsg}`);
     }
 
-    if (agent.status === 'STOPPED') {
-      console.error(`⏸️ Agent ${agentId} was stopped`);
-      throw new Error('Code generation was stopped');
+    if (run.status === 'CANCELLED' || run.status === 'EXPIRED') {
+      console.error(`⏸️ Agent ${agentId} run ${runId} ended with status ${run.status}`);
+      throw new Error(`Code generation was ${run.status.toLowerCase()}`);
     }
 
     const elapsed = Date.now() - startTime;
     if (elapsed >= maxWaitMs) {
-      console.error(`⏱️ Agent ${agentId} timed out after ${elapsed}ms`);
+      console.error(`⏱️ Agent ${agentId} run ${runId} timed out after ${elapsed}ms`);
       throw new Error(`Code generation timed out after ${Math.round(elapsed / 1000)}s`);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    if (!TERMINAL_STATUSES.has(run.status)) {
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+      continue;
+    }
+
+    throw new Error(`Code generation ended unexpectedly with status ${run.status}`);
   }
 };
