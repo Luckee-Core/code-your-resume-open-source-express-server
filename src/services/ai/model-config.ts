@@ -44,6 +44,12 @@ const CONFIGS: Record<string, ModelConfig> = {
     temperature: 0.28,
     maxTokens: 8192,
   },
+  /** Job newsletter email → structured job posting rows for CRM ingest. */
+  job_newsletter_ingest: {
+    model: HAIKU,
+    temperature: 0.2,
+    maxTokens: 8192,
+  },
 };
 
 /**

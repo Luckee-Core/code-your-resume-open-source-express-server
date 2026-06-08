@@ -40,6 +40,11 @@ import { createUserBackgroundStudioRouter } from "./src/api/user-background-stud
 app.use("/api/user-background-studio", requireCrmApiSecretWhenConfigured);
 app.use("/api/user-background-studio", createUserBackgroundStudioRouter());
 
+// Job newsletter ingest — forwarded job digests from email-manager
+import { createJobNewsletterIngestRouter } from "./src/api/job-newsletter-ingest/router";
+app.use("/api/job-newsletter-ingest", requireCrmApiSecretWhenConfigured);
+app.use("/api/job-newsletter-ingest", createJobNewsletterIngestRouter());
+
 // API documentation catalog (metadata only — no CRM secret)
 import { createApiDocsRouter } from "./src/services/api-docs";
 app.use(createApiDocsRouter());

@@ -16,6 +16,7 @@ import { createJobQuestionAnswersRouter } from "./job-question-answers/router";
 import { createThunkErrorsRouter } from "../../data/thunk-errors";
 import { createUiErrorsRouter } from "../../data/ui-errors";
 import { createApiErrorsRouter } from "../../data/api-errors";
+import { createJobNewsletterSourcesRouter } from "./job-newsletter-sources/router";
 
 /**
  * Aggregates CRM action routes under `/api/data`.
@@ -39,5 +40,6 @@ export const createApiDataRouter = (): Router => {
   router.use("/thunk-errors", createThunkErrorsRouter());
   router.use("/ui-errors", createUiErrorsRouter());
   router.use("/api-errors", createApiErrorsRouter());
+  router.use("/job-newsletter-sources", createJobNewsletterSourcesRouter());
   return router;
 };
