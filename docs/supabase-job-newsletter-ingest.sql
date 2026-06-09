@@ -2,7 +2,7 @@
 -- Code Your Resume — job newsletter email ingest
 -- =============================================================================
 -- Prerequisite: run docs/crm-postgres-schema.sql first (companies + jobs tables).
--- Forwarded emails from email-manager are matched to job_newsletter_sources by
+-- code-your-resume pulls fetched emails from email-manager; sender_email matches
 -- sender_email; Anthropic parses job postings using parse_instructions per row.
 --
 -- Run in your code-your-resume Supabase project SQL editor.

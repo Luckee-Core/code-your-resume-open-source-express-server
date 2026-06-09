@@ -40,7 +40,7 @@ import { createUserBackgroundStudioRouter } from "./src/api/user-background-stud
 app.use("/api/user-background-studio", requireCrmApiSecretWhenConfigured);
 app.use("/api/user-background-studio", createUserBackgroundStudioRouter());
 
-// Job newsletter ingest — forwarded job digests from email-manager
+// Job newsletter ingest — pull from email-manager, AI parse into CRM jobs
 import { createJobNewsletterIngestRouter } from "./src/api/job-newsletter-ingest/router";
 app.use("/api/job-newsletter-ingest", requireCrmApiSecretWhenConfigured);
 app.use("/api/job-newsletter-ingest", createJobNewsletterIngestRouter());
