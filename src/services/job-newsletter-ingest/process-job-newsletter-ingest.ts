@@ -1,8 +1,11 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createCompanyInStore, createJobInStore } from '../../data/crm';
 import { findCompanyByNameFromSupabase } from '../../data/crm/supabase/find-company-by-name-from-supabase';
 import { findJobByUrlFromSupabase } from '../../data/crm/supabase/find-job-by-url-from-supabase';
 import { requireCrmSupabaseClient } from '../../data/crm/require-crm-supabase-client';
 import { updateJobInStore } from '../../data/crm/update-job-in-store';
+import { createJobNewsletterIngestAiExchange } from '../../data/job-newsletter-ingest-ai-exchange';
+import { getActiveJobNewsletterIngestAiPrompt } from '../../data/job-newsletter-ingest-ai-prompt';
 import { getJobNewsletterSourceBySenderEmail } from '../../data/job-newsletter-sources';
 import { parseNewsletterEmailWithAi } from './parse-newsletter-email-with-ai';
 import type {
@@ -15,6 +18,7 @@ import type {
 
 export type ProcessJobNewsletterIngestInput = {
   emails: InboundNewsletterEmail[];
+  runId?: string | null;
 };
 
 const buildJobDescription = (listing: ParsedNewsletterJobListing): string => {
@@ -99,15 +103,67 @@ const ingestListing = async (
   };
 };
 
+type LogExchangeParams = {
+  sourceId: string;
+  runId: string | null | undefined;
+  gmailMessageId: string;
+  promptId: string | null;
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  status: 'completed' | 'failed' | 'skipped';
+  contextLabel?: string | null;
+  errorMessage?: string | null;
+};
+
+/**
+ * Persist an AI exchange row for newsletter parse token tracking.
+ */
+const logExchange = async (
+  supabase: SupabaseClient,
+  params: LogExchangeParams,
+): Promise<void> => {
+  try {
+    await createJobNewsletterIngestAiExchange(supabase, {
+      source_id: params.sourceId,
+      run_id: params.runId ?? null,
+      gmail_message_id: params.gmailMessageId,
+      prompt_id: params.promptId,
+      model: params.model,
+      input_tokens: params.inputTokens,
+      output_tokens: params.outputTokens,
+      status: params.status,
+      context_label: params.contextLabel ?? null,
+      error_message: params.errorMessage ?? null,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'logExchange failed';
+    console.error('❌ logExchange:', message);
+  }
+};
+
 /**
  * Match forwarded emails to configured newsletter sources and ingest parsed job postings into CRM.
  */
 export const processJobNewsletterIngest = async (
   input: ProcessJobNewsletterIngestInput,
 ): Promise<JobNewsletterIngestResult> => {
-  console.log('🚀 processJobNewsletterIngest', { emailCount: input.emails.length });
+  console.log('🚀 processJobNewsletterIngest', {
+    emailCount: input.emails.length,
+    runId: input.runId ?? null,
+  });
 
   const supabase = requireCrmSupabaseClient();
+  const activePrompt = await getActiveJobNewsletterIngestAiPrompt(supabase);
+  const systemPrompt = activePrompt?.system_prompt?.trim() ?? '';
+  const activePromptId = activePrompt?.id ?? null;
+
+  if (!systemPrompt) {
+    throw new Error(
+      'No active job_newsletter_ingest_ai_prompt row. Run docs/supabase-crm-ai-prompts-migration.sql in Supabase.',
+    );
+  }
+
   const counters = {
     jobsCreated: 0,
     jobsSkipped: 0,
@@ -175,15 +231,32 @@ export const processJobNewsletterIngest = async (
         ? 'text'
         : 'none';
 
+    const contextLabel = email.subject?.trim() || email.gmailMessageId;
+
     const parseOutcome = await parseNewsletterEmailWithAi({
       sourceName: source.name,
       parseInstructions: source.parse_instructions,
       subject: email.subject,
       bodyHtml: email.bodyHtml,
       bodyText: email.bodyText,
+      systemPrompt,
+      promptId: activePromptId,
     });
 
     if (parseOutcome.kind === 'skipped') {
+      await logExchange(supabase, {
+        sourceId: source.id,
+        runId: input.runId,
+        gmailMessageId: email.gmailMessageId,
+        promptId: activePromptId,
+        model: null,
+        inputTokens: null,
+        outputTokens: null,
+        status: 'skipped',
+        contextLabel,
+        errorMessage: 'ANTHROPIC_API_KEY is not configured',
+      });
+
       emailResults.push({
         gmailMessageId: email.gmailMessageId,
         status: 'parse_error',
@@ -198,6 +271,19 @@ export const processJobNewsletterIngest = async (
     }
 
     if (parseOutcome.kind === 'error') {
+      await logExchange(supabase, {
+        sourceId: source.id,
+        runId: input.runId,
+        gmailMessageId: email.gmailMessageId,
+        promptId: parseOutcome.promptId ?? activePromptId,
+        model: parseOutcome.model ?? null,
+        inputTokens: null,
+        outputTokens: null,
+        status: 'failed',
+        contextLabel,
+        errorMessage: parseOutcome.message,
+      });
+
       emailResults.push({
         gmailMessageId: email.gmailMessageId,
         status: 'parse_error',
@@ -210,6 +296,18 @@ export const processJobNewsletterIngest = async (
       });
       continue;
     }
+
+    await logExchange(supabase, {
+      sourceId: source.id,
+      runId: input.runId,
+      gmailMessageId: email.gmailMessageId,
+      promptId: parseOutcome.promptId ?? activePromptId,
+      model: parseOutcome.model,
+      inputTokens: parseOutcome.inputTokens,
+      outputTokens: parseOutcome.outputTokens,
+      status: 'completed',
+      contextLabel,
+    });
 
     listingsFound += parseOutcome.jobs.length;
     const jobs: JobNewsletterIngestJobResult[] = [];

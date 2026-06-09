@@ -3,11 +3,13 @@ import { processJobNewslettersFromEmailManager } from '../../../services/job-new
 
 type Body = {
   syncTaskId?: unknown;
+  senderFilter?: unknown;
+  senderEmail?: unknown;
 };
 
 /**
  * POST /api/job-newsletter-ingest/process-from-email-manager
- * Pull fetched emails from email-manager, AI-parse, create CRM jobs.
+ * Sync Gmail via email-manager, pull fetched emails, AI-parse, create CRM jobs.
  */
 export const handleProcessFromEmailManager = async (
   req: Request,
@@ -21,8 +23,15 @@ export const handleProcessFromEmailManager = async (
       typeof body.syncTaskId === 'string' && body.syncTaskId.trim()
         ? body.syncTaskId.trim()
         : undefined;
+    const senderRaw =
+      typeof body.senderFilter === 'string' && body.senderFilter.trim()
+        ? body.senderFilter
+        : typeof body.senderEmail === 'string' && body.senderEmail.trim()
+          ? body.senderEmail
+          : undefined;
+    const senderFilter = senderRaw?.trim();
 
-    const data = await processJobNewslettersFromEmailManager({ syncTaskId });
+    const data = await processJobNewslettersFromEmailManager({ syncTaskId, senderFilter });
 
     console.log('📤 POST /api/job-newsletter-ingest/process-from-email-manager');
     res.status(200).json({ success: true, data });

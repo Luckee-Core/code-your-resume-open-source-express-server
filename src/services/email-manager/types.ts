@@ -1,3 +1,28 @@
+/** Row from email-manager GET /api/data/email-sync-tasks */
+export type EmailManagerSyncTask = {
+  id: string;
+  name: string | null;
+  mailbox_email: string;
+  sender_filter: string;
+  lookback_hours: number;
+  schedule_interval_hours: number;
+  enabled: boolean;
+  last_run_at: string | null;
+  gmail_connection_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Result from email-manager POST /api/data/email-sync-tasks/:id/run */
+export type EmailManagerSyncTaskRunResult = {
+  syncTaskId: string;
+  syncRunId: string;
+  status: 'completed' | 'failed';
+  messagesFound: number;
+  messagesStored: number;
+  errorMessage?: string;
+};
+
 /** Row from email-manager GET /api/data/fetched-emails */
 export type EmailManagerFetchedEmail = {
   id: string;

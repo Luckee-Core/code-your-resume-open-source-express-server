@@ -13,7 +13,9 @@ import {
   insertTechnicalSkillsSuggestionsBulk,
 } from '../../data/technical-skills';
 import { callAI } from './call-ai';
-import { buildTechnicalSkillsCoachSystemPrompt, buildTechnicalSkillsCoachUserPayload } from './buildTechnicalSkillsCoachPrompt';
+import { CRM_AI_FLOW_PROMPT_FLOWS } from '../../constants/crm-ai-flow-prompt-flows';
+import { loadCrmCoachSystemPrompt } from '../../utils/ai/load-crm-coach-system-prompt';
+import { buildTechnicalSkillsCoachUserPayload } from './buildTechnicalSkillsCoachPrompt';
 import {
   parseTechnicalSkillsCoachJson,
   type TechnicalSkillsCoachAiPayload,
@@ -160,7 +162,10 @@ export const processTechnicalSkillsChat = async (
       return;
     }
 
-    const systemPrompt = buildTechnicalSkillsCoachSystemPrompt();
+    const systemPrompt = await loadCrmCoachSystemPrompt(
+      supabase,
+      CRM_AI_FLOW_PROMPT_FLOWS.TECHNICAL_SKILLS,
+    );
     const userPayload = buildTechnicalSkillsCoachUserPayload({
       currentSkills,
       recentChat,

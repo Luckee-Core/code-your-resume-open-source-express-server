@@ -38,6 +38,12 @@ export const runJobListingImport = async (input: {
   });
 
   if (!scrapeResult.ok) {
+    console.warn("⚠️ runJobListingImport: scrape failed", {
+      jobId: input.job.id,
+      statusCode: scrapeResult.statusCode,
+      error: scrapeResult.error,
+      scrapeRunId: scrapeResult.scrapeRunId,
+    });
     return {
       ok: false,
       statusCode: scrapeResult.statusCode,
@@ -47,6 +53,13 @@ export const runJobListingImport = async (input: {
   }
 
   const { scrapeRunId, cappedPlain } = scrapeResult;
+
+  console.log("📊 runJobListingImport: scrape ok, starting AI extract", {
+    jobId: input.job.id,
+    scrapeRunId,
+    httpStatus: scrapeResult.httpStatus,
+    cappedPlainChars: cappedPlain.length,
+  });
 
   const ledgerResult = await persistJobListingAiLedger({
     jobId: input.job.id,
@@ -105,7 +118,11 @@ export const runJobListingImport = async (input: {
       scrapeRunId,
       exchangeId,
       titleUpdated: Boolean(title),
+      savedTitle: job.title,
       descriptionChars: (job.description ?? "").length,
+      responsibilities: responsibilities.length,
+      requirements: requirements.length,
+      niceToHaves: niceToHaves.length,
     });
 
     return { ok: true, job, scrapeRunId, exchangeId };

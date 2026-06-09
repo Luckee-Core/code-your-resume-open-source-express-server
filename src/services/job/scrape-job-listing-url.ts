@@ -75,11 +75,30 @@ export const scrapeJobListingUrl = async (params: {
     });
   }
 
-  const plain = htmlJobListingToPlainText(fetched.bodyText);
+  const plain =
+    fetched.fetchMethod === "playwright"
+      ? fetched.bodyText.replace(/\s+/g, " ").trim()
+      : htmlJobListingToPlainText(fetched.bodyText);
   const cappedPlain =
     plain.length > JOB_LISTING_MAX_PLAINTEXT_CHARS
       ? plain.slice(0, JOB_LISTING_MAX_PLAINTEXT_CHARS)
       : plain;
+
+  const plainLower = cappedPlain.toLowerCase();
+  const looksUnavailable =
+    plainLower.includes("no longer available") ||
+    plainLower.includes("position has been filled") ||
+    plainLower.includes("job posting is closed");
+
+  console.log("📊 scrapeJobListingUrl: plain text extracted", {
+    jobId,
+    scrapeRunId,
+    fetchMethod: fetched.fetchMethod,
+    finalUrl: fetched.finalUrl?.slice(0, 200) ?? null,
+    plainChars: plain.length,
+    cappedPlainChars: cappedPlain.length,
+    looksUnavailable,
+  });
 
   if (!cappedPlain.trim()) {
     return failScrape({

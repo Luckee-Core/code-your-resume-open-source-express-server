@@ -3,16 +3,18 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
-import { buildCoverLetterPrompt } from './build-cover-letter-prompt';
+import { CRM_AI_FLOW_PROMPT_FLOWS } from '../../constants/crm-ai-flow-prompt-flows';
+import { loadCrmGenerationPromptTemplate } from '../../utils/ai/load-crm-generation-prompt-template';
+import { buildCoverLetterPromptFromTemplate } from './build-cover-letter-prompt';
 import {
-  insertResumeTsxRequest,
-  insertResumeTsxExchange,
-  insertResumeTsxResponse,
-  updateResumeTsxExchangeCompleted,
-  updateResumeTsxExchangeFailed,
-  updateResumeTsxRequestCompleted,
-  updateResumeTsxRequestFailed,
-} from '../../data/resume-tsx-code-generation';
+  insertCoverLetterRequest,
+  insertCoverLetterExchange,
+  insertCoverLetterResponse,
+  updateCoverLetterExchangeCompleted,
+  updateCoverLetterExchangeFailed,
+  updateCoverLetterRequestCompleted,
+  updateCoverLetterRequestFailed,
+} from '../../data/cover-letter-generation';
 
 export type RunCoverLetterGenerationInput = {
   jobId: string;
@@ -81,7 +83,11 @@ export const runCoverLetterGeneration = async (
   let exchangeId: string | undefined;
 
   try {
-    const prompt = buildCoverLetterPrompt({
+    const template = await loadCrmGenerationPromptTemplate(
+      supabase,
+      CRM_AI_FLOW_PROMPT_FLOWS.COVER_LETTER_GENERATION,
+    );
+    const prompt = buildCoverLetterPromptFromTemplate(template, {
       jobId,
       jobTitle,
       companyName,
@@ -94,8 +100,9 @@ export const runCoverLetterGeneration = async (
       skills,
     });
 
-    await insertResumeTsxRequest(supabase, {
+    await insertCoverLetterRequest(supabase, {
       id: requestId,
+      jobId,
       skills,
       canvasWidthPx,
       canvasHeightPx,
@@ -113,8 +120,9 @@ export const runCoverLetterGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertResumeTsxExchange(supabase, {
+    await insertCoverLetterExchange(supabase, {
       id: exchangeId,
+      jobId,
       requestId,
       agentId: agent.id,
     });
@@ -126,25 +134,23 @@ export const runCoverLetterGeneration = async (
     });
 
     const responseId = randomUUID();
-    await insertResumeTsxResponse(supabase, {
+    await insertCoverLetterResponse(supabase, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
     });
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
-    const apiCallsCount = 1 + Math.max(1, Math.ceil(durationSeconds / 30));
-    const costEstimate = apiCallsCount * 0.01;
 
-    await updateResumeTsxExchangeCompleted(supabase, {
+    await updateCoverLetterExchangeCompleted(supabase, {
       id: exchangeId,
       responseId,
-      durationSeconds,
-      apiCallsCount,
-      costEstimate,
+      inputTokens: 0,
+      outputTokens: 0,
+      modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
     });
 
-    await updateResumeTsxRequestCompleted(supabase, requestId);
+    await updateCoverLetterRequestCompleted(supabase, requestId);
 
     console.log(`✅ Cover letter generation complete (${durationSeconds}s)`);
 
@@ -154,9 +160,9 @@ export const runCoverLetterGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateResumeTsxExchangeFailed(supabase, exchangeId, err.message);
+        await updateCoverLetterExchangeFailed(supabase, exchangeId, err.message);
       }
-      await updateResumeTsxRequestFailed(supabase, requestId);
+      await updateCoverLetterRequestFailed(supabase, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

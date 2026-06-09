@@ -17,6 +17,12 @@ import { createThunkErrorsRouter } from "../../data/thunk-errors";
 import { createUiErrorsRouter } from "../../data/ui-errors";
 import { createApiErrorsRouter } from "../../data/api-errors";
 import { createJobNewsletterSourcesRouter } from "./job-newsletter-sources/router";
+import { createJobNewsletterIngestRunsRouter } from "./job-newsletter-ingest-runs/router";
+import { createJobNewsletterIngestAiPromptsRouter } from "./job-newsletter-ingest-ai-prompts/router";
+import { createJobNewsletterIngestAiCostsRouter } from "./job-newsletter-ingest-ai-costs/router";
+import { createExchangeRegistryRouter } from "./exchange-registry/router";
+import { createAiPromptsRouter } from "./ai-prompts/router";
+import { createJobListingAiPromptsRouter } from "./job-listing-ai-prompts/router";
 
 /**
  * Aggregates CRM action routes under `/api/data`.
@@ -41,5 +47,11 @@ export const createApiDataRouter = (): Router => {
   router.use("/ui-errors", createUiErrorsRouter());
   router.use("/api-errors", createApiErrorsRouter());
   router.use("/job-newsletter-sources", createJobNewsletterSourcesRouter());
+  router.use("/job-newsletter-ingest-runs", createJobNewsletterIngestRunsRouter());
+  router.use("/job-newsletter-ingest-ai-prompts", createJobNewsletterIngestAiPromptsRouter());
+  router.use("/job-newsletter-ingest-ai-costs", createJobNewsletterIngestAiCostsRouter());
+  router.use("/exchange-registry", createExchangeRegistryRouter());
+  router.use("/ai-prompts", createAiPromptsRouter());
+  router.use("/job-listing-ai-prompts", createJobListingAiPromptsRouter());
   return router;
 };

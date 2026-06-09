@@ -5,10 +5,12 @@ import type {
   JobListingAiResponse,
   JobListingStructuredBulletRow,
 } from "../../data/job-listing/types";
+import { getActiveJobListingAiPrompt } from "../../data/job-listing-ai-prompt";
+import { getSupabaseCrmMirrorClient } from "../supabase/get-supabase-crm-mirror-client";
+import { requireActivePromptText } from "../../utils/ai/require-active-prompt-text";
 import {
   extractJobListingWithAnthropic,
   getAnthropicJobListingModel,
-  JOB_LISTING_EXTRACT_SYSTEM_PROMPT,
 } from "./extract-job-listing-with-anthropic";
 import type { ExtractJobListingHints } from "./extract-job-listing-types";
 import {
@@ -71,21 +73,43 @@ export const persistJobListingAiLedger = async (params: {
     hasTitleHint: Boolean(hints.titleHint?.trim()),
   });
 
-  const outcome = await extractJobListingWithAnthropic(cappedPlain, hints);
+  const mirror = getSupabaseCrmMirrorClient();
+  if (!mirror) {
+    return { ok: false, error: "Supabase CRM mirror client is not configured" };
+  }
+
+  let systemPrompt: string;
+  try {
+    const activePrompt = await getActiveJobListingAiPrompt(mirror);
+    systemPrompt = requireActivePromptText(activePrompt, "job_listing_ai_prompt");
+  } catch (promptErr: unknown) {
+    const msg = promptErr instanceof Error ? promptErr.message : String(promptErr);
+    return { ok: false, error: msg };
+  }
+
+  const outcome = await extractJobListingWithAnthropic(cappedPlain, hints, { systemPrompt });
 
   console.log("🤖 persistJobListingAiLedger: Anthropic outcome", {
     jobId,
     scrapeRunId,
     kind: outcome.kind,
+    ...(outcome.kind === "ok"
+      ? {
+          extractedTitle: outcome.title,
+          descriptionChars: outcome.description.length,
+          responsibilities: outcome.responsibilities.length,
+          requirements: outcome.requirements.length,
+          niceToHaves: outcome.niceToHaves.length,
+        }
+      : {}),
+    ...(outcome.kind === "error" ? { error: outcome.message } : {}),
   });
 
   const requestId = randomUUID();
   const createdAtReq = nowIso();
 
   const systemPromptForLedger =
-    outcome.kind === "ok" || outcome.kind === "error"
-      ? outcome.systemPrompt
-      : JOB_LISTING_EXTRACT_SYSTEM_PROMPT;
+    outcome.kind === "ok" || outcome.kind === "error" ? outcome.systemPrompt : systemPrompt;
   const userMessageForLedger =
     outcome.kind === "ok" || outcome.kind === "error"
       ? outcome.userMessage

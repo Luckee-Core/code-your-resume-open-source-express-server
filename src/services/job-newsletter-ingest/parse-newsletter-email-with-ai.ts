@@ -4,9 +4,6 @@ import type { ParsedNewsletterJobListing } from './types';
 
 const MODEL = getModelConfig('job_newsletter_ingest');
 
-const SYSTEM_PROMPT =
-  'You extract structured job postings from newsletter emails. Reply with ONLY valid JSON (no markdown fences) shaped as: {"jobs":[{"title":string,"companyName":string,"url":string,"description":string,"salary":string|null}]}. Include every distinct job posting found. Use empty string for missing text fields and null for salary when unknown. url must be the application or listing link when present in the email.';
-
 const MAX_FIELD_CHARS = 8000;
 const MAX_JOBS = 100;
 
@@ -46,16 +43,22 @@ export type ParseNewsletterEmailWithAiInput = {
   subject?: string | null;
   bodyHtml?: string | null;
   bodyText?: string | null;
+  systemPrompt: string;
+  promptId?: string | null;
 };
 
 export type ParseNewsletterEmailWithAiOutcome =
   | { kind: 'skipped'; reason: 'no_api_key' }
-  | { kind: 'error'; message: string }
+  | { kind: 'error'; message: string; model?: string; promptId?: string | null }
   | {
       kind: 'ok';
       jobs: ParsedNewsletterJobListing[];
       parseSource: 'html' | 'text';
       rawResponse: string;
+      model: string;
+      promptId: string | null;
+      inputTokens: number | null;
+      outputTokens: number | null;
     };
 
 /**
@@ -73,10 +76,24 @@ export const parseNewsletterEmailWithAi = async (
   const text = input.bodyText?.trim() ?? '';
   const content = html || text;
   if (!content) {
-    return { kind: 'ok', jobs: [], parseSource: html ? 'html' : 'text', rawResponse: '' };
+    return {
+      kind: 'ok',
+      jobs: [],
+      parseSource: html ? 'html' : 'text',
+      rawResponse: '',
+      model: MODEL.model,
+      promptId: input.promptId ?? null,
+      inputTokens: 0,
+      outputTokens: 0,
+    };
   }
 
   const parseSource: 'html' | 'text' = html ? 'html' : 'text';
+  const systemPrompt = input.systemPrompt.trim();
+  if (!systemPrompt) {
+    return { kind: 'error', message: 'Missing newsletter ingest system prompt', promptId: input.promptId ?? null };
+  }
+  const promptId = input.promptId ?? null;
   const userMessage = [
     `Newsletter source: ${input.sourceName}`,
     input.subject ? `Subject: ${input.subject}` : '',
@@ -103,22 +120,33 @@ export const parseNewsletterEmailWithAi = async (
       model: MODEL.model,
       max_tokens: MODEL.maxTokens,
       temperature: MODEL.temperature,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     });
 
     const block = msg.content.find((b) => b.type === 'text');
     const rawResponse = block && block.type === 'text' ? block.text.trim() : '';
+    const inputTokens = msg.usage?.input_tokens ?? null;
+    const outputTokens = msg.usage?.output_tokens ?? null;
 
     const strip = rawResponse.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
     const parsed = JSON.parse(strip) as Record<string, unknown>;
     const jobs = normalizeJobs(parsed.jobs);
 
     console.log('✅ parseNewsletterEmailWithAi', { jobsFound: jobs.length });
-    return { kind: 'ok', jobs, parseSource, rawResponse };
+    return {
+      kind: 'ok',
+      jobs,
+      parseSource,
+      rawResponse,
+      model: MODEL.model,
+      promptId,
+      inputTokens,
+      outputTokens,
+    };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Anthropic parse failed';
     console.error('❌ parseNewsletterEmailWithAi:', message);
-    return { kind: 'error', message };
+    return { kind: 'error', message, model: MODEL.model, promptId };
   }
 };

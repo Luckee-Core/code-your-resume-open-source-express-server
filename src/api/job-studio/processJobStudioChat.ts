@@ -12,7 +12,9 @@ import {
   updateJobStudioRequestCompletion,
 } from "../../data/job-studio";
 import { callAI } from "../technical-skills/call-ai";
-import { buildJobStudioCoachSystemPrompt, buildJobStudioCoachUserPayload } from "./buildJobStudioCoachPrompt";
+import { CRM_AI_FLOW_PROMPT_FLOWS } from "../../constants/crm-ai-flow-prompt-flows";
+import { loadCrmCoachSystemPrompt } from "../../utils/ai/load-crm-coach-system-prompt";
+import { buildJobStudioCoachUserPayload } from "./buildJobStudioCoachPrompt";
 import { loadJobStudioCoachContext, type JobStudioCoachContext } from "./loadJobStudioCoachContext";
 import { parseJobStudioCoachJson } from "./parseJobStudioCoachJson";
 
@@ -151,7 +153,10 @@ export const processJobStudioChat = async (
       return;
     }
 
-    const systemPrompt = buildJobStudioCoachSystemPrompt();
+    const systemPrompt = await loadCrmCoachSystemPrompt(
+      supabase,
+      CRM_AI_FLOW_PROMPT_FLOWS.JOB_STUDIO,
+    );
     const userPayload = buildJobStudioCoachUserPayload({
       context: params.coachContext,
       recentChat,

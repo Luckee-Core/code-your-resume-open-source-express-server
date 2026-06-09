@@ -1,7 +1,9 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { AI_PROMPT_TYPES } from '../../constants/ai-prompt-types';
+import { CRM_AI_FLOW_PROMPT_FLOWS } from '../../constants/crm-ai-flow-prompt-flows';
 import { getActiveAiPromptByUserAndType } from '../../data/ai-prompts/get-active-ai-prompt-by-user-and-type';
 import type { AiPromptRow } from '../../data/ai-prompts/types';
+import { loadCrmCoachSystemPrompt } from '../../utils/ai/load-crm-coach-system-prompt';
 
 const readSystemPromptFromRow = (row: AiPromptRow | null): string | null => {
   if (!row?.content || typeof row.content !== 'object' || Array.isArray(row.content)) {
@@ -16,16 +18,11 @@ const readSystemPromptFromRow = (row: AiPromptRow | null): string | null => {
 };
 
 /**
- * Uses the active `ai_prompts` row for `user_background_studio` when present; otherwise falls back to `builtIn`.
- *
- * @param supabase - Supabase client
- * @param userId - User ID
- * @param builtIn - Function returning the built-in system prompt string
+ * Uses per-user `ai_prompts` when present; otherwise the global `crm_ai_flow_prompt` row.
  */
 export const resolveUserBackgroundStudioSystemPrompt = async (
   supabase: SupabaseClient,
   userId: string,
-  builtIn: () => string,
 ): Promise<string> => {
   try {
     const row = await getActiveAiPromptByUserAndType(
@@ -38,7 +35,8 @@ export const resolveUserBackgroundStudioSystemPrompt = async (
       return fromDb;
     }
   } catch {
-    // ai_prompts table may not exist in this deployment; fall back to built-in
+    // ai_prompts table may not exist in this deployment
   }
-  return builtIn();
+
+  return loadCrmCoachSystemPrompt(supabase, CRM_AI_FLOW_PROMPT_FLOWS.USER_BACKGROUND_STUDIO);
 };

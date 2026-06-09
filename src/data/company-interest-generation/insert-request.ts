@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type InsertResumeTsxRequestInput = {
+export type InsertCompanyInterestRequestInput = {
   id: string;
+  jobId: string;
   skills: string[];
   canvasWidthPx: number;
   canvasHeightPx: number;
@@ -9,17 +10,18 @@ export type InsertResumeTsxRequestInput = {
 };
 
 /**
- * Insert a new resume TSX code generation request record (status: pending).
+ * Insert a new company interest generation request record (status: pending).
  *
  * @param supabase - Supabase service-role client
  * @param input - Request fields
  */
-export const insertResumeTsxRequest = async (
+export const insertCompanyInterestRequest = async (
   supabase: SupabaseClient,
-  input: InsertResumeTsxRequestInput,
+  input: InsertCompanyInterestRequestInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('resume_tsx_code_generation_requests').insert({
+  const { error } = await supabase.from('company_interest_generation_requests').insert({
     id: input.id,
+    job_id: input.jobId,
     skills: input.skills,
     canvas_width_px: input.canvasWidthPx,
     canvas_height_px: input.canvasHeightPx,
@@ -28,7 +30,7 @@ export const insertResumeTsxRequest = async (
   });
 
   if (error) {
-    console.error('❌ insertResumeTsxRequest:', error.message);
-    throw new Error(`Failed to insert request record: ${error.message}`);
+    console.error('❌ insertCompanyInterestRequest:', error.message);
+    throw new Error(`Failed to insert company interest request record: ${error.message}`);
   }
 };

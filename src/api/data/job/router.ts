@@ -7,10 +7,12 @@ import { handleJobUpdate } from "./update";
 import { handleJobDelete } from "./delete";
 import { handleJobImportListing } from "./import-listing";
 import { handleJobImportDescription } from "./import-description";
+import { handleJobListSectionCounts } from "./list-section-counts";
 
 export const createJobApiRouter = (): Router => {
   const router = Router();
   router.get("/list", handleJobList);
+  router.get("/list-section-counts", handleJobListSectionCounts);
   router.get("/get", handleJobGet);
   router.post("/create", handleJobCreate);
   router.post("/create-from-listing-url", handleJobCreateFromListingUrl);

@@ -3,16 +3,18 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
-import { buildCompanyInterestPrompt } from './build-company-interest-prompt';
+import { CRM_AI_FLOW_PROMPT_FLOWS } from '../../constants/crm-ai-flow-prompt-flows';
+import { loadCrmGenerationPromptTemplate } from '../../utils/ai/load-crm-generation-prompt-template';
+import { buildCompanyInterestPromptFromTemplate } from './build-company-interest-prompt';
 import {
-  insertResumeTsxRequest,
-  insertResumeTsxExchange,
-  insertResumeTsxResponse,
-  updateResumeTsxExchangeCompleted,
-  updateResumeTsxExchangeFailed,
-  updateResumeTsxRequestCompleted,
-  updateResumeTsxRequestFailed,
-} from '../../data/resume-tsx-code-generation';
+  insertCompanyInterestRequest,
+  insertCompanyInterestExchange,
+  insertCompanyInterestResponse,
+  updateCompanyInterestExchangeCompleted,
+  updateCompanyInterestExchangeFailed,
+  updateCompanyInterestRequestCompleted,
+  updateCompanyInterestRequestFailed,
+} from '../../data/company-interest-generation';
 
 export type RunCompanyInterestGenerationInput = {
   jobId: string;
@@ -80,7 +82,11 @@ export const runCompanyInterestGeneration = async (
   let exchangeId: string | undefined;
 
   try {
-    const prompt = buildCompanyInterestPrompt({
+    const template = await loadCrmGenerationPromptTemplate(
+      supabase,
+      CRM_AI_FLOW_PROMPT_FLOWS.COMPANY_INTEREST_GENERATION,
+    );
+    const prompt = buildCompanyInterestPromptFromTemplate(template, {
       jobId,
       jobTitle,
       companyName,
@@ -93,8 +99,9 @@ export const runCompanyInterestGeneration = async (
       skills,
     });
 
-    await insertResumeTsxRequest(supabase, {
+    await insertCompanyInterestRequest(supabase, {
       id: requestId,
+      jobId,
       skills,
       canvasWidthPx,
       canvasHeightPx,
@@ -112,8 +119,9 @@ export const runCompanyInterestGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertResumeTsxExchange(supabase, {
+    await insertCompanyInterestExchange(supabase, {
       id: exchangeId,
+      jobId,
       requestId,
       agentId: agent.id,
     });
@@ -125,25 +133,23 @@ export const runCompanyInterestGeneration = async (
     });
 
     const responseId = randomUUID();
-    await insertResumeTsxResponse(supabase, {
+    await insertCompanyInterestResponse(supabase, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
     });
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
-    const apiCallsCount = 1 + Math.max(1, Math.ceil(durationSeconds / 30));
-    const costEstimate = apiCallsCount * 0.01;
 
-    await updateResumeTsxExchangeCompleted(supabase, {
+    await updateCompanyInterestExchangeCompleted(supabase, {
       id: exchangeId,
       responseId,
-      durationSeconds,
-      apiCallsCount,
-      costEstimate,
+      inputTokens: 0,
+      outputTokens: 0,
+      modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
     });
 
-    await updateResumeTsxRequestCompleted(supabase, requestId);
+    await updateCompanyInterestRequestCompleted(supabase, requestId);
 
     console.log(`✅ Company interest generation complete (${durationSeconds}s)`);
 
@@ -153,9 +159,9 @@ export const runCompanyInterestGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateResumeTsxExchangeFailed(supabase, exchangeId, err.message);
+        await updateCompanyInterestExchangeFailed(supabase, exchangeId, err.message);
       }
-      await updateResumeTsxRequestFailed(supabase, requestId);
+      await updateCompanyInterestRequestFailed(supabase, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

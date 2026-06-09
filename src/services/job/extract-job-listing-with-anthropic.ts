@@ -4,9 +4,6 @@ import type { ExtractJobListingHints } from "./extract-job-listing-types";
 
 const JOB_LISTING_MODEL = getModelConfig("job_listing");
 
-export const JOB_LISTING_EXTRACT_SYSTEM_PROMPT =
-  'You extract job posting data. Reply with ONLY valid JSON (no markdown fences) shaped as: {"title": string | null, "description": string, "responsibilities": string[], "requirements": string[], "niceToHaves": string[]}. title: role name or null if unclear. description: readable summary of the role, responsibilities, and requirements. responsibilities: duties and day-to-day work. requirements: required experience, must-have skills, qualifications. niceToHaves: preferred, bonus, or optional skills. Use empty arrays [] for missing sections.';
-
 const MAX_BULLETS_PER_SECTION = 80;
 const MAX_BULLET_CHARS = 2000;
 
@@ -54,10 +51,16 @@ export type ExtractJobListingOutcome =
 export const extractJobListingWithAnthropic = async (
   plainText: string,
   hints: ExtractJobListingHints,
+  options: { systemPrompt: string },
 ): Promise<ExtractJobListingOutcome> => {
   const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) {
     return { kind: "skipped" };
+  }
+
+  const systemPrompt = options.systemPrompt.trim();
+  if (!systemPrompt) {
+    return { kind: "error", message: "Missing job listing system prompt", rawResponse: "", systemPrompt: "", userMessage: "" };
   }
 
   const userMessage = [
@@ -72,12 +75,19 @@ export const extractJobListingWithAnthropic = async (
   const userMessageSent = userMessage.slice(0, 100_000);
   const client = new Anthropic({ apiKey: key });
 
+  console.log("📥 job-listing extract: sending to Anthropic", {
+    model: JOB_LISTING_MODEL.model,
+    plainTextChars: plainText.length,
+    hasCompanyHint: Boolean(hints.companyName?.trim()),
+    hasTitleHint: Boolean(hints.titleHint?.trim()),
+  });
+
   try {
     const msg = await client.messages.create({
       model: JOB_LISTING_MODEL.model,
       max_tokens: JOB_LISTING_MODEL.maxTokens,
       temperature: JOB_LISTING_MODEL.temperature,
-      system: JOB_LISTING_EXTRACT_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: "user", content: userMessageSent }],
     });
 
@@ -121,16 +131,18 @@ export const extractJobListingWithAnthropic = async (
       niceToHaves = normalizeStringArray(parsed.niceToHaves);
 
       console.log("✅ job-listing extract: JSON parsed", {
+        title: title ?? null,
         hasTitleString: Boolean(title),
         descriptionChars: description.length,
         responsibilities: responsibilities.length,
         requirements: requirements.length,
         niceToHaves: niceToHaves.length,
+        rawResponseChars: rawResponse.length,
       });
     } catch (parseErr) {
       description = rawResponse.slice(0, 50_000);
       console.warn("⚠️ job-listing extract: JSON.parse failed, using raw response as description", {
-        rawPreview: rawResponse.slice(0, 240),
+        rawResponseChars: rawResponse.length,
         error: parseErr instanceof Error ? parseErr.message : String(parseErr),
       });
     }
@@ -145,7 +157,7 @@ export const extractJobListingWithAnthropic = async (
       rawResponse,
       usageInputTokens,
       usageOutputTokens,
-      systemPrompt: JOB_LISTING_EXTRACT_SYSTEM_PROMPT,
+      systemPrompt,
       userMessage: userMessageSent,
     };
   } catch (err: unknown) {
@@ -154,7 +166,7 @@ export const extractJobListingWithAnthropic = async (
       kind: "error",
       message,
       rawResponse: "",
-      systemPrompt: JOB_LISTING_EXTRACT_SYSTEM_PROMPT,
+      systemPrompt,
       userMessage: userMessageSent,
     };
   }

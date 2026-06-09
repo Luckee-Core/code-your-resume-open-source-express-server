@@ -15,7 +15,7 @@ import {
 } from '../../data/user-background-studio';
 import { callAI } from './call-ai';
 import { deductCredits } from './deduct-credits';
-import { buildUserBackgroundCoachSystemPrompt, buildUserBackgroundCoachUserPayload } from './buildIcpCoachPrompt';
+import { buildUserBackgroundCoachUserPayload } from './buildIcpCoachPrompt';
 import { resolveUserBackgroundStudioSystemPrompt } from './resolve-user-background-studio-system-prompt';
 import {
   parseUserBackgroundCoachJson,
@@ -190,7 +190,7 @@ export const processUserBackgroundChat = async (
       return;
     }
 
-    const systemPrompt = await resolveUserBackgroundStudioSystemPrompt(supabase, userId, buildUserBackgroundCoachSystemPrompt);
+    const systemPrompt = await resolveUserBackgroundStudioSystemPrompt(supabase, userId);
     const userPayload = buildUserBackgroundCoachUserPayload({
       currentSegmentItems,
       recentChat,

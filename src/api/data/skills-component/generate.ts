@@ -1,14 +1,59 @@
 import type { Request, Response } from "express";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
 import { runSkillsComponentGeneration } from "../../../services/skills-component-generation";
 import {
   assertHasActiveSkills,
   JobGenerationContextError,
   loadJobGenerationContext,
+  type JobGenerationContext,
 } from "../../../services/generation";
+import {
+  persistGeneratedJobGraphic,
+  scheduleBackgroundJobGraphicGeneration,
+} from "../../../services/job-graphic-generation";
 
 /**
- * POST /api/data/skills-component/generate — generate TSX skills component for a job.
+ * Runs Cursor skills generation and persists the graphic on Express (client-independent).
+ */
+const runSkillsComponentGenerationInBackground = (
+  supabase: SupabaseClient,
+  context: JobGenerationContext,
+): void => {
+  const label = `skills-component job ${context.jobId}`;
+
+  scheduleBackgroundJobGraphicGeneration(label, async () => {
+    console.log(`🚀 Background ${label} — starting Cursor agent`);
+
+    const result = await runSkillsComponentGeneration(supabase, {
+      jobId: context.jobId,
+      jobTitle: context.jobTitle,
+      companyName: context.companyName,
+      responsibilities: context.responsibilities,
+      requirements: context.requirements,
+      niceToHaves: context.niceToHaves,
+      skills: context.skillPromptLines,
+      professionalBackgroundSegments: context.professionalBackgroundSegments,
+    });
+
+    const graphic = await persistGeneratedJobGraphic(supabase, {
+      kind: "resume",
+      jobId: context.jobId,
+      jobTitle: context.jobTitle,
+      tsx: result.tsx,
+      requestId: result.requestId,
+      exchangeId: result.exchangeId,
+    });
+
+    console.log(
+      `✅ Background ${label} — graphic ${graphic.id} persisted (${graphic.title})`,
+    );
+  });
+};
+
+/**
+ * POST /api/data/skills-component/generate — queue resume TSX generation for a job.
+ * Returns 202 immediately; Cursor agent + Supabase graphic write run on Express.
  */
 export const handleSkillsComponentGenerate = async (
   req: Request,
@@ -35,19 +80,10 @@ export const handleSkillsComponentGenerate = async (
       `📥 POST /api/data/skills-component/generate — job: ${context.jobTitle} (${context.jobId}), skills: ${context.skillPromptLines.length}`,
     );
 
-    const result = await runSkillsComponentGeneration(supabase, {
-      jobId: context.jobId,
-      jobTitle: context.jobTitle,
-      companyName: context.companyName,
-      responsibilities: context.responsibilities,
-      requirements: context.requirements,
-      niceToHaves: context.niceToHaves,
-      skills: context.skillPromptLines,
-      professionalBackgroundSegments: context.professionalBackgroundSegments,
-    });
+    runSkillsComponentGenerationInBackground(supabase, context);
 
-    console.log("📤 200 POST /api/data/skills-component/generate");
-    return res.status(200).json({ success: true, tsx: result.tsx });
+    console.log(`📤 202 POST /api/data/skills-component/generate — queued job ${context.jobId}`);
+    return res.status(202).json({ success: true, accepted: true, jobId: context.jobId });
   } catch (error: unknown) {
     if (error instanceof JobGenerationContextError) {
       return res.status(error.statusCode).json({ success: false, error: error.message });

@@ -3,19 +3,21 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
-import { buildSkillsComponentPrompt } from './build-skills-component-prompt';
+import { CRM_AI_FLOW_PROMPT_FLOWS } from '../../constants/crm-ai-flow-prompt-flows';
+import { loadCrmGenerationPromptTemplate } from '../../utils/ai/load-crm-generation-prompt-template';
+import { buildSkillsComponentPromptFromTemplate } from './build-skills-component-prompt';
 import {
-  insertResumeTsxRequest,
-  insertResumeTsxExchange,
-  insertResumeTsxResponse,
-  updateResumeTsxExchangeCompleted,
-  updateResumeTsxExchangeFailed,
-  updateResumeTsxRequestCompleted,
-  updateResumeTsxRequestFailed,
-} from '../../data/resume-tsx-code-generation';
+  insertSkillsComponentRequest,
+  insertSkillsComponentExchange,
+  insertSkillsComponentResponse,
+  updateSkillsComponentExchangeCompleted,
+  updateSkillsComponentExchangeFailed,
+  updateSkillsComponentRequestCompleted,
+  updateSkillsComponentRequestFailed,
+} from '../../data/skills-component-generation';
 
 export type RunSkillsComponentGenerationInput = {
-  jobId?: string;
+  jobId: string;
   jobTitle: string;
   companyName?: string;
   responsibilities: string[];
@@ -90,8 +92,12 @@ export const runSkillsComponentGeneration = async (
   let exchangeId: string | undefined;
 
   try {
-    const prompt = buildSkillsComponentPrompt({
-      jobId: jobId?.trim() || 'unknown',
+    const template = await loadCrmGenerationPromptTemplate(
+      supabase,
+      CRM_AI_FLOW_PROMPT_FLOWS.SKILLS_COMPONENT_GENERATION,
+    );
+    const prompt = buildSkillsComponentPromptFromTemplate(template, {
+      jobId: jobId.trim(),
       jobTitle,
       companyName,
       responsibilities,
@@ -103,8 +109,9 @@ export const runSkillsComponentGeneration = async (
       professionalBackgroundSegments,
     });
 
-    await insertResumeTsxRequest(supabase, {
+    await insertSkillsComponentRequest(supabase, {
       id: requestId,
+      jobId,
       skills,
       canvasWidthPx,
       canvasHeightPx,
@@ -112,7 +119,7 @@ export const runSkillsComponentGeneration = async (
     });
 
     console.log(
-      `🚀 Launching Cursor agent for skills${jobId ? ` (job ${jobId})` : ''}: ${skills.join(', ')}`,
+      `🚀 Launching Cursor agent for skills (job ${jobId}): ${skills.join(', ')}`,
     );
 
     const agent = await cursorClient.launchAgent({
@@ -124,8 +131,9 @@ export const runSkillsComponentGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertResumeTsxExchange(supabase, {
+    await insertSkillsComponentExchange(supabase, {
       id: exchangeId,
+      jobId,
       requestId,
       agentId: agent.id,
     });
@@ -135,25 +143,23 @@ export const runSkillsComponentGeneration = async (
     const tsx = await extractTsxFromConversation(cursorClient, agent.id, agent.runId);
 
     const responseId = randomUUID();
-    await insertResumeTsxResponse(supabase, {
+    await insertSkillsComponentResponse(supabase, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
     });
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
-    const apiCallsCount = 1 + Math.max(1, Math.ceil(durationSeconds / 30));
-    const costEstimate = apiCallsCount * 0.01;
 
-    await updateResumeTsxExchangeCompleted(supabase, {
+    await updateSkillsComponentExchangeCompleted(supabase, {
       id: exchangeId,
       responseId,
-      durationSeconds,
-      apiCallsCount,
-      costEstimate,
+      inputTokens: 0,
+      outputTokens: 0,
+      modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
     });
 
-    await updateResumeTsxRequestCompleted(supabase, requestId);
+    await updateSkillsComponentRequestCompleted(supabase, requestId);
 
     console.log(`✅ Skills component generation complete (${durationSeconds}s)`);
 
@@ -163,9 +169,9 @@ export const runSkillsComponentGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateResumeTsxExchangeFailed(supabase, exchangeId, err.message);
+        await updateSkillsComponentExchangeFailed(supabase, exchangeId, err.message);
       }
-      await updateResumeTsxRequestFailed(supabase, requestId);
+      await updateSkillsComponentRequestFailed(supabase, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

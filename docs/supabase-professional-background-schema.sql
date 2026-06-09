@@ -1,5 +1,5 @@
 -- Professional Background Studio — single-tenant narrative segments (education, bio, voice, portfolio).
--- Run in the same Supabase project as technical_skills / resume_tsx_code_generation.
+-- Run in the same Supabase project as technical_skills / Cursor generation ledgers.
 
 CREATE TABLE IF NOT EXISTS professional_background (
   id TEXT PRIMARY KEY DEFAULT 'default' CHECK (id = 'default'),
