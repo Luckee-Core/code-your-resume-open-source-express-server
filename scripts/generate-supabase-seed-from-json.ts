@@ -2,7 +2,7 @@
  * Reads CRM + job-listing JSON vault files and writes Supabase seed SQL.
  *
  * Defaults (Express server cwd):
- *   .data/crm/{companies,employees,jobs,job-applications}.json
+ *   .data/crm/{companies,jobs}.json
  *   .data/job-listing/job-listing-scrape-runs.json
  *
  * Override with CRM_DATA_DIR / JOB_LISTING_DATA_DIR (same as runtime Express).
@@ -13,7 +13,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import type { Company, Employee, Job, JobApplication } from "../src/data/crm/types";
+import type { Company, Job } from "../src/data/crm/types";
 import type { JobListingScrapeRun } from "../src/data/job-listing/types";
 
 type SeedPaths = {
@@ -126,43 +126,6 @@ ON CONFLICT (id) DO UPDATE SET
 `;
 };
 
-const buildEmployeeInsert = (rows: Employee[]): string => {
-  if (rows.length === 0) {
-    return "-- employees: (no rows in JSON)\n";
-  }
-
-  const values = rows
-    .map((row) => {
-      return `  (
-    ${sqlUuid(row.id)},
-    ${sqlUuid(row.companyId)},
-    ${sqlText(row.name)},
-    ${sqlText(row.role ?? "")},
-    ${sqlText(row.email ?? "")},
-    ${sqlText(row.linkedinUrl ?? "")},
-    ${sqlTimestamptz(row.createdAt)},
-    ${sqlTimestamptz(row.updatedAt)}
-  )`;
-    })
-    .join(",\n");
-
-  return `-- employees (${rows.length} rows)
-INSERT INTO employees (
-  id, company_id, name, role, email, linkedin_url, created_at, updated_at
-)
-VALUES
-${values}
-ON CONFLICT (id) DO UPDATE SET
-  company_id = EXCLUDED.company_id,
-  name = EXCLUDED.name,
-  role = EXCLUDED.role,
-  email = EXCLUDED.email,
-  linkedin_url = EXCLUDED.linkedin_url,
-  created_at = EXCLUDED.created_at,
-  updated_at = EXCLUDED.updated_at;
-`;
-};
-
 const buildJobInsert = (rows: Job[]): string => {
   if (rows.length === 0) {
     return "-- jobs: (no rows in JSON)\n";
@@ -203,71 +166,6 @@ ON CONFLICT (id) DO UPDATE SET
   listing_imported_at = EXCLUDED.listing_imported_at,
   latest_scrape_run_id = EXCLUDED.latest_scrape_run_id,
   latest_ai_exchange_id = EXCLUDED.latest_ai_exchange_id,
-  created_at = EXCLUDED.created_at,
-  updated_at = EXCLUDED.updated_at;
-`;
-};
-
-const buildImageGraphicStubs = (applications: JobApplication[]): string => {
-  const ids = [...new Set(applications.map((row) => row.imageGraphicId).filter(Boolean))];
-  if (ids.length === 0) {
-    return "-- image_graphics: (no job applications referencing graphics)\n";
-  }
-
-  const values = ids
-    .map((id) => {
-      return `  (
-    ${sqlUuid(id)},
-    ${sqlText("Seeded graphic stub")},
-    960,
-    540,
-    '{}'::jsonb,
-    NOW(),
-    NOW()
-  )`;
-    })
-    .join(",\n");
-
-  return `-- image_graphics stubs for job_applications FK (${ids.length} rows)
-INSERT INTO image_graphics (
-  id, title, canvas_width_px, canvas_height_px, metadata, created_at, updated_at
-)
-VALUES
-${values}
-ON CONFLICT (id) DO NOTHING;
-`;
-};
-
-const buildJobApplicationInsert = (rows: JobApplication[]): string => {
-  if (rows.length === 0) {
-    return "-- job_applications: (no rows in JSON)\n";
-  }
-
-  const values = rows
-    .map((row) => {
-      return `  (
-    ${sqlUuid(row.id)},
-    ${sqlUuid(row.jobId)},
-    ${sqlTimestamptz(row.submittedAt)},
-    ${sqlUuid(row.imageGraphicId)},
-    ${sqlText(row.notes ?? "")},
-    ${sqlTimestamptz(row.createdAt)},
-    ${sqlTimestamptz(row.updatedAt)}
-  )`;
-    })
-    .join(",\n");
-
-  return `-- job_applications (${rows.length} rows)
-INSERT INTO job_applications (
-  id, job_id, submitted_at, image_graphic_id, notes, created_at, updated_at
-)
-VALUES
-${values}
-ON CONFLICT (id) DO UPDATE SET
-  job_id = EXCLUDED.job_id,
-  submitted_at = EXCLUDED.submitted_at,
-  image_graphic_id = EXCLUDED.image_graphic_id,
-  notes = EXCLUDED.notes,
   created_at = EXCLUDED.created_at,
   updated_at = EXCLUDED.updated_at;
 `;
@@ -321,11 +219,7 @@ const main = (): void => {
   const paths = parseArgs();
 
   const companies = readJsonArray<Company>(path.join(paths.crmDir, "companies.json"));
-  const employees = readJsonArray<Employee>(path.join(paths.crmDir, "employees.json"));
   const jobs = readJsonArray<Job>(path.join(paths.crmDir, "jobs.json"));
-  const applications = readJsonArray<JobApplication>(
-    path.join(paths.crmDir, "job-applications.json")
-  );
   const scrapeRuns = readJsonArray<JobListingScrapeRun>(
     path.join(paths.jobListingDir, "job-listing-scrape-runs.json")
   );
@@ -363,11 +257,8 @@ CREATE TABLE IF NOT EXISTS job_listing_scrape_runs (
 
   const body = [
     buildCompanyInsert(companies),
-    buildEmployeeInsert(employees),
-    buildImageGraphicStubs(applications),
     buildJobInsert(jobs),
     buildScrapeRunInsert(scrapeRuns),
-    buildJobApplicationInsert(applications),
   ].join("\n");
 
   const footer = `
@@ -379,7 +270,7 @@ COMMIT;
 
   console.log(`✅ Wrote ${paths.outFile}`);
   console.log(
-    `   companies=${companies.length} employees=${employees.length} jobs=${jobs.length} applications=${applications.length} scrape_runs=${scrapeRuns.length}`
+    `   companies=${companies.length} jobs=${jobs.length} scrape_runs=${scrapeRuns.length}`
   );
 };
 

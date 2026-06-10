@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { completeCursorGenerationExchange } from '../../utils/cursor-generation';
 
 export type UpdateSkillsComponentExchangeCompletedInput = {
   id: string;
@@ -18,22 +19,15 @@ export const updateSkillsComponentExchangeCompleted = async (
   supabase: SupabaseClient,
   input: UpdateSkillsComponentExchangeCompletedInput,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('skills_component_generation_exchanges')
-    .update({
-      response_id: input.responseId,
-      input_tokens: input.inputTokens,
-      output_tokens: input.outputTokens,
-      model_used: input.modelUsed,
-      status: 'completed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', input.id);
-
-  if (error) {
-    console.error('❌ updateSkillsComponentExchangeCompleted:', error.message);
-    throw new Error(`Failed to update skills component exchange record: ${error.message}`);
-  }
+  await completeCursorGenerationExchange(supabase, {
+    tableName: 'skills_component_generation_exchanges',
+    id: input.id,
+    responseId: input.responseId,
+    inputTokens: input.inputTokens,
+    outputTokens: input.outputTokens,
+    modelUsed: input.modelUsed,
+    logLabel: 'updateSkillsComponentExchangeCompleted',
+  });
 };
 
 /**

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { completeCursorGenerationExchange } from '../../utils/cursor-generation';
 
 export type UpdateCompanyInterestExchangeCompletedInput = {
   id: string;
@@ -18,22 +19,15 @@ export const updateCompanyInterestExchangeCompleted = async (
   supabase: SupabaseClient,
   input: UpdateCompanyInterestExchangeCompletedInput,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('company_interest_generation_exchanges')
-    .update({
-      response_id: input.responseId,
-      input_tokens: input.inputTokens,
-      output_tokens: input.outputTokens,
-      model_used: input.modelUsed,
-      status: 'completed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', input.id);
-
-  if (error) {
-    console.error('❌ updateCompanyInterestExchangeCompleted:', error.message);
-    throw new Error(`Failed to update company interest exchange record: ${error.message}`);
-  }
+  await completeCursorGenerationExchange(supabase, {
+    tableName: 'company_interest_generation_exchanges',
+    id: input.id,
+    responseId: input.responseId,
+    inputTokens: input.inputTokens,
+    outputTokens: input.outputTokens,
+    modelUsed: input.modelUsed,
+    logLabel: 'updateCompanyInterestExchangeCompleted',
+  });
 };
 
 /**

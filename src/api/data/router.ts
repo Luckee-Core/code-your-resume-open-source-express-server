@@ -1,9 +1,6 @@
 import { Router } from "express";
 import { createCompanyApiRouter } from "./company/router";
-import { createEmployeeApiRouter } from "./employee/router";
 import { createJobApiRouter } from "./job/router";
-import { createJobApplicationApiRouter } from "./job-application/router";
-import { createEmploymentApiRouter } from "./employment/router";
 import { createJobResponsibilitiesApiRouter } from "./job-responsibilities/router";
 import { createJobRequirementsApiRouter } from "./job-requirements/router";
 import { createJobNiceToHavesApiRouter } from "./job-nice-to-haves/router";
@@ -23,6 +20,10 @@ import { createJobNewsletterIngestAiCostsRouter } from "./job-newsletter-ingest-
 import { createExchangeRegistryRouter } from "./exchange-registry/router";
 import { createAiPromptsRouter } from "./ai-prompts/router";
 import { createJobListingAiPromptsRouter } from "./job-listing-ai-prompts/router";
+import { createLinkedInProfileRouter } from "./linkedin-profile/router";
+import { createLinkedInEmploymentRouter } from "./linkedin-employment/router";
+import { createLinkedInEducationRouter } from "./linkedin-education/router";
+import { createLinkedInCertificationRouter } from "./linkedin-certification/router";
 
 /**
  * Aggregates CRM action routes under `/api/data`.
@@ -31,10 +32,7 @@ export const createApiDataRouter = (): Router => {
   const router = Router();
   router.use("/company", createCompanyApiRouter());
   router.use("/image-graphic", createImageGraphicApiRouter());
-  router.use("/employee", createEmployeeApiRouter());
   router.use("/job", createJobApiRouter());
-  router.use("/job-application", createJobApplicationApiRouter());
-  router.use("/employment", createEmploymentApiRouter());
   router.use("/job-responsibilities", createJobResponsibilitiesApiRouter());
   router.use("/job-requirements", createJobRequirementsApiRouter());
   router.use("/job-nice-to-haves", createJobNiceToHavesApiRouter());
@@ -53,5 +51,9 @@ export const createApiDataRouter = (): Router => {
   router.use("/exchange-registry", createExchangeRegistryRouter());
   router.use("/ai-prompts", createAiPromptsRouter());
   router.use("/job-listing-ai-prompts", createJobListingAiPromptsRouter());
+  router.use("/linkedin-profile", createLinkedInProfileRouter());
+  router.use("/linkedin-employment", createLinkedInEmploymentRouter());
+  router.use("/linkedin-education", createLinkedInEducationRouter());
+  router.use("/linkedin-certification", createLinkedInCertificationRouter());
   return router;
 };

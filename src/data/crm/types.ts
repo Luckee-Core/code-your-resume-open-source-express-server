@@ -15,17 +15,6 @@ export type Company = {
   updatedAt: string;
 };
 
-export type Employee = {
-  id: string;
-  companyId: string;
-  name: string;
-  role: string;
-  email: string;
-  linkedinUrl: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type JobStatus =
   | "draft"
   | "applied"
@@ -62,16 +51,6 @@ export type Job = {
   updatedAt: string;
 };
 
-export type JobApplication = {
-  id: string;
-  jobId: string;
-  submittedAt: string;
-  imageGraphicId: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 /** Graphics Studio layout row (Supabase `image_graphics`; API type only). */
 export type ImageGraphic = {
   id: string;
@@ -80,19 +59,6 @@ export type ImageGraphic = {
   canvasWidthPx: number;
   canvasHeightPx: number;
   metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-/** Links a CRM company + job with tenure dates (resume work history). */
-export type Employment = {
-  id: string;
-  companyId: string;
-  jobId: string;
-  /** ISO date string (YYYY-MM-DD). */
-  startDate: string;
-  /** ISO date string; empty means current role. */
-  endDate: string;
   createdAt: string;
   updatedAt: string;
 };

@@ -49,46 +49,6 @@ ON CONFLICT (id) DO UPDATE SET
   created_at = EXCLUDED.created_at,
   updated_at = EXCLUDED.updated_at;
 
--- employees (1 rows)
-INSERT INTO employees (
-  id, company_id, name, role, email, linkedin_url, created_at, updated_at
-)
-VALUES
-  (
-    $seed$4e2f5585-654e-4d97-81ab-38dc978e1930$seed$::uuid,
-    $seed$bd8daab0-4d3d-45cd-a996-a3b8a0734baf$seed$::uuid,
-    $seed$Temp Employee$seed$,
-    $seed$Recruiter$seed$,
-    $seed$test@tmail.com$seed$,
-    $seed$$seed$,
-    $seed$2026-04-30T16:00:03.762Z$seed$::timestamptz,
-    $seed$2026-04-30T17:03:04.444Z$seed$::timestamptz
-  )
-ON CONFLICT (id) DO UPDATE SET
-  company_id = EXCLUDED.company_id,
-  name = EXCLUDED.name,
-  role = EXCLUDED.role,
-  email = EXCLUDED.email,
-  linkedin_url = EXCLUDED.linkedin_url,
-  created_at = EXCLUDED.created_at,
-  updated_at = EXCLUDED.updated_at;
-
--- image_graphics stubs for job_applications FK (1 rows)
-INSERT INTO image_graphics (
-  id, title, canvas_width_px, canvas_height_px, metadata, created_at, updated_at
-)
-VALUES
-  (
-    $seed$454cc7e5-85c3-4e19-a5c4-fb9e8abba85b$seed$::uuid,
-    $seed$Seeded graphic stub$seed$,
-    960,
-    540,
-    '{}'::jsonb,
-    NOW(),
-    NOW()
-  )
-ON CONFLICT (id) DO NOTHING;
-
 -- jobs (1 rows)
 INSERT INTO jobs (
   id, company_id, title, url, status, description,
@@ -122,27 +82,5 @@ ON CONFLICT (id) DO UPDATE SET
   updated_at = EXCLUDED.updated_at;
 
 -- job_listing_scrape_runs: (no rows in JSON)
-
--- job_applications (1 rows)
-INSERT INTO job_applications (
-  id, job_id, submitted_at, image_graphic_id, notes, created_at, updated_at
-)
-VALUES
-  (
-    $seed$556d63f5-1d2b-4bb3-8dbd-764067155351$seed$::uuid,
-    $seed$aa5eec5f-6426-400c-b91e-d235bcdcd15d$seed$::uuid,
-    $seed$2026-04-30T16:49:11.309Z$seed$::timestamptz,
-    $seed$454cc7e5-85c3-4e19-a5c4-fb9e8abba85b$seed$::uuid,
-    $seed$$seed$,
-    $seed$2026-04-30T16:49:11.468Z$seed$::timestamptz,
-    $seed$2026-04-30T16:49:11.468Z$seed$::timestamptz
-  )
-ON CONFLICT (id) DO UPDATE SET
-  job_id = EXCLUDED.job_id,
-  submitted_at = EXCLUDED.submitted_at,
-  image_graphic_id = EXCLUDED.image_graphic_id,
-  notes = EXCLUDED.notes,
-  created_at = EXCLUDED.created_at,
-  updated_at = EXCLUDED.updated_at;
 
 COMMIT;

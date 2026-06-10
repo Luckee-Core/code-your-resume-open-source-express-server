@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Job, JobApplication } from "../../data/crm/types";
+import type { Job } from "../../data/crm/types";
 import { listSectionBodiesByJobId } from "../../data/job-listing-sections";
 
 export type JobStudioCoachContext = {
@@ -10,7 +10,6 @@ export type JobStudioCoachContext = {
   responsibilities: string[];
   requirements: string[];
   niceToHaves: string[];
-  applicationsSummary: string;
 };
 
 /**
@@ -20,7 +19,6 @@ export const loadJobStudioCoachContext = async (
   supabase: SupabaseClient | null,
   job: Job,
   companyName: string | null,
-  applications: JobApplication[],
 ): Promise<JobStudioCoachContext> => {
   const jobId = job.id;
   const [respBodies, reqBodies, nthBodies] = supabase
@@ -35,17 +33,6 @@ export const loadJobStudioCoachContext = async (
   const requirements = reqBodies.length ? reqBodies : job.requirements ?? [];
   const niceToHaves = nthBodies.length ? nthBodies : job.niceToHaves ?? [];
 
-  const appsForJob = applications.filter((a) => a.jobId === jobId);
-  const applicationsSummary =
-    appsForJob.length === 0
-      ? "No applications logged yet for this job."
-      : appsForJob
-          .map(
-            (a, i) =>
-              `${i + 1}. submittedAt=${a.submittedAt}, graphicId=${a.imageGraphicId}, notes=${a.notes || "(none)"}`,
-          )
-          .join("\n");
-
   return {
     jobTitle: job.title.trim() || "Untitled role",
     companyName,
@@ -54,6 +41,5 @@ export const loadJobStudioCoachContext = async (
     responsibilities,
     requirements,
     niceToHaves,
-    applicationsSummary,
   };
 };

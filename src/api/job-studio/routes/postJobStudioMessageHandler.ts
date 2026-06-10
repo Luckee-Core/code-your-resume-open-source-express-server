@@ -3,7 +3,6 @@ import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supab
 import { getAnthropicClient } from "../../../services/ai/get-anthropic-client";
 import { getJobFromStore } from "../../../data/crm";
 import { getCompanyFromStore } from "../../../data/crm";
-import { listJobApplicationsFromStore } from "../../../data/crm";
 import { loadJobStudioCoachContext } from "../loadJobStudioCoachContext";
 import { processJobStudioChat } from "../processJobStudioChat";
 import { loadJobStudioPayload } from "../loadJobStudioPayload";
@@ -51,8 +50,7 @@ export const postJobStudioMessageHandler = async (req: Request, res: Response): 
     }
 
     const company = job.companyId ? await getCompanyFromStore(job.companyId) : null;
-    const applications = await listJobApplicationsFromStore();
-    const coachContext = await loadJobStudioCoachContext(supabase, job, company?.name ?? null, applications);
+    const coachContext = await loadJobStudioCoachContext(supabase, job, company?.name ?? null);
 
     await processJobStudioChat(supabase, anthropic, {
       jobId: jid,

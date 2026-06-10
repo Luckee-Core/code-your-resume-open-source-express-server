@@ -21,17 +21,6 @@ const companyExample = {
   updatedAt: ts,
 };
 
-const employeeExample = {
-  id: "uuid",
-  companyId: "uuid",
-  name: "Jane Doe",
-  role: "Engineering Manager",
-  email: "jane@acme.example",
-  linkedinUrl: "",
-  createdAt: ts,
-  updatedAt: ts,
-};
-
 const jobExample = {
   id: "uuid",
   companyId: "uuid",
@@ -46,26 +35,6 @@ const jobExample = {
   responsibilities: ["Build features"],
   requirements: ["5+ years experience"],
   niceToHaves: ["TypeScript"],
-  createdAt: ts,
-  updatedAt: ts,
-};
-
-const jobApplicationExample = {
-  id: "uuid",
-  jobId: "uuid",
-  submittedAt: ts,
-  imageGraphicId: "uuid",
-  notes: "",
-  createdAt: ts,
-  updatedAt: ts,
-};
-
-const employmentExample = {
-  id: "uuid",
-  companyId: "uuid",
-  jobId: "uuid",
-  startDate: "2024-01-01",
-  endDate: "",
   createdAt: ts,
   updatedAt: ts,
 };
@@ -108,9 +77,9 @@ const jobListingSectionExample = {
 const buildOverviewGroup = (): ApiDocsGroup => ({
   name: "Overview",
   description: [
-    "REST API for the open-source Code Your Resume app. Supabase stores CRM entities (companies, jobs, applications), graphics, studio state, and error logs; this Express server exposes action routes over HTTP for the Next.js dashboard or any client.",
+    "REST API for the open-source Code Your Resume app. Supabase stores CRM entities (companies, jobs), graphics, studio state, and error logs; this Express server exposes action routes over HTTP for the Next.js dashboard or any client.",
     "Route layout: `/api/data/*` — CRM entity actions (`/list`, `/create`, `/update`, …); `/api/technical-skills/*`, `/api/professional-background/*`, `/api/job-studio/*`, `/api/user-background-studio/*` — studio coaches; `GET /api-docs.json` — this catalog. Standard CRM entities use GET list/get, POST create, PATCH update, DELETE delete. Exceptions (AI generation, job import, website research) are documented on their group.",
-    "Typical flow: create companies → add jobs (optionally import listing URL) → track job applications with graphics → use Technical Skills / Professional Background / Job Studio coaches → generate TSX skills components and cover letters for applications.",
+    "Typical flow: create companies → add jobs (optionally import listing URL) → use Technical Skills / Professional Background / Job Studio coaches → generate TSX skills components and cover letters per role.",
     "Success JSON: `{ success: true, data?, count?, message? }`. Error JSON: `{ success: false, error: string }`. OSS default has no auth — bind to localhost or set optional `CRM_API_SECRET` shared with the Next.js BFF. Core CRM requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. AI features need `ANTHROPIC_API_KEY`; skills component generation may use `CURSOR_API_KEY`.",
   ].join("\n\n"),
   endpoints: [],
@@ -144,7 +113,7 @@ const buildHealthGroup = (): ApiDocsGroup => ({
 const buildCompaniesGroup = (): ApiDocsGroup => ({
   name: "Companies",
   description:
-    "Job-search CRM companies. Create companies before employees, jobs, and employments. Supports one-shot website URL discovery and AI website research summaries.",
+    "Job-search CRM companies. Create companies before jobs. Supports one-shot website URL discovery and AI website research summaries.",
   endpoints: [
     ...buildActionEntityDocs({
       entityName: "company",
@@ -194,19 +163,6 @@ const buildCompaniesGroup = (): ApiDocsGroup => ({
       ],
     },
   ],
-});
-
-const buildEmployeesGroup = (): ApiDocsGroup => ({
-  name: "Employees",
-  description:
-    "Contacts at a company (hiring managers, recruiters). Each employee belongs to one company via `companyId`.",
-  endpoints: buildActionEntityDocs({
-    entityName: "employee",
-    basePath: "/api/data/employee",
-    entityExample: employeeExample,
-    createBodyExample: { companyId: "uuid", name: "Jane Doe", role: "Recruiter" },
-    patchBodyExample: { id: "uuid", role: "Engineering Manager" },
-  }),
 });
 
 const buildJobsGroup = (): ApiDocsGroup => ({
@@ -268,37 +224,6 @@ const buildJobsGroup = (): ApiDocsGroup => ({
       ],
     },
   ],
-});
-
-const buildJobApplicationsGroup = (): ApiDocsGroup => ({
-  name: "Job applications",
-  description:
-    "Application records linking a job to a submitted graphic (resume/cover letter export). Track submission date and notes per application.",
-  endpoints: buildActionEntityDocs({
-    entityName: "job application",
-    basePath: "/api/data/job-application",
-    entityExample: jobApplicationExample,
-    createBodyExample: { jobId: "uuid", imageGraphicId: "uuid", submittedAt: ts },
-    patchBodyExample: { id: "uuid", notes: "Followed up with recruiter" },
-  }),
-});
-
-const buildEmploymentsGroup = (): ApiDocsGroup => ({
-  name: "Employments",
-  description:
-    "Resume work history linking a company and job with tenure dates. Create/update validates that `job.companyId` matches `employment.companyId`.",
-  endpoints: buildActionEntityDocs({
-    entityName: "employment",
-    basePath: "/api/data/employment",
-    entityExample: employmentExample,
-    createBodyExample: {
-      companyId: "uuid",
-      jobId: "uuid",
-      startDate: "2024-01-01",
-      endDate: "",
-    },
-    patchBodyExample: { id: "uuid", endDate: "2025-06-01" },
-  }),
 });
 
 const buildJobListingSectionListGroup = (
@@ -778,6 +703,70 @@ const buildUserBackgroundStudioGroup = (): ApiDocsGroup => ({
   ],
 });
 
+const buildLinkedInProfileGroup = (): ApiDocsGroup => ({
+  name: "LinkedIn profile",
+  description:
+    "Tenant LinkedIn profile synced from Apify via linkedin-scraper-express-server. Normalized employment, education, and certification rows.",
+  endpoints: [
+    {
+      method: "GET",
+      path: "/api/data/linkedin-profile/get-tenant",
+      summary: "Get tenant LinkedIn profile",
+      responses: [
+        { status: 200, description: "Profile or null", example: successEnvelope(null) },
+        { status: 500, description: "Server error", example: errorEnvelope("Failed to load") },
+      ],
+    },
+    {
+      method: "POST",
+      path: "/api/data/linkedin-profile/create-tenant",
+      summary: "Create tenant LinkedIn profile URL",
+      requestBody: {
+        contentType: "application/json",
+        example: { linkedinUrl: "https://www.linkedin.com/in/example" },
+      },
+      responses: [
+        { status: 200, description: "Created profile", example: successEnvelope({ id: "uuid" }) },
+        { status: 400, description: "Validation error", example: errorEnvelope("linkedinUrl is required") },
+        { status: 500, description: "Server error", example: errorEnvelope("Failed to create") },
+      ],
+    },
+    {
+      method: "PATCH",
+      path: "/api/data/linkedin-profile/update-tenant-url",
+      summary: "Update tenant LinkedIn profile URL",
+      requestBody: {
+        contentType: "application/json",
+        example: { linkedinUrl: "https://www.linkedin.com/in/example" },
+      },
+      responses: [
+        { status: 200, description: "Updated profile", example: successEnvelope({ id: "uuid" }) },
+        { status: 400, description: "Validation error", example: errorEnvelope("Tenant LinkedIn profile is not configured") },
+        { status: 500, description: "Server error", example: errorEnvelope("Failed to update") },
+      ],
+    },
+    {
+      method: "POST",
+      path: "/api/data/linkedin-profile/sync-tenant",
+      summary: "Sync tenant profile from LinkedIn scraper",
+      responses: [
+        {
+          status: 200,
+          description: "Profile bundle",
+          example: successEnvelope({
+            profile: { id: "uuid" },
+            employments: [],
+            educations: [],
+            certifications: [],
+          }),
+        },
+        { status: 400, description: "Not configured", example: errorEnvelope("Tenant LinkedIn profile is not configured") },
+        { status: 500, description: "Server error", example: errorEnvelope("Sync failed") },
+      ],
+    },
+  ],
+});
+
 /**
  * Builds the full API documentation catalog for Code Your Resume Express.
  */
@@ -793,10 +782,7 @@ export const buildApiDocsCatalog = (): ApiDocsCatalog => {
     buildOverviewGroup(),
     buildHealthGroup(),
     buildCompaniesGroup(),
-    buildEmployeesGroup(),
     buildJobsGroup(),
-    buildJobApplicationsGroup(),
-    buildEmploymentsGroup(),
     buildJobListingSectionListGroup(
       "Job responsibilities",
       "/api/data/job-responsibilities",
@@ -817,6 +803,7 @@ export const buildApiDocsCatalog = (): ApiDocsCatalog => {
     ),
     buildJobQuestionsGroup(),
     buildJobQuestionAnswersGroup(),
+    buildLinkedInProfileGroup(),
     buildImageGraphicsGroup(),
     buildGenerationGroup(
       "Skills component generation",

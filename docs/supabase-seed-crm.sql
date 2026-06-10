@@ -269,10 +269,6 @@ ON CONFLICT (id) DO UPDATE SET
   created_at = EXCLUDED.created_at,
   updated_at = EXCLUDED.updated_at;
 
--- employees: (no rows in JSON)
-
--- image_graphics: (no job applications referencing graphics)
-
 -- jobs (17 rows)
 INSERT INTO jobs (
   id, company_id, title, url, status, description,
@@ -1060,7 +1056,5 @@ ON CONFLICT (id) DO UPDATE SET
   error = EXCLUDED.error,
   started_at = EXCLUDED.started_at,
   completed_at = EXCLUDED.completed_at;
-
--- job_applications: (no rows in JSON)
 
 COMMIT;

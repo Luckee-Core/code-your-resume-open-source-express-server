@@ -7,9 +7,7 @@
 --
 -- JSON on disk → tables (filenames in parentheses):
 --   companies.json              → companies
---   employees.json              → employees
 --   jobs.json                     → jobs
---   job-applications.json        → job_applications
 --   job-listing-scrape-runs.json → job_listing_scrape_runs
 --   job_listing_ai_requests / job_listing_ai_responses / job_listing_ai_exchanges: runtime inserts
 --   from Express import-listing (Supabase only; no JSON mirror files for the AI ledger).
@@ -36,17 +34,6 @@ CREATE TABLE IF NOT EXISTS companies (
   playwright_website_url_discovery_attempted BOOLEAN NOT NULL DEFAULT false,
   website_research_summary TEXT NOT NULL DEFAULT '',
   website_research_completed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS employees (
-  id UUID PRIMARY KEY,
-  company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT '',
-  email TEXT NOT NULL DEFAULT '',
-  linkedin_url TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );
@@ -79,16 +66,6 @@ CREATE TABLE IF NOT EXISTS image_graphics (
   updated_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS job_applications (
-  id UUID PRIMARY KEY,
-  job_id UUID NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
-  submitted_at TIMESTAMPTZ NOT NULL,
-  image_graphic_id UUID NOT NULL REFERENCES image_graphics (id) ON DELETE RESTRICT,
-  notes TEXT NOT NULL DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS job_questions (
   id UUID PRIMARY KEY,
   prompt TEXT NOT NULL,
@@ -105,16 +82,6 @@ CREATE TABLE IF NOT EXISTS job_question_answers (
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
   UNIQUE (job_id, job_question_id)
-);
-
-CREATE TABLE IF NOT EXISTS employments (
-  id UUID PRIMARY KEY,
-  company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
-  job_id UUID NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
-  start_date DATE NOT NULL,
-  end_date DATE,
-  created_at TIMESTAMPTZ NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL
 );
 
 -- ---------------------------------------------------------------------------
@@ -210,9 +177,7 @@ CREATE TABLE IF NOT EXISTS job_nice_to_have (
 -- Indexes
 -- ---------------------------------------------------------------------------
 
-CREATE INDEX IF NOT EXISTS idx_employees_company_id ON employees (company_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_company_id ON jobs (company_id);
-CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications (job_id);
 
 CREATE INDEX IF NOT EXISTS idx_job_listing_scrape_runs_job_id ON job_listing_scrape_runs (job_id);
 CREATE INDEX IF NOT EXISTS idx_job_listing_scrape_runs_status ON job_listing_scrape_runs (status);
@@ -238,3 +203,8 @@ CREATE INDEX IF NOT EXISTS idx_job_requirements_exchange_id ON job_requirements 
 CREATE INDEX IF NOT EXISTS idx_job_nice_to_have_job_id ON job_nice_to_have (job_id);
 CREATE INDEX IF NOT EXISTS idx_job_nice_to_have_scrape_run_id ON job_nice_to_have (scrape_run_id);
 CREATE INDEX IF NOT EXISTS idx_job_nice_to_have_exchange_id ON job_nice_to_have (exchange_id);
+
+-- ---------------------------------------------------------------------------
+-- LinkedIn profiles (Apify sync) — see docs/supabase-linkedin-profile-schema.sql
+-- ---------------------------------------------------------------------------
+-- linkedin_profiles, linkedin_employments, linkedin_educations, linkedin_certifications

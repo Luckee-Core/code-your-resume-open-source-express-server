@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { completeCursorGenerationExchange } from '../../utils/cursor-generation';
 
 export type UpdateCoverLetterExchangeCompletedInput = {
   id: string;
@@ -18,22 +19,15 @@ export const updateCoverLetterExchangeCompleted = async (
   supabase: SupabaseClient,
   input: UpdateCoverLetterExchangeCompletedInput,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('cover_letter_generation_exchanges')
-    .update({
-      response_id: input.responseId,
-      input_tokens: input.inputTokens,
-      output_tokens: input.outputTokens,
-      model_used: input.modelUsed,
-      status: 'completed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', input.id);
-
-  if (error) {
-    console.error('❌ updateCoverLetterExchangeCompleted:', error.message);
-    throw new Error(`Failed to update cover letter exchange record: ${error.message}`);
-  }
+  await completeCursorGenerationExchange(supabase, {
+    tableName: 'cover_letter_generation_exchanges',
+    id: input.id,
+    responseId: input.responseId,
+    inputTokens: input.inputTokens,
+    outputTokens: input.outputTokens,
+    modelUsed: input.modelUsed,
+    logLabel: 'updateCoverLetterExchangeCompleted',
+  });
 };
 
 /**

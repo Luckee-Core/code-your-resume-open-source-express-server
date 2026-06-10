@@ -22,7 +22,6 @@ export const buildJobStudioCoachUserPayload = (params: {
       requirements: context.requirements,
       niceToHaves: context.niceToHaves,
     },
-    applications: context.applicationsSummary,
     recentChat,
     userMessage,
   };
