@@ -8,6 +8,7 @@ import { createSkillsComponentRouter } from "./skills-component/router";
 import { createCoverLetterRouter } from "./cover-letter/router";
 import { createImageGraphicApiRouter } from "./image-graphic/router";
 import { createCompanyInterestRouter } from "./company-interest/router";
+import { createTeamConversationRouter } from "./team-conversation/router";
 import { createJobQuestionsRouter } from "./job-questions/router";
 import { createJobQuestionAnswersRouter } from "./job-question-answers/router";
 import { createThunkErrorsRouter } from "../../data/thunk-errors";
@@ -39,6 +40,7 @@ export const createApiDataRouter = (): Router => {
   router.use("/skills-component", createSkillsComponentRouter());
   router.use("/cover-letter", createCoverLetterRouter());
   router.use("/company-interest", createCompanyInterestRouter());
+  router.use("/team-conversation", createTeamConversationRouter());
   router.use("/job-questions", createJobQuestionsRouter());
   router.use("/job-question-answers", createJobQuestionAnswersRouter());
   router.use("/thunk-errors", createThunkErrorsRouter());

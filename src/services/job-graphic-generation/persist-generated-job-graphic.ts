@@ -5,7 +5,11 @@ import {
 } from '../../data/image-graphics';
 import type { ImageGraphic } from '../../data/image-graphics/types';
 
-export type JobGraphicGenerationKind = 'resume' | 'coverLetter' | 'companyInterest';
+export type JobGraphicGenerationKind =
+  | 'resume'
+  | 'coverLetter'
+  | 'companyInterest'
+  | 'teamConversation';
 
 type KindConfig = {
   titlePrefix: string;
@@ -30,6 +34,12 @@ const KIND_CONFIG: Record<JobGraphicGenerationKind, KindConfig> = {
   companyInterest: {
     titlePrefix: 'Company interest —',
     metadataSourceKey: 'companyInterestSource',
+    canvasWidthPx: 816,
+    canvasHeightPx: 480,
+  },
+  teamConversation: {
+    titlePrefix: 'Team conversation —',
+    metadataSourceKey: 'teamConversationSource',
     canvasWidthPx: 816,
     canvasHeightPx: 480,
   },

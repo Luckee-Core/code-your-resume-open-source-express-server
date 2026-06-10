@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
-import { runCoverLetterGeneration } from "../../../services/cover-letter-generation";
+import { runTeamConversationGeneration } from "../../../services/team-conversation-generation";
 import {
   assertHasBackgroundVoice,
   JobGenerationContextError,
@@ -13,22 +13,19 @@ import {
   scheduleBackgroundJobGraphicGeneration,
 } from "../../../services/job-graphic-generation";
 
-const MAX_POINT_OF_EMPHASIS_CHARS = 2000;
-
 /**
- * Runs Cursor cover letter generation and persists the graphic on Express (client-independent).
+ * Runs Cursor team-conversation generation and persists the graphic on Express (client-independent).
  */
-const runCoverLetterGenerationInBackground = (
+const runTeamConversationGenerationInBackground = (
   supabase: SupabaseClient,
   context: JobGenerationContext,
-  pointOfEmphasis?: string,
 ): void => {
-  const label = `cover-letter job ${context.jobId}`;
+  const label = `team-conversation job ${context.jobId}`;
 
   scheduleBackgroundJobGraphicGeneration(label, async () => {
     console.log(`🚀 Background ${label} — starting Cursor agent`);
 
-    const result = await runCoverLetterGeneration(supabase, {
+    const result = await runTeamConversationGeneration(supabase, {
       jobId: context.jobId,
       jobTitle: context.jobTitle,
       companyName: context.companyName,
@@ -37,11 +34,10 @@ const runCoverLetterGenerationInBackground = (
       niceToHaves: context.niceToHaves,
       skills: context.skillPromptLines.length > 0 ? context.skillPromptLines : undefined,
       professionalBackgroundSegments: context.professionalBackgroundSegments,
-      pointOfEmphasis,
     });
 
     const graphic = await persistGeneratedJobGraphic(supabase, {
-      kind: "coverLetter",
+      kind: "teamConversation",
       jobId: context.jobId,
       jobTitle: context.jobTitle,
       tsx: result.tsx,
@@ -56,10 +52,10 @@ const runCoverLetterGenerationInBackground = (
 };
 
 /**
- * POST /api/data/cover-letter/generate — queue cover letter TSX generation for a job.
+ * POST /api/data/team-conversation/generate — queue team-conversation TSX generation for a job.
  * Returns 202 immediately; Cursor agent + Supabase graphic write run on Express.
  */
-export const handleCoverLetterGenerate = async (
+export const handleTeamConversationGenerate = async (
   req: Request,
   res: Response,
 ): Promise<Response> => {
@@ -77,35 +73,23 @@ export const handleCoverLetterGenerate = async (
       return res.status(400).json({ success: false, error: "jobId is required" });
     }
 
-    const rawEmphasis =
-      typeof req.body?.pointOfEmphasis === "string" ? req.body.pointOfEmphasis.trim() : "";
-    if (rawEmphasis.length > MAX_POINT_OF_EMPHASIS_CHARS) {
-      return res.status(400).json({
-        success: false,
-        error: `pointOfEmphasis must be at most ${MAX_POINT_OF_EMPHASIS_CHARS} characters`,
-      });
-    }
-    const pointOfEmphasis = rawEmphasis || undefined;
-
     const context = await loadJobGenerationContext(supabase, jobId);
     assertHasBackgroundVoice(context);
 
     console.log(
-      `📥 POST /api/data/cover-letter/generate — job: ${context.jobTitle} (${context.jobId})${
-        pointOfEmphasis ? " — with point of emphasis" : ""
-      }`,
+      `📥 POST /api/data/team-conversation/generate — job: ${context.jobTitle} (${context.jobId})`,
     );
 
-    runCoverLetterGenerationInBackground(supabase, context, pointOfEmphasis);
+    runTeamConversationGenerationInBackground(supabase, context);
 
-    console.log(`📤 202 POST /api/data/cover-letter/generate — queued job ${context.jobId}`);
+    console.log(`📤 202 POST /api/data/team-conversation/generate — queued job ${context.jobId}`);
     return res.status(202).json({ success: true, accepted: true, jobId: context.jobId });
   } catch (error: unknown) {
     if (error instanceof JobGenerationContextError) {
       return res.status(error.statusCode).json({ success: false, error: error.message });
     }
     const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("❌ POST /api/data/cover-letter/generate:", msg);
+    console.error("❌ POST /api/data/team-conversation/generate:", msg);
     return res.status(500).json({ success: false, error: msg });
   }
 };

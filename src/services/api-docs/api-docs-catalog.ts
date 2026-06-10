@@ -823,6 +823,12 @@ export const buildApiDocsCatalog = (): ApiDocsCatalog => {
       "Generate company interest TSX for a job",
       "AI-generated why-this-company paragraph TSX tailored to the job and company research summary.",
     ),
+    buildGenerationGroup(
+      "Team conversation generation",
+      "/api/data/team-conversation/generate",
+      "Generate team conversation TSX for a job",
+      "AI-generated YC-style conversation opener — share about you, what you're looking for, or why the company interests you.",
+    ),
     buildErrorReportingGroup(),
     buildTechnicalSkillsGroup(),
     buildProfessionalBackgroundGroup(),

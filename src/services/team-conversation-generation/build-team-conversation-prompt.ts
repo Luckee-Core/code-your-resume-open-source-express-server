@@ -1,6 +1,6 @@
 import { renderPromptTemplate } from '../../utils/ai/render-prompt-template';
 
-export type BuildCompanyInterestPromptInput = {
+export type BuildTeamConversationPromptInput = {
   jobId: string;
   jobTitle: string;
   companyName?: string;
@@ -18,9 +18,6 @@ export type BuildCompanyInterestPromptInput = {
   skills?: string[];
 };
 
-const COMPANY_INTEREST_QUESTION =
-  'What interests you about working for this company?';
-
 const formatBulletList = (items: string[], emptyLabel: string): string => {
   if (!items.length) {
     return emptyLabel;
@@ -29,10 +26,28 @@ const formatBulletList = (items: string[], emptyLabel: string): string => {
 };
 
 /**
- * Build placeholder vars for the company interest Cursor agent template.
+ * Build the YC-style team conversation prompt shown in the generated UI.
  */
-export const buildCompanyInterestPromptVars = (
-  input: BuildCompanyInterestPromptInput,
+export const buildTeamConversationQuestion = (companyName?: string): string => {
+  const trimmed = companyName?.trim();
+  if (trimmed) {
+    return (
+      `Start a conversation with the team at ${trimmed}. Share something about you, ` +
+      `what you're looking for, or why ${trimmed} interests you. Human-written messages ` +
+      `are more likely to get a response.`
+    );
+  }
+  return (
+    "Start a conversation with the team. Share something about you, what you're looking for, " +
+    'or why this role interests you. Human-written messages are more likely to get a response.'
+  );
+};
+
+/**
+ * Build placeholder vars for the team conversation Cursor agent template.
+ */
+export const buildTeamConversationPromptVars = (
+  input: BuildTeamConversationPromptInput,
 ): Record<string, string> => {
   const {
     jobId,
@@ -56,8 +71,13 @@ export const buildCompanyInterestPromptVars = (
 
   const hasPostingBullets = responsibilities.length > 0 || requirements.length > 0;
   const postingBulletsRule = hasPostingBullets
-    ? `- This posting includes responsibility and/or requirement bullets below. Reference **one or two** of them in plain language (paraphrase is fine). Do not stack every bullet or turn the answer into a skills checklist.`
-    : `- Responsibilities and/or requirements may be sparse below; write naturally without inventing posting details.`;
+    ? `- This posting has bullets below. Mention **one** in plain words (paraphrase OK). Do not echo the whole job description or turn the note into a checklist.`
+    : `- Posting bullets may be sparse below; write naturally without inventing posting details.`;
+
+  const backgroundScopeRule =
+    '- **Background scope:** credibility_bio may include non-software history (family business, contracting, trades, etc.). ' +
+    '**Ignore all of that for this YC-style note.** Only reference software engineering and product-building work. ' +
+    'Do not connect family, pre-software jobs, or childhood work to the role.';
 
   return {
     jobId,
@@ -74,15 +94,16 @@ export const buildCompanyInterestPromptVars = (
     portfolio_github: portfolio_github || '(empty)',
     canvasWidthPx: String(canvasWidthPx),
     canvasHeightPx: String(canvasHeightPx),
-    companyInterestQuestion: COMPANY_INTEREST_QUESTION,
+    teamConversationQuestion: buildTeamConversationQuestion(companyName),
     postingBulletsRule,
+    backgroundScopeRule,
   };
 };
 
 /**
- * Render the company interest Cursor agent prompt from a DB template.
+ * Render the team conversation Cursor agent prompt from a DB template.
  */
-export const buildCompanyInterestPromptFromTemplate = (
+export const buildTeamConversationPromptFromTemplate = (
   template: string,
-  input: BuildCompanyInterestPromptInput,
-): string => renderPromptTemplate(template, buildCompanyInterestPromptVars(input));
+  input: BuildTeamConversationPromptInput,
+): string => renderPromptTemplate(template, buildTeamConversationPromptVars(input));

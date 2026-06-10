@@ -25,6 +25,7 @@ const OPTIONAL_COLUMNS: Partial<Record<string, string[]>> = {
   job_studio: ['job_id'],
   cover_letter_generation: ['job_id'],
   company_interest_generation: ['job_id'],
+  team_conversation_generation: ['job_id'],
   skills_component_generation: ['job_id'],
   user_background_studio: ['profile_id'],
 };

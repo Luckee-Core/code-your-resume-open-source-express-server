@@ -5,18 +5,18 @@ import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
 import { CRM_AI_FLOW_PROMPT_FLOWS } from '../../constants/crm-ai-flow-prompt-flows';
 import { loadCrmGenerationPromptTemplate } from '../../utils/ai/load-crm-generation-prompt-template';
-import { buildCoverLetterPromptFromTemplate } from './build-cover-letter-prompt';
+import { buildTeamConversationPromptFromTemplate } from './build-team-conversation-prompt';
 import {
-  insertCoverLetterRequest,
-  insertCoverLetterExchange,
-  insertCoverLetterResponse,
-  updateCoverLetterExchangeCompleted,
-  updateCoverLetterExchangeFailed,
-  updateCoverLetterRequestCompleted,
-  updateCoverLetterRequestFailed,
-} from '../../data/cover-letter-generation';
+  insertTeamConversationRequest,
+  insertTeamConversationExchange,
+  insertTeamConversationResponse,
+  updateTeamConversationExchangeCompleted,
+  updateTeamConversationExchangeFailed,
+  updateTeamConversationRequestCompleted,
+  updateTeamConversationRequestFailed,
+} from '../../data/team-conversation-generation';
 
-export type RunCoverLetterGenerationInput = {
+export type RunTeamConversationGenerationInput = {
   jobId: string;
   jobTitle: string;
   companyName?: string;
@@ -32,10 +32,9 @@ export type RunCoverLetterGenerationInput = {
     portfolio_github: string;
   };
   skills?: string[];
-  pointOfEmphasis?: string;
 };
 
-export type RunCoverLetterGenerationResult = {
+export type RunTeamConversationGenerationResult = {
   tsx: string;
   agentId: string;
   requestId: string;
@@ -44,23 +43,22 @@ export type RunCoverLetterGenerationResult = {
 
 /** US Letter width at 96dpi. */
 const DEFAULT_CANVAS_WIDTH = 816;
-/** US Letter height at 96dpi. */
-const DEFAULT_CANVAS_HEIGHT = 1056;
+/** Short conversational answer block — same footprint as company interest. */
+const DEFAULT_CANVAS_HEIGHT = 480;
 
-const COVER_LETTER_COMPONENT_NAME = 'GeneratedCoverLetterPreview';
+const TEAM_CONVERSATION_COMPONENT_NAME = 'GeneratedTeamConversationPreview';
 
 /**
- * Run the full cover letter generation pipeline:
- * build prompt → ledger → Cursor agent → poll → extract TSX → ledger complete.
+ * Run the team-conversation generation pipeline: prompt → ledger → Cursor → extract TSX.
  *
  * @param supabase - Supabase service-role client for ledger writes
  * @param input - Job context, background segments, optional skills
  * @returns Generated TSX string and ledger IDs
  */
-export const runCoverLetterGeneration = async (
+export const runTeamConversationGeneration = async (
   supabase: SupabaseClient,
-  input: RunCoverLetterGenerationInput,
-): Promise<RunCoverLetterGenerationResult> => {
+  input: RunTeamConversationGenerationInput,
+): Promise<RunTeamConversationGenerationResult> => {
   const {
     jobId,
     jobTitle,
@@ -72,7 +70,6 @@ export const runCoverLetterGeneration = async (
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
     professionalBackgroundSegments,
     skills = [],
-    pointOfEmphasis,
   } = input;
 
   const targetRepo = process.env.CURSOR_TARGET_REPO?.trim();
@@ -87,9 +84,9 @@ export const runCoverLetterGeneration = async (
   try {
     const template = await loadCrmGenerationPromptTemplate(
       supabase,
-      CRM_AI_FLOW_PROMPT_FLOWS.COVER_LETTER_GENERATION,
+      CRM_AI_FLOW_PROMPT_FLOWS.TEAM_CONVERSATION_GENERATION,
     );
-    const prompt = buildCoverLetterPromptFromTemplate(template, {
+    const prompt = buildTeamConversationPromptFromTemplate(template, {
       jobId,
       jobTitle,
       companyName,
@@ -100,10 +97,9 @@ export const runCoverLetterGeneration = async (
       canvasHeightPx,
       professionalBackgroundSegments,
       skills,
-      pointOfEmphasis,
     });
 
-    await insertCoverLetterRequest(supabase, {
+    await insertTeamConversationRequest(supabase, {
       id: requestId,
       jobId,
       skills,
@@ -112,7 +108,7 @@ export const runCoverLetterGeneration = async (
       promptText: prompt,
     });
 
-    console.log(`🚀 Launching Cursor agent for cover letter — job: ${jobTitle} (${jobId})`);
+    console.log(`🚀 Launching Cursor agent for team conversation — job: ${jobTitle} (${jobId})`);
 
     const agent = await cursorClient.launchAgent({
       prompt: { text: prompt },
@@ -123,7 +119,7 @@ export const runCoverLetterGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertCoverLetterExchange(supabase, {
+    await insertTeamConversationExchange(supabase, {
       id: exchangeId,
       jobId,
       requestId,
@@ -133,11 +129,11 @@ export const runCoverLetterGeneration = async (
     const finalRun = await pollAgentStatus(cursorClient, agent.id, agent.runId);
 
     const tsx = await extractTsxFromConversation(cursorClient, agent.id, agent.runId, {
-      expectedComponentName: COVER_LETTER_COMPONENT_NAME,
+      expectedComponentName: TEAM_CONVERSATION_COMPONENT_NAME,
     });
 
     const responseId = randomUUID();
-    await insertCoverLetterResponse(supabase, {
+    await insertTeamConversationResponse(supabase, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
@@ -145,7 +141,7 @@ export const runCoverLetterGeneration = async (
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
 
-    await updateCoverLetterExchangeCompleted(supabase, {
+    await updateTeamConversationExchangeCompleted(supabase, {
       id: exchangeId,
       responseId,
       inputTokens: 0,
@@ -153,9 +149,9 @@ export const runCoverLetterGeneration = async (
       modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
     });
 
-    await updateCoverLetterRequestCompleted(supabase, requestId);
+    await updateTeamConversationRequestCompleted(supabase, requestId);
 
-    console.log(`✅ Cover letter generation complete (${durationSeconds}s)`);
+    console.log(`✅ Team conversation generation complete (${durationSeconds}s)`);
 
     return { tsx, agentId: agent.id, requestId, exchangeId };
   } catch (error) {
@@ -163,9 +159,9 @@ export const runCoverLetterGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateCoverLetterExchangeFailed(supabase, exchangeId, err.message);
+        await updateTeamConversationExchangeFailed(supabase, exchangeId, err.message);
       }
-      await updateCoverLetterRequestFailed(supabase, requestId);
+      await updateTeamConversationRequestFailed(supabase, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

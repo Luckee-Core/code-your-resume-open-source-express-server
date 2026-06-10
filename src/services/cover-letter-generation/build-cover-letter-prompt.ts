@@ -16,6 +16,7 @@ export type BuildCoverLetterPromptInput = {
     portfolio_github: string;
   };
   skills?: string[];
+  pointOfEmphasis?: string;
 };
 
 const formatBulletList = (items: string[], emptyLabel: string): string => {
@@ -42,6 +43,7 @@ export const buildCoverLetterPromptVars = (
     canvasHeightPx,
     professionalBackgroundSegments,
     skills = [],
+    pointOfEmphasis,
   } = input;
 
   const companyLine = companyName?.trim()
@@ -62,6 +64,12 @@ export const buildCoverLetterPromptVars = (
     ? `- This posting includes ${responsibilities.length} responsibility bullet(s) and ${requirements.length} requirement bullet(s) below. You MUST reference several of them specifically (paraphrase is fine). NEVER claim the posting "does not list" responsibilities or requirements, and NEVER invent a "broad mandate" narrative when bullets are provided.`
     : `- Responsibilities and/or requirements may be sparse below; write naturally without claiming the posting is empty if other context exists.`;
 
+  const emphasisTrimmed = pointOfEmphasis?.trim() ?? '';
+  const pointOfEmphasisBlock = emphasisTrimmed || '(none provided)';
+  const pointOfEmphasisRule = emphasisTrimmed
+    ? `- The candidate provided a **point of emphasis** below. Weave it naturally into the body — typically in the first body paragraph after the opener — to explain why this role appeals to them from that angle. Connect their enthusiasm to specific responsibilities or requirements from the posting. Keep it in their voice per voice_style; do not invent employers, metrics, or experiences beyond professional background + emphasis.`
+    : `- No point of emphasis was provided; explain fit using posting bullets and professional background alone without fabricating personal motivations.`;
+
   return {
     jobId,
     jobTitle: jobTitle.trim(),
@@ -77,6 +85,8 @@ export const buildCoverLetterPromptVars = (
     canvasWidthPx: String(canvasWidthPx),
     canvasHeightPx: String(canvasHeightPx),
     postingBulletsRule,
+    pointOfEmphasisBlock,
+    pointOfEmphasisRule,
   };
 };
 
