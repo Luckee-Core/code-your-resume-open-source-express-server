@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ExchangeTableRegistryRow } from './types';
 import { listJobListingRegistryExchangeRows } from './list-job-listing-registry-exchange-rows';
+import { listProjectNotesSynthesisRegistryExchangeRows } from './list-project-notes-synthesis-registry-exchange-rows';
 
 export type RegistryExchangeSourceRow = {
   exchange_id: string;
@@ -51,6 +52,10 @@ export const listExchangeRowsFromRegistryEntry = async (
 
   if (entry.logical_key === 'job_listing') {
     return listJobListingRegistryExchangeRows(supabase, lim, filters.jobId);
+  }
+
+  if (entry.logical_key === 'project_notes_synthesis') {
+    return listProjectNotesSynthesisRegistryExchangeRows(supabase, lim);
   }
 
   const columnSet = new Set<string>(['id', 'status']);

@@ -55,6 +55,26 @@ const jobQuestionAnswerExample = {
   updatedAt: ts,
 };
 
+const projectExample = {
+  id: "uuid",
+  businessName: "TaskFlow",
+  description: "Team workflow dashboard for remote teams.",
+  url: "https://github.com/example/taskflow",
+  duration: "",
+  technologies: ["React", "Node.js", "PostgreSQL"],
+  websiteResearchSummary: "SaaS dashboard for team workflows…",
+  websiteResearchCompletedAt: ts,
+  createdAt: ts,
+  updatedAt: ts,
+};
+
+const projectNoteExample = {
+  id: "uuid",
+  projectId: "uuid",
+  body: "~500 active users; focus on onboarding and reporting.",
+  createdAt: ts,
+};
+
 const imageGraphicExample = {
   id: "uuid",
   title: "Resume skills block",
@@ -78,7 +98,7 @@ const buildOverviewGroup = (): ApiDocsGroup => ({
   name: "Overview",
   description: [
     "REST API for the open-source Code Your Resume app. Supabase stores CRM entities (companies, jobs), graphics, studio state, and error logs; this Express server exposes action routes over HTTP for the Next.js dashboard or any client.",
-    "Route layout: `/api/data/*` — CRM entity actions (`/list`, `/create`, `/update`, …); `/api/technical-skills/*`, `/api/professional-background/*`, `/api/job-studio/*`, `/api/user-background-studio/*` — studio coaches; `GET /api-docs.json` — this catalog. Standard CRM entities use GET list/get, POST create, PATCH update, DELETE delete. Exceptions (AI generation, job import, website research) are documented on their group.",
+    "Route layout: `/api/data/*` — CRM entity actions (`/list`, `/create`, `/update`, …); `/api/technical-skills/*`, `/api/voice-style/*`, `/api/job-studio/*`, `/api/user-background-studio/*` — studio coaches; `GET /api-docs.json` — this catalog. Standard CRM entities use GET list/get, POST create, PATCH update, DELETE delete. Exceptions (AI generation, job import, website research) are documented on their group.",
     "Typical flow: create companies → add jobs (optionally import listing URL) → use Technical Skills / Professional Background / Job Studio coaches → generate TSX skills components and cover letters per role.",
     "Success JSON: `{ success: true, data?, count?, message? }`. Error JSON: `{ success: false, error: string }`. OSS default has no auth — bind to localhost or set optional `CRM_API_SECRET` shared with the Next.js BFF. Core CRM requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. AI features need `ANTHROPIC_API_KEY`; skills component generation may use `CURSOR_API_KEY`.",
   ].join("\n\n"),
@@ -286,6 +306,133 @@ const buildJobQuestionAnswersGroup = (): ApiDocsGroup => ({
   }),
 });
 
+const buildProjectsGroup = (): ApiDocsGroup => ({
+  name: "Projects",
+  description:
+    "Portfolio projects with business context, technologies, and freeform note logs. Primary narrative source for AI generation (replaces professional background).",
+  endpoints: [
+    ...buildActionEntityDocs({
+      entityName: "project",
+      basePath: "/api/data/project",
+      entityExample: projectExample,
+      createBodyExample: {
+        businessName: "TaskFlow",
+        description: "Team workflow dashboard",
+        url: "https://github.com/example/taskflow",
+        duration: "6 months",
+        technologies: ["React", "TypeScript"],
+      },
+      patchBodyExample: {
+        id: "uuid",
+        businessName: "TaskFlow Pro",
+        technologies: ["React", "Node.js"],
+      },
+    }),
+    {
+      method: "POST",
+      path: "/api/data/project/synthesize-notes",
+      summary: "Synthesize project notes from pasted narrative text (replaces existing notes)",
+      requestBody: {
+        contentType: "application/json",
+        example: {
+          id: "uuid",
+          synthesisText: "Built a React dashboard for 500K users…",
+        },
+      },
+      responses: [
+        {
+          status: 200,
+          description: "Replaced notes",
+          example: successEnvelope({
+            notes: [projectNoteExample],
+            exchangeId: "uuid",
+          }),
+        },
+        {
+          status: 400,
+          description: "Validation error",
+          example: errorEnvelope("Synthesis text must be at least 40 characters"),
+        },
+        {
+          status: 422,
+          description: "No notes extracted",
+          example: errorEnvelope("Could not extract any project notes from this text"),
+        },
+        { status: 500, description: "Server error", example: errorEnvelope("Synthesis failed") },
+      ],
+    },
+    {
+      method: "POST",
+      path: "/api/data/project/website-research",
+      summary: "Crawl project URL and store website research summary",
+      requestBody: {
+        contentType: "application/json",
+        example: { id: "uuid" },
+      },
+      responses: [
+        { status: 200, description: "Updated project", example: successEnvelope(projectExample) },
+        {
+          status: 400,
+          description: "Validation error",
+          example: errorEnvelope("Set a project URL before running website research"),
+        },
+        { status: 500, description: "Server error", example: errorEnvelope("Research failed") },
+      ],
+    },
+  ],
+});
+
+const buildProjectNotesGroup = (): ApiDocsGroup => ({
+  name: "Project notes",
+  description: "Append-only freeform notes per project (users, focus areas, metrics).",
+  endpoints: [
+    {
+      method: "GET",
+      path: "/api/data/project-notes/list",
+      summary: "List notes for a project",
+      queryParams: [{ name: "projectId", description: "Project UUID", required: true }],
+      responses: [
+        {
+          status: 200,
+          description: "Array of note rows",
+          example: successEnvelope([projectNoteExample]),
+        },
+        {
+          status: 400,
+          description: "Missing projectId",
+          example: errorEnvelope("projectId is required"),
+        },
+        { status: 500, description: "Server error", example: errorEnvelope("Failed to list") },
+      ],
+    },
+    {
+      method: "POST",
+      path: "/api/data/project-notes/create",
+      summary: "Append a note to a project",
+      requestBody: {
+        contentType: "application/json",
+        example: { projectId: "uuid", body: "~500 active users; focus on onboarding." },
+      },
+      responses: [
+        { status: 201, description: "Created note", example: successEnvelope(projectNoteExample) },
+        { status: 400, description: "Validation error", example: errorEnvelope("body is required") },
+        { status: 500, description: "Server error", example: errorEnvelope("Failed to create") },
+      ],
+    },
+    {
+      method: "DELETE",
+      path: "/api/data/project-notes/delete",
+      summary: "Delete a project note",
+      queryParams: [{ name: "id", description: "Note UUID", required: true }],
+      responses: [
+        { status: 200, description: "Deleted", example: { success: true } },
+        { status: 400, description: "Missing id", example: errorEnvelope("id is required") },
+        { status: 500, description: "Server error", example: errorEnvelope("Failed to delete") },
+      ],
+    },
+  ],
+});
+
 const buildImageGraphicsGroup = (): ApiDocsGroup => ({
   name: "Image graphics",
   description:
@@ -486,34 +633,34 @@ const buildTechnicalSkillsGroup = (): ApiDocsGroup => ({
   ],
 });
 
-const buildProfessionalBackgroundGroup = (): ApiDocsGroup => ({
-  name: "Professional Background Studio",
+const buildVoiceStyleGroup = (): ApiDocsGroup => ({
+  name: "Voice Style Studio",
   description:
-    "Education and narrative segments for resume background. Load and patch segment text used in generation flows.",
+    "Singleton tone/voice notes for AI generation. Load and patch voice text used in cover letter and application flows.",
   endpoints: [
     {
       method: "GET",
-      path: "/api/professional-background/",
-      summary: "Load professional background segments",
+      path: "/api/voice-style/",
+      summary: "Load voice style body",
       responses: [
         {
           status: 200,
-          description: "Segment map",
-          example: successEnvelope({ segments: { education: "", summary: "" } }),
+          description: "Voice style text",
+          example: successEnvelope({ body: "", updatedAt: null }),
         },
         { status: 500, description: "Server error", example: errorEnvelope("Failed to load") },
       ],
     },
     {
       method: "PATCH",
-      path: "/api/professional-background/",
-      summary: "Update professional background segments",
+      path: "/api/voice-style/",
+      summary: "Update voice style body",
       requestBody: {
         contentType: "application/json",
-        example: { segments: { education: "BS Computer Science", summary: "Full-stack engineer…" } },
+        example: { body: "Plain, direct tone. Short sentences. No corporate polish." },
       },
       responses: [
-        { status: 200, description: "Updated segments", example: successEnvelope({ segments: {} }) },
+        { status: 200, description: "Updated body", example: successEnvelope({ body: "", updatedAt: null }) },
         { status: 500, description: "Server error", example: errorEnvelope("Failed to patch") },
       ],
     },
@@ -803,6 +950,8 @@ export const buildApiDocsCatalog = (): ApiDocsCatalog => {
     ),
     buildJobQuestionsGroup(),
     buildJobQuestionAnswersGroup(),
+    buildProjectsGroup(),
+    buildProjectNotesGroup(),
     buildLinkedInProfileGroup(),
     buildImageGraphicsGroup(),
     buildGenerationGroup(
@@ -831,7 +980,7 @@ export const buildApiDocsCatalog = (): ApiDocsCatalog => {
     ),
     buildErrorReportingGroup(),
     buildTechnicalSkillsGroup(),
-    buildProfessionalBackgroundGroup(),
+    buildVoiceStyleGroup(),
     buildJobStudioGroup(),
     buildUserBackgroundStudioGroup(),
   ];

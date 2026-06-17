@@ -6,6 +6,7 @@ import {
 import { getJobNewsletterSourceBySenderEmail } from '../../data/job-newsletter-sources';
 import {
   listFetchedEmailsFromEmailManager,
+  listEnabledSyncTasksFromEmailManager,
   markFetchedEmailsProcessedInEmailManager,
   runEmailSyncTasksFromEmailManager,
 } from '../email-manager';
@@ -18,6 +19,9 @@ export type ProcessJobNewslettersFromEmailManagerInput = {
   /** Newsletter source sender — runs matching email-manager Gmail sync task(s) first. */
   senderFilter?: string;
 };
+
+const DEFAULT_SYNC_LOOKBACK_HOURS = 24;
+const EXTENDED_SYNC_LOOKBACK_HOURS = 48;
 
 /**
  * Sync Gmail via email-manager, pull unprocessed emails, parse with AI, ingest CRM jobs.
@@ -55,10 +59,36 @@ export const processJobNewslettersFromEmailManager = async (
       senderFilter: input.senderFilter,
     });
 
-    const fetched = await listFetchedEmailsFromEmailManager({
+    let fetched = await listFetchedEmailsFromEmailManager({
       syncTaskId: input.syncTaskId,
       unprocessedOnly: true,
     });
+
+    if (fetched.length === 0) {
+      const tasks = await listEnabledSyncTasksFromEmailManager(input.senderFilter);
+      const scopedTasks = input.syncTaskId
+        ? tasks.filter((task) => task.id === input.syncTaskId)
+        : tasks;
+      const configuredLookback =
+        scopedTasks.length > 0
+          ? Math.max(...scopedTasks.map((task) => task.lookback_hours))
+          : DEFAULT_SYNC_LOOKBACK_HOURS;
+
+      if (configuredLookback <= DEFAULT_SYNC_LOOKBACK_HOURS) {
+        console.log(
+          `📊 processJobNewslettersFromEmailManager — no unprocessed emails after ${configuredLookback}h sync; retrying with ${EXTENDED_SYNC_LOOKBACK_HOURS}h lookback`,
+        );
+        await runEmailSyncTasksFromEmailManager({
+          syncTaskId: input.syncTaskId,
+          senderFilter: input.senderFilter,
+          lookbackHours: EXTENDED_SYNC_LOOKBACK_HOURS,
+        });
+        fetched = await listFetchedEmailsFromEmailManager({
+          syncTaskId: input.syncTaskId,
+          unprocessedOnly: true,
+        });
+      }
+    }
 
     if (fetched.length === 0) {
       console.log('✅ processJobNewslettersFromEmailManager — no unprocessed emails');

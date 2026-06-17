@@ -25,12 +25,8 @@ export type RunTeamConversationGenerationInput = {
   niceToHaves?: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
-  professionalBackgroundSegments: {
-    education: string;
-    credibility_bio: string;
-    voice_style: string;
-    portfolio_github: string;
-  };
+  voiceStyle: string;
+  projectsBlock: string;
   skills?: string[];
 };
 
@@ -68,7 +64,8 @@ export const runTeamConversationGeneration = async (
     niceToHaves,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
-    professionalBackgroundSegments,
+    voiceStyle,
+    projectsBlock,
     skills = [],
   } = input;
 
@@ -95,7 +92,8 @@ export const runTeamConversationGeneration = async (
       niceToHaves,
       canvasWidthPx,
       canvasHeightPx,
-      professionalBackgroundSegments,
+      voiceStyle,
+      projectsBlock,
       skills,
     });
 
@@ -146,7 +144,7 @@ export const runTeamConversationGeneration = async (
       responseId,
       inputTokens: 0,
       outputTokens: 0,
-      modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
+      modelUsed: agent.modelId,
     });
 
     await updateTeamConversationRequestCompleted(supabase, requestId);

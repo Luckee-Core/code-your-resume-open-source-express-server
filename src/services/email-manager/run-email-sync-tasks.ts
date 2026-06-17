@@ -17,6 +17,8 @@ export type RunEmailSyncTasksFromEmailManagerInput = {
   syncTaskId?: string;
   /** Match email-manager sync task `sender_filter` (e.g. newsletter source sender). */
   senderFilter?: string;
+  /** One-off Gmail lookback override passed to email-manager POST .../run. */
+  lookbackHours?: number;
 };
 
 const normalizeEmail = (value: string): string => value.trim().toLowerCase();
@@ -24,7 +26,7 @@ const normalizeEmail = (value: string): string => value.trim().toLowerCase();
 /**
  * List enabled email sync tasks from email-manager, optionally filtered by sender.
  */
-const listEnabledSyncTasksFromEmailManager = async (
+export const listEnabledSyncTasksFromEmailManager = async (
   senderFilter?: string,
 ): Promise<EmailManagerSyncTask[]> => {
   const url = `${getEmailManagerBaseUrl()}/api/data/email-sync-tasks`;
@@ -49,9 +51,14 @@ const listEnabledSyncTasksFromEmailManager = async (
  */
 const runEmailSyncTaskInEmailManager = async (
   syncTaskId: string,
+  lookbackHours?: number,
 ): Promise<EmailManagerSyncTaskRunResult> => {
   const url = `${getEmailManagerBaseUrl()}/api/data/email-sync-tasks/${syncTaskId}/run`;
-  const response = await fetch(url, { method: 'POST' });
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(lookbackHours ? { lookbackHours } : {}),
+  });
   const body = (await response.json()) as ExpressRunResponse;
 
   if (!response.ok || !body.success || !body.data) {
@@ -70,7 +77,10 @@ export const runEmailSyncTasksFromEmailManager = async (
   console.log('🚀 runEmailSyncTasksFromEmailManager', input);
 
   if (input.syncTaskId) {
-    const result = await runEmailSyncTaskInEmailManager(input.syncTaskId);
+    const result = await runEmailSyncTaskInEmailManager(
+      input.syncTaskId,
+      input.lookbackHours,
+    );
     console.log('✅ runEmailSyncTasksFromEmailManager — single task', result);
     return [result];
   }
@@ -83,7 +93,7 @@ export const runEmailSyncTasksFromEmailManager = async (
 
   const results: EmailManagerSyncTaskRunResult[] = [];
   for (const task of tasks) {
-    const result = await runEmailSyncTaskInEmailManager(task.id);
+    const result = await runEmailSyncTaskInEmailManager(task.id, input.lookbackHours);
     results.push(result);
   }
 

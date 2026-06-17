@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
 import { runCompanyInterestGeneration } from "../../../services/company-interest-generation";
 import {
-  assertHasBackgroundVoice,
+  assertHasNarrativeContext,
   JobGenerationContextError,
   loadJobGenerationContext,
   type JobGenerationContext,
@@ -33,7 +33,8 @@ const runCompanyInterestGenerationInBackground = (
       requirements: context.requirements,
       niceToHaves: context.niceToHaves,
       skills: context.skillPromptLines.length > 0 ? context.skillPromptLines : undefined,
-      professionalBackgroundSegments: context.professionalBackgroundSegments,
+      voiceStyle: context.voiceStyle,
+      projectsBlock: context.projectsBlock,
     });
 
     const graphic = await persistGeneratedJobGraphic(supabase, {
@@ -74,7 +75,7 @@ export const handleCompanyInterestGenerate = async (
     }
 
     const context = await loadJobGenerationContext(supabase, jobId);
-    assertHasBackgroundVoice(context);
+    assertHasNarrativeContext(context);
 
     console.log(
       `📥 POST /api/data/company-interest/generate — job: ${context.jobTitle} (${context.jobId})`,

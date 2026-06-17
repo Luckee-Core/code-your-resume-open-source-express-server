@@ -9,12 +9,8 @@ export type BuildCoverLetterPromptInput = {
   niceToHaves?: string[];
   canvasWidthPx: number;
   canvasHeightPx: number;
-  professionalBackgroundSegments: {
-    education: string;
-    credibility_bio: string;
-    voice_style: string;
-    portfolio_github: string;
-  };
+  voiceStyle: string;
+  projectsBlock: string;
   skills?: string[];
   pointOfEmphasis?: string;
 };
@@ -41,7 +37,8 @@ export const buildCoverLetterPromptVars = (
     niceToHaves = [],
     canvasWidthPx,
     canvasHeightPx,
-    professionalBackgroundSegments,
+    voiceStyle,
+    projectsBlock,
     skills = [],
     pointOfEmphasis,
   } = input;
@@ -56,8 +53,7 @@ export const buildCoverLetterPromptVars = (
   const skillsBlock =
     skills.length > 0 ? skills.map((s) => `- ${s}`).join('\n') : '(none provided)';
 
-  const { education, credibility_bio, voice_style, portfolio_github } =
-    professionalBackgroundSegments;
+  const projects = projectsBlock || '(no projects recorded)';
 
   const hasPostingBullets = responsibilities.length > 0 || requirements.length > 0;
   const postingBulletsRule = hasPostingBullets
@@ -67,8 +63,8 @@ export const buildCoverLetterPromptVars = (
   const emphasisTrimmed = pointOfEmphasis?.trim() ?? '';
   const pointOfEmphasisBlock = emphasisTrimmed || '(none provided)';
   const pointOfEmphasisRule = emphasisTrimmed
-    ? `- The candidate provided a **point of emphasis** below. Weave it naturally into the body — typically in the first body paragraph after the opener — to explain why this role appeals to them from that angle. Connect their enthusiasm to specific responsibilities or requirements from the posting. Keep it in their voice per voice_style; do not invent employers, metrics, or experiences beyond professional background + emphasis.`
-    : `- No point of emphasis was provided; explain fit using posting bullets and professional background alone without fabricating personal motivations.`;
+    ? `- The candidate provided a **point of emphasis** below. Weave it naturally into the body — typically in the first body paragraph after the opener — to explain why this role appeals to them from that angle. Connect their enthusiasm to specific responsibilities or requirements from the posting. Keep it in their voice per voice_style; do not invent employers, metrics, or experiences beyond projects + emphasis.`
+    : `- No point of emphasis was provided; explain fit using posting bullets and projects alone without fabricating personal motivations.`;
 
   return {
     jobId,
@@ -78,10 +74,9 @@ export const buildCoverLetterPromptVars = (
     requirementsBlock,
     niceToHavesBlock,
     skillsBlock,
-    education: education || '(empty)',
-    credibility_bio: credibility_bio || '(empty)',
-    voice_style: voice_style || '(empty)',
-    portfolio_github: portfolio_github || '(empty)',
+    voice_style: voiceStyle || '(empty)',
+    projects,
+    portfolio_github: projects,
     canvasWidthPx: String(canvasWidthPx),
     canvasHeightPx: String(canvasHeightPx),
     postingBulletsRule,

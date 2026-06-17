@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
 import { runCoverLetterGeneration } from "../../../services/cover-letter-generation";
 import {
-  assertHasBackgroundVoice,
+  assertHasNarrativeContext,
   JobGenerationContextError,
   loadJobGenerationContext,
   type JobGenerationContext,
@@ -36,7 +36,8 @@ const runCoverLetterGenerationInBackground = (
       requirements: context.requirements,
       niceToHaves: context.niceToHaves,
       skills: context.skillPromptLines.length > 0 ? context.skillPromptLines : undefined,
-      professionalBackgroundSegments: context.professionalBackgroundSegments,
+      voiceStyle: context.voiceStyle,
+      projectsBlock: context.projectsBlock,
       pointOfEmphasis,
     });
 
@@ -88,7 +89,7 @@ export const handleCoverLetterGenerate = async (
     const pointOfEmphasis = rawEmphasis || undefined;
 
     const context = await loadJobGenerationContext(supabase, jobId);
-    assertHasBackgroundVoice(context);
+    assertHasNarrativeContext(context);
 
     console.log(
       `📥 POST /api/data/cover-letter/generate — job: ${context.jobTitle} (${context.jobId})${

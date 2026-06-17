@@ -4,6 +4,7 @@ import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supab
 import { runSkillsComponentGeneration } from "../../../services/skills-component-generation";
 import {
   assertHasActiveSkills,
+  assertHasCandidateName,
   JobGenerationContextError,
   loadJobGenerationContext,
   type JobGenerationContext,
@@ -13,12 +14,15 @@ import {
   scheduleBackgroundJobGraphicGeneration,
 } from "../../../services/job-graphic-generation";
 
+const MAX_POINT_OF_EMPHASIS_CHARS = 2000;
+
 /**
  * Runs Cursor skills generation and persists the graphic on Express (client-independent).
  */
 const runSkillsComponentGenerationInBackground = (
   supabase: SupabaseClient,
   context: JobGenerationContext,
+  pointOfEmphasis?: string,
 ): void => {
   const label = `skills-component job ${context.jobId}`;
 
@@ -33,7 +37,11 @@ const runSkillsComponentGenerationInBackground = (
       requirements: context.requirements,
       niceToHaves: context.niceToHaves,
       skills: context.skillPromptLines,
-      professionalBackgroundSegments: context.professionalBackgroundSegments,
+      voiceStyle: context.voiceStyle,
+      projectsBlock: context.projectsBlock,
+      pointOfEmphasis,
+      candidateFullName: context.candidateFullName,
+      appendedPromptSections: context.appendedPromptSections,
     });
 
     const graphic = await persistGeneratedJobGraphic(supabase, {
@@ -73,14 +81,27 @@ export const handleSkillsComponentGenerate = async (
       return res.status(400).json({ success: false, error: "jobId is required" });
     }
 
+    const rawEmphasis =
+      typeof req.body?.pointOfEmphasis === "string" ? req.body.pointOfEmphasis.trim() : "";
+    if (rawEmphasis.length > MAX_POINT_OF_EMPHASIS_CHARS) {
+      return res.status(400).json({
+        success: false,
+        error: `pointOfEmphasis must be at most ${MAX_POINT_OF_EMPHASIS_CHARS} characters`,
+      });
+    }
+    const pointOfEmphasis = rawEmphasis || undefined;
+
     const context = await loadJobGenerationContext(supabase, jobId);
     assertHasActiveSkills(context);
+    assertHasCandidateName(context);
 
     console.log(
-      `📥 POST /api/data/skills-component/generate — job: ${context.jobTitle} (${context.jobId}), skills: ${context.skillPromptLines.length}`,
+      `📥 POST /api/data/skills-component/generate — job: ${context.jobTitle} (${context.jobId}), skills: ${context.skillPromptLines.length}${
+        pointOfEmphasis ? " — with focus points" : ""
+      }`,
     );
 
-    runSkillsComponentGenerationInBackground(supabase, context);
+    runSkillsComponentGenerationInBackground(supabase, context, pointOfEmphasis);
 
     console.log(`📤 202 POST /api/data/skills-component/generate — queued job ${context.jobId}`);
     return res.status(202).json({ success: true, accepted: true, jobId: context.jobId });

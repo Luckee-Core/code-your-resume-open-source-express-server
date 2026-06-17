@@ -26,12 +26,11 @@ export type RunSkillsComponentGenerationInput = {
   skills: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
-  professionalBackgroundSegments?: {
-    education: string;
-    credibility_bio: string;
-    voice_style: string;
-    portfolio_github: string;
-  };
+  voiceStyle?: string;
+  projectsBlock?: string;
+  pointOfEmphasis?: string;
+  candidateFullName?: string;
+  appendedPromptSections?: string;
 };
 
 export type RunSkillsComponentGenerationResult = {
@@ -79,7 +78,11 @@ export const runSkillsComponentGeneration = async (
     skills,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
-    professionalBackgroundSegments,
+    voiceStyle,
+    projectsBlock,
+    pointOfEmphasis,
+    candidateFullName,
+    appendedPromptSections,
   } = input;
 
   const targetRepo = process.env.CURSOR_TARGET_REPO?.trim();
@@ -96,7 +99,7 @@ export const runSkillsComponentGeneration = async (
       supabase,
       CRM_AI_FLOW_PROMPT_FLOWS.SKILLS_COMPONENT_GENERATION,
     );
-    const prompt = buildSkillsComponentPromptFromTemplate(template, {
+    const promptBase = buildSkillsComponentPromptFromTemplate(template, {
       jobId: jobId.trim(),
       jobTitle,
       companyName,
@@ -106,8 +109,14 @@ export const runSkillsComponentGeneration = async (
       skills,
       canvasWidthPx,
       canvasHeightPx,
-      professionalBackgroundSegments,
+      voiceStyle,
+      projectsBlock,
+      pointOfEmphasis,
+      candidateFullName,
     });
+    const prompt = appendedPromptSections?.trim()
+      ? `${promptBase}\n\n${appendedPromptSections.trim()}`
+      : promptBase;
 
     await insertSkillsComponentRequest(supabase, {
       id: requestId,
@@ -156,7 +165,7 @@ export const runSkillsComponentGeneration = async (
       responseId,
       inputTokens: 0,
       outputTokens: 0,
-      modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
+      modelUsed: agent.modelId,
     });
 
     await updateSkillsComponentRequestCompleted(supabase, requestId);

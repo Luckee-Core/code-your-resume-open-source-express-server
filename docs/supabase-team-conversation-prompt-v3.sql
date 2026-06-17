@@ -60,7 +60,7 @@ Voice/style notes (match tone — **not** catchphrase openers; see bans below):
 {{voice_style}}
 
 Portfolio/GitHub narrative (software work only — mention at most once if relevant):
-{{portfolio_github}}
+{{projects}}
 
 {{backgroundScopeRule}}
 

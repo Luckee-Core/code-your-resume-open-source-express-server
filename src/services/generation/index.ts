@@ -1,6 +1,7 @@
 export {
   assertHasActiveSkills,
-  assertHasBackgroundVoice,
+  assertHasCandidateName,
+  assertHasNarrativeContext,
   JobGenerationContextError,
   loadJobGenerationContext,
   type JobGenerationContext,

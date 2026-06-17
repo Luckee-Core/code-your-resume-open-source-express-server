@@ -7,7 +7,7 @@ This document defines how to organize files in the **Code Your Resume** Express 
 Unlike the mentorai-server monolith (`src/domains/{domain}/`), this product uses:
 
 - **`src/api/data/{entity}/`** — CRM entity HTTP (action routes: `/api/data/company/list`, …)
-- **`src/api/{feature}/`** — Studio routers (job-studio, technical-skills, professional-background, user-background-studio)
+- **`src/api/{feature}/`** — Studio routers (job-studio, technical-skills, voice-style, user-background-studio)
 - **Do not add `src/domains/` for CRM** — action paths stay under `/api/data/`
 
 Reference OSS pattern: [lead-studio-express-server](https://github.com/lead-open-source/lead-studio-express-server) uses `createDataService()` in `src/data/`. This repo uses `createApiDataRouter()` in `src/api/data/router.ts` — same rules, different mount path (documented fork exception per ADR 009).

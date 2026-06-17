@@ -25,12 +25,8 @@ export type RunCoverLetterGenerationInput = {
   niceToHaves?: string[];
   canvasWidthPx?: number;
   canvasHeightPx?: number;
-  professionalBackgroundSegments: {
-    education: string;
-    credibility_bio: string;
-    voice_style: string;
-    portfolio_github: string;
-  };
+  voiceStyle: string;
+  projectsBlock: string;
   skills?: string[];
   pointOfEmphasis?: string;
 };
@@ -70,7 +66,8 @@ export const runCoverLetterGeneration = async (
     niceToHaves,
     canvasWidthPx = DEFAULT_CANVAS_WIDTH,
     canvasHeightPx = DEFAULT_CANVAS_HEIGHT,
-    professionalBackgroundSegments,
+    voiceStyle,
+    projectsBlock,
     skills = [],
     pointOfEmphasis,
   } = input;
@@ -98,7 +95,8 @@ export const runCoverLetterGeneration = async (
       niceToHaves,
       canvasWidthPx,
       canvasHeightPx,
-      professionalBackgroundSegments,
+      voiceStyle,
+      projectsBlock,
       skills,
       pointOfEmphasis,
     });
@@ -150,7 +148,7 @@ export const runCoverLetterGeneration = async (
       responseId,
       inputTokens: 0,
       outputTokens: 0,
-      modelUsed: process.env.CURSOR_AGENT_MODEL?.trim() || 'cursor-agent',
+      modelUsed: agent.modelId,
     });
 
     await updateCoverLetterRequestCompleted(supabase, requestId);

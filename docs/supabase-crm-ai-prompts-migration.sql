@@ -319,7 +319,7 @@ Voice/style notes (match this tone throughout):
 {{voice_style}}
 
 Portfolio/GitHub narrative (same Acme Labs work as credibility_bio — do not list products separately in the letter):
-{{portfolio_github}}
+{{projects}}
 
 ### Visual / structural target (must follow)
 
@@ -353,7 +353,7 @@ Portfolio/GitHub narrative (same Acme Labs work as credibility_bio — do not li
 - Agency/consulting framing: "I help teams reduce repetitive work", "I help companies with…", "my firm", "our services", "happy to help you with", "compare notes on where we could help"
 - Sales closes: "I'd be glad to compare notes", "let's explore how I can support", "reach out if you want to reduce…"
 - Treating Acme Labs (or similar) as something you're **selling** — if mentioned, only as current work context **relevant to why you'd be a good hire**, in one short clause max (no "founder" label)
-- Listing Acme Labs products/apps twice — portfolio_github and Acme Labs are the same work; mention at most once in the letter body, not as a separate product list plus an experience paragraph
+- Listing Acme Labs products/apps twice — projects and Acme Labs are the same work; mention at most once in the letter body, not as a separate product list plus an experience paragraph
 
 **Also avoid** robotic phrases: "I'm reading this as", "low-friction conversation", "matches how I work", "broad mandate", "operating discipline", "I'd welcome the opportunity to".
 
@@ -442,7 +442,7 @@ Voice/style notes (match this tone):
 {{voice_style}}
 
 Portfolio/GitHub narrative (same Acme Labs work as credibility_bio — mention at most once if relevant):
-{{portfolio_github}}
+{{projects}}
 
 ### Visual / structural target (must follow)
 
@@ -548,7 +548,7 @@ Role: {{jobTitle}}
      - **Content:** Follow **Job-tailored emphasis** above — lead with what **this posting** prioritizes, not a default stack order.
      - **Anti-pattern (reject):** third-person bio copy, leading with irrelevant stack when posting screams AI (or vice versa), bullet-list summary, or a redundant skills/stack section at the bottom.
   3) **Experience** — **one row per real employer only.** Put the strongest **posting-aligned** evidence here. **This is where stack and tools belong** — woven into impact bullets, not duplicated in a separate list.
-     - **Acme Labs (THT) — exactly ONE entry, non-negotiable:** Everything from Acme Labs, THT, portfolio_github, credibility_bio client/product builds, and labels like "Client Product Work", "Independent product work", or skill-themed splits is the **same employer**. Use organization **Acme Labs** once. Pick **one** role title. Combine work into **3–4 bullets** ordered by **posting relevance** — do **not** split by specialty into two Experience blocks.
+     - **Acme Labs (THT) — exactly ONE entry, non-negotiable:** Everything from Acme Labs, THT, projects, credibility_bio client/product builds, and labels like "Client Product Work", "Independent product work", or skill-themed splits is the **same employer**. Use organization **Acme Labs** once. Pick **one** role title. Combine work into **3–4 bullets** ordered by **posting relevance** — do **not** split by specialty into two Experience blocks.
      - **Other employers:** Only clearly separate companies get their own row (e.g. Revature → "Earlier").
      - Each entry: role | organization, date range ("Recent" / "Earlier" if unknown), **2–4 bullets** for THT (merged), **1–2 bullets** for other employers.
      - Prefer engineering/building titles over founder labels when both apply.
@@ -577,7 +577,7 @@ Role: {{jobTitle}}
 - **Executive summary cap:** One `<p>`, max 3 sentences, max 70 words, **first person only**.
 - **No viewport min-heights:** Never use `min-h-screen` / `h-screen` / `min-h-*vh` on any element.
 - **No skills section:** Never render Technical Focus / Skills / Technologies / Stack blocks — tools belong in Experience bullets only.
-- **Deduplication:** Acme Labs / THT / portfolio_github / client product work = **one** Experience entry.
+- **Deduplication:** Acme Labs / THT / projects / client product work = **one** Experience entry.
 
 ## Output
 

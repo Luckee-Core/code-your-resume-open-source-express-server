@@ -7,6 +7,7 @@ export const CRM_AI_FLOW_PROMPT_FLOWS = {
   COMPANY_INTEREST_GENERATION: 'company_interest_generation',
   TEAM_CONVERSATION_GENERATION: 'team_conversation_generation',
   SKILLS_COMPONENT_GENERATION: 'skills_component_generation',
+  PROJECT_NOTES_SYNTHESIS: 'project_notes_synthesis',
 } as const;
 
 export type CrmAiFlowPromptFlow =
@@ -20,4 +21,5 @@ export const CRM_AI_FLOW_PROMPT_FLOW_LABELS: Record<string, string> = {
   company_interest_generation: 'Company interest generation',
   team_conversation_generation: 'Team conversation generation',
   skills_component_generation: 'Skills component generation',
+  project_notes_synthesis: 'Project notes synthesis',
 };

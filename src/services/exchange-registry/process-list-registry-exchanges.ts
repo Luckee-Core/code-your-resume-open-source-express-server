@@ -11,6 +11,7 @@ import type { ListRegistryExchangesInput, ListRegistryExchangesResult, ListedExc
 const FLOW_LABELS: Record<string, string> = {
   job_newsletter_ingest: 'Job newsletter ingest',
   job_listing: 'Job listing import',
+  project_notes_synthesis: 'Project notes synthesis',
   ...CRM_AI_FLOW_PROMPT_FLOW_LABELS,
 };
 

@@ -60,7 +60,7 @@ Voice/style notes (**#1 priority — write exactly like this person; common word
 {{voice_style}}
 
 Portfolio/GitHub narrative (same Acme Labs work as credibility_bio — mention at most once if relevant):
-{{portfolio_github}}
+{{projects}}
 
 ### Visual / structural target (must follow)
 

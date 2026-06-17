@@ -10,12 +10,10 @@ export type BuildSkillsComponentPromptInput = {
   skills: string[];
   canvasWidthPx: number;
   canvasHeightPx: number;
-  professionalBackgroundSegments?: {
-    education: string;
-    credibility_bio: string;
-    voice_style: string;
-    portfolio_github: string;
-  };
+  voiceStyle?: string;
+  projectsBlock?: string;
+  pointOfEmphasis?: string;
+  candidateFullName?: string;
 };
 
 const formatBulletList = (items: string[], emptyLabel: string): string => {
@@ -41,7 +39,10 @@ export const buildSkillsComponentPromptVars = (
     skills,
     canvasWidthPx,
     canvasHeightPx,
-    professionalBackgroundSegments,
+    voiceStyle = '',
+    projectsBlock,
+    pointOfEmphasis,
+    candidateFullName = '',
   } = input;
 
   const companyLine = companyName?.trim()
@@ -53,20 +54,34 @@ export const buildSkillsComponentPromptVars = (
     ? `Read **Responsibilities** and **Requirements** below first. Infer what this **${jobTitle.trim()}** role weights most (e.g. AI/LLM/agents, mobile, full-stack product, infra, FDE/customer-facing delivery, etc.) from repetition and specificity — **do not assume a fixed lead theme**.`
     : `Posting bullets may be sparse — infer emphasis from **${jobTitle.trim()}**, company context, and skills; still prioritize relevance over a generic stack laundry list.`;
 
-  const professionalBackgroundBlock = professionalBackgroundSegments
-    ? `\n### Professional background (factual source — do not invent beyond this)\n\nEducation:\n${professionalBackgroundSegments.education || '(empty)'}\n\nCredibility bio:\n${professionalBackgroundSegments.credibility_bio || '(empty)'}\n\nVoice/style notes:\n${professionalBackgroundSegments.voice_style || '(empty)'}\n\nPortfolio/GitHub narrative (**same Acme Labs / THT body of work** as credibility_bio — NOT a second employer; merge every product and client build listed here into the **single** Acme Labs Experience entry):\n${professionalBackgroundSegments.portfolio_github || '(empty)'}\n`
-    : '';
+  const projects = projectsBlock?.trim() || '(no projects recorded)';
+
+  const projectsBlockSection = `\n### Projects (each ### heading is the employer/organization name — use exactly in Experience)\n\n${projects}\n`;
+
+  const emphasisTrimmed = pointOfEmphasis?.trim() ?? '';
+  const pointOfEmphasisBlock = emphasisTrimmed || '(none provided)';
+  const pointOfEmphasisRule = emphasisTrimmed
+    ? `- The candidate provided **focus points** below. Use them to steer the executive summary opening and Experience bullet ordering — emphasize the skills, stack, or themes they name when supported by the skills list and projects. Connect their focus to specific responsibilities or requirements from the posting. Do not invent employers, metrics, or experiences beyond what the inputs support.`
+    : `- No focus points were provided; infer emphasis from the posting and skills/projects alone per postingEmphasisRule.`;
+
+  const candidateNameLine = candidateFullName.trim()
+    ? `Candidate full name: ${candidateFullName.trim()}`
+    : 'Candidate full name: (sync My LinkedIn first)';
 
   return {
     jobId,
     jobTitle: jobTitle.trim(),
     companyLine,
+    candidateNameLine,
     responsibilitiesBlock: formatBulletList(responsibilities, '(none provided)'),
     requirementsBlock: formatBulletList(requirements, '(none provided)'),
     niceToHavesBlock: formatBulletList(niceToHaves, '(none provided)'),
     skillsList: skills.map((s) => `- ${s}`).join('\n'),
     postingEmphasisRule,
-    professionalBackgroundBlock,
+    pointOfEmphasisBlock,
+    pointOfEmphasisRule,
+    projectsBlock: projectsBlockSection,
+    voice_style: voiceStyle || '(empty)',
     canvasWidthPx: String(canvasWidthPx),
     canvasHeightPx: String(canvasHeightPx),
   };

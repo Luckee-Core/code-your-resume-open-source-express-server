@@ -5,6 +5,11 @@
  */
 
 import { formatCursorApiError } from '../../utils/cursor/format-cursor-api-error';
+import {
+  pickCursorComposerModel,
+  type CursorAgentModelSelection,
+  type CursorModelCatalogItem,
+} from '../../utils/cursor/pick-cursor-composer-model';
 import { toGithubRepoUrl } from '../../utils/cursor/to-github-repo-url';
 
 export type RunStatus = 'CREATING' | 'RUNNING' | 'FINISHED' | 'ERROR' | 'CANCELLED' | 'EXPIRED';
@@ -27,7 +32,6 @@ export type LaunchAgentRequest = {
     skipReviewerRequest?: boolean;
     branchName?: string;
   };
-  model?: string;
   webhook?: {
     url: string;
     secret?: string;
@@ -39,6 +43,7 @@ export type Agent = {
   id: string;
   runId: string;
   summary?: string;
+  modelId: string;
 };
 
 export type AgentRun = {
@@ -66,6 +71,7 @@ type CreateAgentResponse = {
 export class CursorApiClient {
   private baseUrl = 'https://api.cursor.com';
   private apiKey: string;
+  private cachedComposerModel?: CursorAgentModelSelection;
 
   constructor(apiKey: string) {
     if (!apiKey) {
@@ -121,6 +127,37 @@ export class CursorApiClient {
   }
 
   /**
+   * List models available to this API key (`GET /v1/models`).
+   */
+  async listModels(): Promise<CursorModelCatalogItem[]> {
+    const response = await this.request<{ items?: CursorModelCatalogItem[] }>(
+      'GET',
+      '/v1/models',
+    );
+    return response.items ?? [];
+  }
+
+  /**
+   * Resolve Composer 2 model id + default params from the Cursor model catalog.
+   */
+  private async resolveComposerModel(): Promise<CursorAgentModelSelection> {
+    if (this.cachedComposerModel) {
+      return this.cachedComposerModel;
+    }
+
+    const items = await this.listModels();
+    const model = pickCursorComposerModel(items);
+    if (!model) {
+      throw new Error(
+        'No Composer 2 model found for this Cursor API key. Run GET /v1/models to inspect available models.',
+      );
+    }
+
+    this.cachedComposerModel = model;
+    return model;
+  }
+
+  /**
    * Launch a new code generation agent via Cursor v1 API.
    *
    * @param request - Agent configuration including prompt, source repo, and target options
@@ -128,7 +165,9 @@ export class CursorApiClient {
    */
   async launchAgent(request: LaunchAgentRequest): Promise<Agent> {
     const repoUrl = toGithubRepoUrl(request.source.repository);
-    const response = await this.request<CreateAgentResponse>('POST', '/v1/agents', {
+    const model = await this.resolveComposerModel();
+
+    const body: Record<string, unknown> = {
       prompt: request.prompt,
       repos: [
         {
@@ -137,11 +176,19 @@ export class CursorApiClient {
         },
       ],
       autoCreatePR: request.target?.autoCreatePr ?? false,
-    });
+      model,
+    };
+
+    console.log(
+      `🤖 Cursor agent model: ${model.id}${model.params?.length ? ` params=${JSON.stringify(model.params)}` : ''}`,
+    );
+
+    const response = await this.request<CreateAgentResponse>('POST', '/v1/agents', body);
 
     return {
       id: response.agent.id,
       runId: response.run.id,
+      modelId: model.id,
     };
   }
 

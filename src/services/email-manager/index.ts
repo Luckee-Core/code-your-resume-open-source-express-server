@@ -9,6 +9,7 @@ export {
   markFetchedEmailsProcessedInEmailManager,
 } from './list-fetched-emails';
 export {
+  listEnabledSyncTasksFromEmailManager,
   runEmailSyncTasksFromEmailManager,
   type RunEmailSyncTasksFromEmailManagerInput,
 } from './run-email-sync-tasks';

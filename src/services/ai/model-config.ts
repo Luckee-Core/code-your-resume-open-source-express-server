@@ -50,6 +50,12 @@ const CONFIGS: Record<string, ModelConfig> = {
     temperature: 0.2,
     maxTokens: 8192,
   },
+  /** Pasted project narrative → resume-ready project note bullets. */
+  project_notes_synthesis: {
+    model: HAIKU,
+    temperature: 0.2,
+    maxTokens: 8192,
+  },
 };
 
 /**

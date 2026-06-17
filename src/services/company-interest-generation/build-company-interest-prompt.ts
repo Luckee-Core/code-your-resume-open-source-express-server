@@ -9,12 +9,8 @@ export type BuildCompanyInterestPromptInput = {
   niceToHaves?: string[];
   canvasWidthPx: number;
   canvasHeightPx: number;
-  professionalBackgroundSegments: {
-    education: string;
-    credibility_bio: string;
-    voice_style: string;
-    portfolio_github: string;
-  };
+  voiceStyle: string;
+  projectsBlock: string;
   skills?: string[];
 };
 
@@ -43,7 +39,8 @@ export const buildCompanyInterestPromptVars = (
     niceToHaves = [],
     canvasWidthPx,
     canvasHeightPx,
-    professionalBackgroundSegments,
+    voiceStyle,
+    projectsBlock,
     skills = [],
   } = input;
 
@@ -51,8 +48,7 @@ export const buildCompanyInterestPromptVars = (
     ? `Company: ${companyName.trim()}`
     : 'Company: (not provided — write about the role and what you can infer from the posting)';
 
-  const { education, credibility_bio, voice_style, portfolio_github } =
-    professionalBackgroundSegments;
+  const projects = projectsBlock || '(no projects recorded)';
 
   const hasPostingBullets = responsibilities.length > 0 || requirements.length > 0;
   const postingBulletsRule = hasPostingBullets
@@ -68,10 +64,9 @@ export const buildCompanyInterestPromptVars = (
     niceToHavesBlock: formatBulletList(niceToHaves, '(none provided)'),
     skillsBlock:
       skills.length > 0 ? skills.map((s) => `- ${s}`).join('\n') : '(none provided)',
-    education: education || '(empty)',
-    credibility_bio: credibility_bio || '(empty)',
-    voice_style: voice_style || '(empty)',
-    portfolio_github: portfolio_github || '(empty)',
+    voice_style: voiceStyle || '(empty)',
+    projects,
+    portfolio_github: projects,
     canvasWidthPx: String(canvasWidthPx),
     canvasHeightPx: String(canvasHeightPx),
     companyInterestQuestion: COMPANY_INTEREST_QUESTION,

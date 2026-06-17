@@ -14,7 +14,7 @@ BEFORE implementing ANY feature, you MUST:
 
 ## Studio / feature routers (non-CRM)
 
-- **HTTP:** `src/api/{feature}/` with `router.ts` + `routes/` (e.g. `job-studio`, `technical-skills`, `professional-background`).
+- **HTTP:** `src/api/{feature}/` with `router.ts` + `routes/` (e.g. `job-studio`, `technical-skills`, `voice-style`).
 - Same handler contract as CRM: validate → delegate to `src/data/` or `src/services/` → try/catch → `{ success, data?, error? }`.
 
 ## Handlers

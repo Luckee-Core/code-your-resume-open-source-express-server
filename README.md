@@ -1,6 +1,6 @@
 # Code Your Resume — Express API
 
-Supabase-backed CRM API, graphics studio, technical skills studio, professional background, job studio, and job listing import for the [Code Your Resume](https://github.com/Luckee-Core/code-your-resume-open-source) Next.js app.
+Supabase-backed CRM API, graphics studio, technical skills studio, voice style, projects, job studio, and job listing import for the [Code Your Resume](https://github.com/Luckee-Core/code-your-resume-open-source) Next.js app.
 
 **Companion web:** [code-your-resume-open-source](https://github.com/Luckee-Core/code-your-resume-open-source)  
 **Studio map:** [Luckee-Core/getting-started](https://github.com/Luckee-Core/getting-started)  
@@ -37,6 +37,8 @@ Apply in order on a fresh Supabase project:
 5. `docs/supabase-job-listing-sections-mirror.sql` (optional)
 6. `docs/supabase-job-studio-schema.sql`
 7. `docs/supabase-user-background-studio-schema.sql` (optional)
+8. `docs/supabase-projects-schema.sql`
+9. `docs/supabase-voice-style-schema.sql`
 
 Optional demo seed: `npm run seed:sql` (reads synthetic fixtures from `.data/`).
 
@@ -59,7 +61,7 @@ src/
     data/                      # CRM entity HTTP (/api/data/company/list, …)
     job-studio/                # Per-job coach chat
     technical-skills/          # Skills studio
-    professional-background/   # Background narrative
+    voice-style/               # Tone/voice notes singleton
     user-background-studio/    # ICP / background coach
   data/                        # Supabase CRUD (one function per file)
   services/                    # Orchestration, middleware, Supabase client
@@ -73,7 +75,7 @@ Architecture: `.cursor/architecture/` — especially [009-api-data-entity-router
 - `GET /api/health` — health check
 - `/api/data/**` — CRM actions (companies, jobs, employees, applications, …)
 - `/api/technical-skills/**` — technical skills studio
-- `/api/professional-background/**` — professional background
+- `/api/voice-style/**` — voice style studio
 - `/api/job-studio/**` — job studio coach
 - `/api/user-background-studio/**` — user background / ICP coach
 - `POST /api/data/job/import-listing` — fetch job URL, optional AI extract
