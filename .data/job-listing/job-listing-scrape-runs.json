@@ -383,5 +383,16 @@
     "error": "",
     "startedAt": "2026-06-17T18:44:45.722Z",
     "completedAt": "2026-06-17T18:44:45.729Z"
+  },
+  {
+    "id": "9615d403-6499-45e0-b433-0840861795ec",
+    "jobId": "5ac00b05-c35c-4697-93ce-32d2b2c28e83",
+    "sourceUrl": "https://jobs.gem.com/sequencing/am9icG9zdDqot13aHgQBtH-BLER50AO6",
+    "status": "completed",
+    "httpStatus": 200,
+    "plainText": "Sequencing Careers",
+    "error": "",
+    "startedAt": "2026-06-17T20:00:02.235Z",
+    "completedAt": "2026-06-17T20:00:02.595Z"
   }
 ]

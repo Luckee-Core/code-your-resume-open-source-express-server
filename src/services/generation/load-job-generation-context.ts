@@ -85,6 +85,7 @@ export const loadJobGenerationContext = async (
   const candidateIdentityInput = {
     profile: tenantProfile,
     educations,
+    jobTitle: job.title.trim() || 'Untitled role',
   };
   const candidateFullName = resolveCandidateFullName(candidateIdentityInput);
   const candidateIdentitySection = candidateFullName

@@ -68,11 +68,15 @@ export const buildSkillsComponentPromptVars = (
     ? `Candidate full name: ${candidateFullName.trim()}`
     : 'Candidate full name: (sync My LinkedIn first)';
 
+  const trimmedJobTitle = jobTitle.trim() || 'Untitled role';
+  const resumeHeaderSublineLine = `Resume header subline (under name): ${trimmedJobTitle}`;
+
   return {
     jobId,
-    jobTitle: jobTitle.trim(),
+    jobTitle: trimmedJobTitle,
     companyLine,
     candidateNameLine,
+    resumeHeaderSublineLine,
     responsibilitiesBlock: formatBulletList(responsibilities, '(none provided)'),
     requirementsBlock: formatBulletList(requirements, '(none provided)'),
     niceToHavesBlock: formatBulletList(niceToHaves, '(none provided)'),

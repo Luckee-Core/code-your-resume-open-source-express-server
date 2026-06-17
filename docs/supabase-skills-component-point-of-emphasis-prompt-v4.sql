@@ -27,6 +27,7 @@ Job ID: {{jobId}}
 Role: {{jobTitle}}
 {{companyLine}}
 {{candidateNameLine}}
+{{resumeHeaderSublineLine}}
 
 ### Responsibilities (from posting)
 
@@ -66,7 +67,7 @@ Role: {{jobTitle}}
 - **Document, not deck:** Outer area is a muted page background (e.g. slate-100); inner content is a **white "paper" column** centered in the canvas with modest padding, subtle border or ring, optional light shadow — similar in spirit to a printed résumé.
 - **Typography:** Use `font-sans`, comfortable body text (`text-sm` / `leading-relaxed`), slate/neutral palette only. **No** gradients-as-backgrounds, **no** neon, **no** heavy glassmorphism, **no** playful illustrations, **no** oversized display type.
 - **Required sections (all required):**
-  1) **Header / name line** — use **candidateNameLine** and appended candidate identity rules at end of prompt. **Do NOT** copy names from demo hold components.
+  1) **Header** — name from **candidateNameLine**; subline from **resumeHeaderSublineLine** (job posting title — never LinkedIn headline). See appended candidate identity rules.
   2) **Executive Summary** — placed immediately below the header, before Experience.
      - **Format:** exactly **one** `<p>` element. **No** `<ul>`, **no** bullets, **no** line-per-sentence layout, **no** second paragraph.
      - **Voice (mandatory):** **First person only** — write as the candidate speaking ("I build…", "I embed…", "My work…"). **Never** third person.
