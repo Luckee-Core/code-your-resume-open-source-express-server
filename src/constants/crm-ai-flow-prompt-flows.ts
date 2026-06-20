@@ -6,6 +6,7 @@ export const CRM_AI_FLOW_PROMPT_FLOWS = {
   COVER_LETTER_GENERATION: 'cover_letter_generation',
   COMPANY_INTEREST_GENERATION: 'company_interest_generation',
   TEAM_CONVERSATION_GENERATION: 'team_conversation_generation',
+  IDEAL_CANDIDATE_GENERATION: 'ideal_candidate_generation',
   SKILLS_COMPONENT_GENERATION: 'skills_component_generation',
   PROJECT_NOTES_SYNTHESIS: 'project_notes_synthesis',
 } as const;
@@ -20,6 +21,7 @@ export const CRM_AI_FLOW_PROMPT_FLOW_LABELS: Record<string, string> = {
   cover_letter_generation: 'Cover letter generation',
   company_interest_generation: 'Company interest generation',
   team_conversation_generation: 'Team conversation generation',
+  ideal_candidate_generation: 'Ideal candidate generation',
   skills_component_generation: 'Skills component generation',
   project_notes_synthesis: 'Project notes synthesis',
 };

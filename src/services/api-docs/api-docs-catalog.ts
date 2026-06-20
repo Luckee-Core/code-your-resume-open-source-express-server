@@ -978,6 +978,12 @@ export const buildApiDocsCatalog = (): ApiDocsCatalog => {
       "Generate team conversation TSX for a job",
       "AI-generated YC-style conversation opener — share about you, what you're looking for, or why the company interests you.",
     ),
+    buildGenerationGroup(
+      "Ideal candidate generation",
+      "/api/data/ideal-candidate/generate",
+      "Generate ideal candidate TSX for a job",
+      "AI-generated why-you-are-the-ideal-fit answer using projects, voice style, and job posting context.",
+    ),
     buildErrorReportingGroup(),
     buildTechnicalSkillsGroup(),
     buildVoiceStyleGroup(),

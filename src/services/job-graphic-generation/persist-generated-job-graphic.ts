@@ -9,7 +9,8 @@ export type JobGraphicGenerationKind =
   | 'resume'
   | 'coverLetter'
   | 'companyInterest'
-  | 'teamConversation';
+  | 'teamConversation'
+  | 'idealCandidate';
 
 type KindConfig = {
   titlePrefix: string;
@@ -40,6 +41,12 @@ const KIND_CONFIG: Record<JobGraphicGenerationKind, KindConfig> = {
   teamConversation: {
     titlePrefix: 'Team conversation —',
     metadataSourceKey: 'teamConversationSource',
+    canvasWidthPx: 816,
+    canvasHeightPx: 480,
+  },
+  idealCandidate: {
+    titlePrefix: 'Ideal candidate —',
+    metadataSourceKey: 'idealCandidateSource',
     canvasWidthPx: 816,
     canvasHeightPx: 480,
   },
