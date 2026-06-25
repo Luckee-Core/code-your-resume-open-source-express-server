@@ -28,6 +28,7 @@ import { createLinkedInEducationRouter } from "./linkedin-education/router";
 import { createLinkedInCertificationRouter } from "./linkedin-certification/router";
 import { createProjectApiRouter } from "./project/router";
 import { createProjectNotesApiRouter } from "./project-notes/router";
+import { createQuickApplyRouter } from "./quick-apply/router";
 
 /**
  * Aggregates CRM action routes under `/api/data`.
@@ -63,5 +64,6 @@ export const createApiDataRouter = (): Router => {
   router.use("/linkedin-certification", createLinkedInCertificationRouter());
   router.use("/project", createProjectApiRouter());
   router.use("/project-notes", createProjectNotesApiRouter());
+  router.use("/quick-apply", createQuickApplyRouter());
   return router;
 };
