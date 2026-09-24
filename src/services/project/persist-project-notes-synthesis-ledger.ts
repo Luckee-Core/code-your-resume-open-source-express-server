@@ -14,10 +14,10 @@ import {
   getAnthropicProjectNotesSynthesisModel,
 } from "./extract-project-notes-with-anthropic";
 import {
-  syncProjectNotesSynthesisExchangeToSupabase,
-  syncProjectNotesSynthesisRequestToSupabase,
-  syncProjectNotesSynthesisResponseToSupabase,
-} from "./sync-project-notes-synthesis-ledger-to-supabase";
+  insertProjectNotesSynthesisExchange,
+  insertProjectNotesSynthesisRequest,
+  insertProjectNotesSynthesisResponse,
+} from "../../data/project-notes-synthesis";
 
 export type PersistProjectNotesSynthesisLedgerResult =
   | { ok: true; exchangeId: string; notes: string[] }
@@ -92,7 +92,7 @@ export const persistProjectNotesSynthesisLedger = async (params: {
   };
 
   try {
-    await syncProjectNotesSynthesisRequestToSupabase(requestRow);
+    await insertProjectNotesSynthesisRequest(supabase, requestRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistProjectNotesSynthesisLedger: failed to persist AI request", err);
@@ -145,7 +145,7 @@ export const persistProjectNotesSynthesisLedger = async (params: {
   }
 
   try {
-    await syncProjectNotesSynthesisResponseToSupabase(responseRow);
+    await insertProjectNotesSynthesisResponse(supabase, responseRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistProjectNotesSynthesisLedger: failed to persist AI response", err);
@@ -162,7 +162,7 @@ export const persistProjectNotesSynthesisLedger = async (params: {
   };
 
   try {
-    await syncProjectNotesSynthesisExchangeToSupabase(exchangeRow);
+    await insertProjectNotesSynthesisExchange(supabase, exchangeRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistProjectNotesSynthesisLedger: failed to persist AI exchange", err);

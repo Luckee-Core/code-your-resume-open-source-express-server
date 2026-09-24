@@ -6,6 +6,9 @@ import type {
   JobListingStructuredBulletRow,
 } from "../../data/job-listing/types";
 import { getActiveJobListingAiPrompt } from "../../data/job-listing-ai-prompt";
+import { insertJobListingAiExchange } from "../../data/job-listing-ai-exchanges";
+import { insertJobListingAiRequest } from "../../data/job-listing-ai-requests";
+import { insertJobListingAiResponse } from "../../data/job-listing-ai-responses";
 import { getSupabaseCrmMirrorClient } from "../supabase/get-supabase-crm-mirror-client";
 import { requireActivePromptText } from "../../utils/ai/require-active-prompt-text";
 import {
@@ -13,11 +16,6 @@ import {
   getAnthropicJobListingModel,
 } from "./extract-job-listing-with-anthropic";
 import type { ExtractJobListingHints } from "./extract-job-listing-types";
-import {
-  syncJobListingAiExchangeToSupabase,
-  syncJobListingAiRequestToSupabase,
-  syncJobListingAiResponseToSupabase,
-} from "./sync-job-listing-ai-ledger-to-supabase";
 import { syncJobListingSectionRowsToSupabase } from "./sync-job-listing-section-rows-to-supabase";
 
 export type PersistJobListingAiLedgerResult =
@@ -131,7 +129,7 @@ export const persistJobListingAiLedger = async (params: {
   };
 
   try {
-    await syncJobListingAiRequestToSupabase(requestRow);
+    await insertJobListingAiRequest(mirror, requestRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistJobListingAiLedger: failed to persist AI request", err);
@@ -190,7 +188,7 @@ export const persistJobListingAiLedger = async (params: {
   }
 
   try {
-    await syncJobListingAiResponseToSupabase(responseRow);
+    await insertJobListingAiResponse(mirror, responseRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistJobListingAiLedger: failed to persist AI response", err);
@@ -208,7 +206,7 @@ export const persistJobListingAiLedger = async (params: {
   };
 
   try {
-    await syncJobListingAiExchangeToSupabase(exchangeRow);
+    await insertJobListingAiExchange(mirror, exchangeRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistJobListingAiLedger: failed to persist AI exchange", err);

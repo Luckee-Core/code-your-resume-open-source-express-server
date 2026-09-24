@@ -7,7 +7,7 @@ import { listProjects } from '../../data/projects';
 import { listAllProjectNotes } from '../../data/project-notes';
 import { getTenantLinkedInProfile } from '../../data/linkedin-profiles';
 import { listLinkedInEducationsByProfileId } from '../../data/linkedin-educations';
-import { loadJobBulletBodiesFromSupabase } from '../../utils/job/load-job-bullet-bodies-from-supabase';
+import { listSectionBodiesByJobId } from '../../data/job-listing-sections';
 import { buildSkillPromptLines } from '../../utils/technical-skills/build-skill-prompt-lines';
 import { buildProjectsPromptBlock, EMPTY_PROJECTS_LABEL, buildExperienceEmployersPromptSection } from '../../utils/projects';
 import {
@@ -68,9 +68,9 @@ export const loadJobGenerationContext = async (
 
   const [respBodies, reqBodies, nthBodies, voiceStyleRow, skillRows, projectRows, projectNotes, tenantProfile] =
     await Promise.all([
-    loadJobBulletBodiesFromSupabase(supabase, trimmedJobId, 'job_responsibilities'),
-    loadJobBulletBodiesFromSupabase(supabase, trimmedJobId, 'job_requirements'),
-    loadJobBulletBodiesFromSupabase(supabase, trimmedJobId, 'job_nice_to_have'),
+    listSectionBodiesByJobId(supabase, trimmedJobId, 'job_responsibilities'),
+    listSectionBodiesByJobId(supabase, trimmedJobId, 'job_requirements'),
+    listSectionBodiesByJobId(supabase, trimmedJobId, 'job_nice_to_have'),
     getVoiceStyle(supabase),
     listTechnicalSkills(supabase),
     listProjects(supabase),

@@ -13,7 +13,7 @@ ADRs document:
 
 ### Shared conventions (001–006, 009–010)
 
-1. [001 – File & API organization](./001-file-and-domain-organization.md) — `src/api/data/` HTTP, `src/data/` CRUD, one function per file.
+1. [001 – File & API organization](./001-file-and-domain-organization.md) — `src/api/data/` HTTP, `src/data/` CRUD, one function per file. Row types stay in `src/data/{entity}/types.ts` (template `src/model/` deferred).
 2. [002 – Router factory & handler pattern](./002-router-factory-and-handler-pattern.md) — Thin routers, handlers own request flow.
 3. [003 – Data layer & CRUD boundaries](./003-data-layer-crud-boundaries.md) — Isolate database CRUD in `src/data/`.
 4. [004 – Managed clients & startup init](./004-managed-clients-and-startup-init.md) — Initialize shared clients at startup.

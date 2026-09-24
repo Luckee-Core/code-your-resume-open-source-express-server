@@ -12,6 +12,8 @@ Unlike the mentorai-server monolith (`src/domains/{domain}/`), this product uses
 
 Reference OSS pattern: [lead-studio-express-server](https://github.com/lead-open-source/lead-studio-express-server) uses `createDataService()` in `src/data/`. This repo uses `createApiDataRouter()` in `src/api/data/router.ts` — same rules, different mount path (documented fork exception per ADR 009).
 
+**Domain types:** table row and write-input types live in `src/data/{entity}/types.ts`. The express-server-template ADR 008 `src/model/` layout is deferred; do not add `src/model/` until a dedicated migration.
+
 ## Canonical folder structure
 
 ```text
