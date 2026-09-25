@@ -28,6 +28,24 @@ CRM_BASE=http://127.0.0.1:3053 npm run verify:crm
 
 Human-readable API reference: start this server and open **http://localhost:3000/docs/api** in the web app (catalog fetched from `GET /api-docs.json`).
 
+## Local-only Postgres (`local-database` branch)
+
+`main` stores CRM and studio data in **Supabase** (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`). To run against **Homebrew Postgres on this machine** instead (no Supabase account), check out the **`local-database`** branch in this repo.
+
+That branch uses `DATABASE_URL` and `migrations/setup.sql`. HTTP routes and JSON shapes stay the same, so the Next.js app does not need a matching branch — point it at this Express process as usual.
+
+```bash
+git checkout local-database
+createdb code_your_resume
+export DATABASE_URL="postgresql://$(whoami)@127.0.0.1:5432/code_your_resume"
+psql "$DATABASE_URL" -f migrations/setup.sql
+cp .env.example .env   # set DATABASE_URL
+npm install
+npm run dev
+```
+
+Setup details live in that branch’s README.
+
 ## Supabase runbook
 
 Apply **required DDL** in this order on a fresh Supabase project. Each file’s header comment is the source of “run after” order. Files use `IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` where they overlap (for example `image_graphics` is in the CRM schema and in the graphics sidecar).
