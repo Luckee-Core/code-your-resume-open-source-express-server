@@ -1,20 +1,20 @@
 import type { Request, Response } from "express";
 import { deleteImageGraphic } from "../../../data/image-graphics";
-import { getSupabaseForImageGraphicHandler } from "./get-supabase-for-handler";
+import { getPgPoolForImageGraphicHandler } from "./get-pg-pool-for-handler";
 
 /**
  * DELETE /api/data/image-graphic/delete?id= — removes one graphic from Supabase.
  */
 export const handleImageGraphicDelete = async (req: Request, res: Response): Promise<void> => {
   try {
-    const supabase = getSupabaseForImageGraphicHandler(res);
-    if (!supabase) return;
+    const pool = getPgPoolForImageGraphicHandler(res);
+    if (!pool) return;
     const id = typeof req.query.id === "string" ? req.query.id.trim() : "";
     if (!id) {
       res.status(400).json({ success: false, error: "id is required" });
       return;
     }
-    const ok = await deleteImageGraphic(supabase, id);
+    const ok = await deleteImageGraphic(pool, id);
     if (!ok) {
       res.status(404).json({ success: false, error: "Graphic not found" });
       return;

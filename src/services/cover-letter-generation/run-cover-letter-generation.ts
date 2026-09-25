@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
@@ -49,12 +49,12 @@ const COVER_LETTER_COMPONENT_NAME = 'GeneratedCoverLetterPreview';
  * Run the full cover letter generation pipeline:
  * build prompt → ledger → Cursor agent → poll → extract TSX → ledger complete.
  *
- * @param supabase - Supabase service-role client for ledger writes
+ * @param pool - Supabase service-role client for ledger writes
  * @param input - Job context, background segments, optional skills
  * @returns Generated TSX string and ledger IDs
  */
 export const runCoverLetterGeneration = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: RunCoverLetterGenerationInput,
 ): Promise<RunCoverLetterGenerationResult> => {
   const {
@@ -83,7 +83,7 @@ export const runCoverLetterGeneration = async (
 
   try {
     const template = await loadCrmGenerationPromptTemplate(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.COVER_LETTER_GENERATION,
     );
     const prompt = buildCoverLetterPromptFromTemplate(template, {
@@ -101,7 +101,7 @@ export const runCoverLetterGeneration = async (
       pointOfEmphasis,
     });
 
-    await insertCoverLetterRequest(supabase, {
+    await insertCoverLetterRequest(pool, {
       id: requestId,
       jobId,
       skills,
@@ -121,7 +121,7 @@ export const runCoverLetterGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertCoverLetterExchange(supabase, {
+    await insertCoverLetterExchange(pool, {
       id: exchangeId,
       jobId,
       requestId,
@@ -135,7 +135,7 @@ export const runCoverLetterGeneration = async (
     });
 
     const responseId = randomUUID();
-    await insertCoverLetterResponse(supabase, {
+    await insertCoverLetterResponse(pool, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
@@ -143,7 +143,7 @@ export const runCoverLetterGeneration = async (
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
 
-    await updateCoverLetterExchangeCompleted(supabase, {
+    await updateCoverLetterExchangeCompleted(pool, {
       id: exchangeId,
       responseId,
       inputTokens: 0,
@@ -151,7 +151,7 @@ export const runCoverLetterGeneration = async (
       modelUsed: agent.modelId,
     });
 
-    await updateCoverLetterRequestCompleted(supabase, requestId);
+    await updateCoverLetterRequestCompleted(pool, requestId);
 
     console.log(`✅ Cover letter generation complete (${durationSeconds}s)`);
 
@@ -161,9 +161,9 @@ export const runCoverLetterGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateCoverLetterExchangeFailed(supabase, exchangeId, err.message);
+        await updateCoverLetterExchangeFailed(pool, exchangeId, err.message);
       }
-      await updateCoverLetterRequestFailed(supabase, requestId);
+      await updateCoverLetterRequestFailed(pool, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

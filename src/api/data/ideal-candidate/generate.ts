@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import type { Pool } from "pg";
+import { getManagedPgPool } from "../../../services/postgres";
 import { runIdealCandidateGeneration } from "../../../services/ideal-candidate-generation";
 import {
   assertHasNarrativeContext,
@@ -17,7 +17,7 @@ import {
  * Runs Cursor ideal-candidate generation and persists the graphic on Express (client-independent).
  */
 const runIdealCandidateGenerationInBackground = (
-  supabase: SupabaseClient,
+  pool: Pool,
   context: JobGenerationContext,
 ): void => {
   const label = `ideal-candidate job ${context.jobId}`;
@@ -25,7 +25,7 @@ const runIdealCandidateGenerationInBackground = (
   scheduleBackgroundJobGraphicGeneration(label, async () => {
     console.log(`🚀 Background ${label} — starting Cursor agent`);
 
-    const result = await runIdealCandidateGeneration(supabase, {
+    const result = await runIdealCandidateGeneration(pool, {
       jobId: context.jobId,
       jobTitle: context.jobTitle,
       companyName: context.companyName,
@@ -38,7 +38,7 @@ const runIdealCandidateGenerationInBackground = (
       appendedPromptSections: context.appendedPromptSections,
     });
 
-    const graphic = await persistGeneratedJobGraphic(supabase, {
+    const graphic = await persistGeneratedJobGraphic(pool, {
       kind: "idealCandidate",
       jobId: context.jobId,
       jobTitle: context.jobTitle,
@@ -62,11 +62,11 @@ export const handleIdealCandidateGenerate = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
+    const pool = getManagedPgPool();
+    if (!pool) {
       return res.status(500).json({
         success: false,
-        error: "Supabase client not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
+        error: "Postgres not configured — set DATABASE_URL",
       });
     }
 
@@ -75,14 +75,14 @@ export const handleIdealCandidateGenerate = async (
       return res.status(400).json({ success: false, error: "jobId is required" });
     }
 
-    const context = await loadJobGenerationContext(supabase, jobId);
+    const context = await loadJobGenerationContext(pool, jobId);
     assertHasNarrativeContext(context);
 
     console.log(
       `📥 POST /api/data/ideal-candidate/generate — job: ${context.jobTitle} (${context.jobId})`,
     );
 
-    runIdealCandidateGenerationInBackground(supabase, context);
+    runIdealCandidateGenerationInBackground(pool, context);
 
     console.log(`📤 202 POST /api/data/ideal-candidate/generate — queued job ${context.jobId}`);
     return res.status(202).json({ success: true, accepted: true, jobId: context.jobId });

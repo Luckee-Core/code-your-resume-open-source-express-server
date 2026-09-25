@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { updateJobNewsletterSource } from "../../../data/job-newsletter-sources";
 import type { UpdateJobNewsletterSourceInput } from "../../../data/job-newsletter-sources";
 
@@ -29,7 +29,7 @@ export const handleJobNewsletterSourceUpdate = async (
       patch.parse_instructions = body.parse_instructions;
     }
 
-    const data = await updateJobNewsletterSource(requireCrmSupabaseClient(), id, patch);
+    const data = await updateJobNewsletterSource(requireCrmPgPool(), id, patch);
     console.log("📤 200 PATCH /api/data/job-newsletter-sources/update");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

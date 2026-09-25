@@ -1,7 +1,8 @@
 import type { Job } from "./types";
 import { isJobStatus } from "./is-job-status";
-import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { requireCrmPgPool } from "./require-crm-pg-pool";
 import { getJobFromSupabase } from "./supabase/get-job-from-supabase";
+import { updateRows } from "../../utils/postgres";
 
 /**
  * Updates an existing job row in Supabase CRM.
@@ -23,8 +24,8 @@ export const updateJobInStore = async (
     >
   >,
 ): Promise<Job | null> => {
-  const supabase = requireCrmSupabaseClient();
-  const prev = await getJobFromSupabase(supabase, id);
+  const pool = requireCrmPgPool();
+  const prev = await getJobFromSupabase(pool, id);
   if (!prev) {
     return null;
   }
@@ -48,9 +49,10 @@ export const updateJobInStore = async (
     updatedAt: new Date().toISOString(),
   };
 
-  const { error } = await supabase
-    .from("jobs")
-    .update({
+  await updateRows(
+    pool,
+    "jobs",
+    {
       company_id: next.companyId,
       title: next.title,
       url: next.url,
@@ -60,13 +62,9 @@ export const updateJobInStore = async (
       latest_scrape_run_id: next.latestScrapeRunId.trim() ? next.latestScrapeRunId : null,
       latest_ai_exchange_id: next.latestAiExchangeId.trim() ? next.latestAiExchangeId : null,
       updated_at: next.updatedAt,
-    })
-    .eq("id", id);
-
-  if (error) {
-    console.error("❌ updateJobInStore:", error.message);
-    throw new Error(error.message);
-  }
+    },
+    { id },
+  );
 
   return next;
 };

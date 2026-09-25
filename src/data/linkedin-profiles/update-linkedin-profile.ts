@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { updateRows } from "../../utils/postgres";
 import type { LinkedInProfile } from "./types";
 import { getLinkedInProfile } from "./get-linkedin-profile";
 
@@ -16,11 +17,11 @@ export type UpdateLinkedInProfileInput = {
  * Updates one LinkedIn profile row.
  */
 export const updateLinkedInProfile = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   patch: UpdateLinkedInProfileInput,
 ): Promise<LinkedInProfile | null> => {
-  const prev = await getLinkedInProfile(supabase, id);
+  const prev = await getLinkedInProfile(pool, id);
   if (!prev) return null;
 
   const updatedAt = new Date().toISOString();
@@ -34,12 +35,13 @@ export const updateLinkedInProfile = async (
   if (patch.location !== undefined) row.location = patch.location;
   if (patch.syncedAt !== undefined) row.synced_at = patch.syncedAt;
 
-  const { error } = await supabase.from("linkedin_profiles").update(row).eq("id", id);
-
-  if (error) {
-    console.error("❌ updateLinkedInProfile:", error.message);
-    throw new Error(error.message);
+  try {
+    await updateRows(pool, "linkedin_profiles", row, { id });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ updateLinkedInProfile:", message);
+    throw new Error(message);
   }
 
-  return getLinkedInProfile(supabase, id);
+  return getLinkedInProfile(pool, id);
 };

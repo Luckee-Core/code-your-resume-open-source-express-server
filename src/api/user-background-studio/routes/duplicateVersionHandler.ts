@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import { duplicateUserBackgroundVersionFrom, getUserBackgroundProfileForUser } from '../../../data/user-background-studio';
 import { buildUserBackgroundProfilePayload } from '../mapUserBackgroundProfile';
 
@@ -21,17 +21,17 @@ export const duplicateVersionHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'fromVersionNumber is required' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    await duplicateUserBackgroundVersionFrom(supabase, profileId, userId, fromVersionNumber);
-    const row = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+    await duplicateUserBackgroundVersionFrom(pool, profileId, userId, fromVersionNumber);
+    const row = await getUserBackgroundProfileForUser(pool, profileId, userId);
     if (!row) {
       return res.status(404).json({ success: false, error: 'Profile not found' });
     }
-    const profile = await buildUserBackgroundProfilePayload(supabase, row);
+    const profile = await buildUserBackgroundProfilePayload(pool, row);
 
     return res.status(200).json({ success: true, profile });
   } catch (error: unknown) {

@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import {
   createCompanyInStore,
   getCompanyFromStore,
@@ -6,7 +6,7 @@ import {
 } from "../../data/crm";
 import { findCompanyByWebsiteFromSupabase } from "../../data/crm/supabase/find-company-by-website-from-supabase";
 import { findJobByUrlFromSupabase } from "../../data/crm/supabase/find-job-by-url-from-supabase";
-import { requireCrmSupabaseClient } from "../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../data/crm/require-crm-pg-pool";
 import type { Company, Job } from "../../data/crm/types";
 import { discoverCompanySitePageUrls } from "../company/discover-company-site-page-urls";
 import { runCompanyWebsiteResearch } from "../company/run-company-website-research";
@@ -62,7 +62,7 @@ const normalizeListingUrlInput = (raw: string): string => {
  * Queue resume TSX generation in the background (same contract as skills-component generate).
  */
 const queueResumeGenerationInBackground = (
-  supabase: SupabaseClient,
+  pool: Pool,
   context: JobGenerationContext,
 ): void => {
   const label = `quick-apply resume job ${context.jobId}`;
@@ -70,7 +70,7 @@ const queueResumeGenerationInBackground = (
   scheduleBackgroundJobGraphicGeneration(label, async () => {
     console.log(`🚀 Background ${label} — starting Cursor agent`);
 
-    const result = await runSkillsComponentGeneration(supabase, {
+    const result = await runSkillsComponentGeneration(pool, {
       jobId: context.jobId,
       jobTitle: context.jobTitle,
       companyName: context.companyName,
@@ -84,7 +84,7 @@ const queueResumeGenerationInBackground = (
       appendedPromptSections: context.appendedPromptSections,
     });
 
-    const graphic = await persistGeneratedJobGraphic(supabase, {
+    const graphic = await persistGeneratedJobGraphic(pool, {
       kind: "resume",
       jobId: context.jobId,
       jobTitle: context.jobTitle,
@@ -151,8 +151,8 @@ const resolveJobFromListingUrl = async (
     return { ok: false, error: urlCheck.error };
   }
 
-  const supabase = requireCrmSupabaseClient();
-  const existingJob = await findJobByUrlFromSupabase(supabase, urlCheck.href);
+  const pool = requireCrmPgPool();
+  const existingJob = await findJobByUrlFromSupabase(pool, urlCheck.href);
   const company = await getCompanyFromStore(companyId);
   const companyName = company?.name;
 
@@ -219,12 +219,12 @@ export const runQuickApplyPipeline = async (
     return { ok: false, statusCode: 400, error: `Job listing: ${jobUrlCheck.error}` };
   }
 
-  const supabase = requireCrmSupabaseClient();
+  const pool = requireCrmPgPool();
   const warnings: string[] = [];
   let companyCreated = false;
 
   let company =
-    (await findCompanyByWebsiteFromSupabase(supabase, companyUrlCheck.href)) ?? null;
+    (await findCompanyByWebsiteFromSupabase(pool, companyUrlCheck.href)) ?? null;
 
   if (!company) {
     const derivedName = deriveCompanyNameFromWebsiteUrl(companyUrlCheck.href);
@@ -277,10 +277,10 @@ export const runQuickApplyPipeline = async (
   let resumeSkipReason: string | undefined;
 
   try {
-    const context = await loadJobGenerationContext(supabase, job.id);
+    const context = await loadJobGenerationContext(pool, job.id);
     assertHasActiveSkills(context);
     assertHasCandidateName(context);
-    queueResumeGenerationInBackground(supabase, context);
+    queueResumeGenerationInBackground(pool, context);
     resumeQueued = true;
   } catch (error: unknown) {
     if (error instanceof JobGenerationContextError) {

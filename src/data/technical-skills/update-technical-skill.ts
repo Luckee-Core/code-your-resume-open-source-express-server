@@ -1,10 +1,11 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Update title/body for an existing technical skill row.
  */
 export const updateTechnicalSkill = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   skillId: string,
   patch: { title?: string; body?: string | null; sourceExchangeId?: string | null },
 ): Promise<void> => {
@@ -13,10 +14,10 @@ export const updateTechnicalSkill = async (
   if (patch.body !== undefined) row.body = patch.body;
   if (patch.sourceExchangeId !== undefined) row.source_exchange_id = patch.sourceExchangeId;
 
-  const { error } = await supabase.from('technical_skills').update(row).eq('id', skillId);
-
-  if (error) {
+  try {
+    await updateRows(pool, 'technical_skills', row, { id: skillId });
+  } catch (error) {
     console.error('❌ updateTechnicalSkill:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

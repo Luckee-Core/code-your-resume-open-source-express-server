@@ -1,6 +1,7 @@
 import type { Company } from "./types";
-import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { requireCrmPgPool } from "./require-crm-pg-pool";
 import { getCompanyFromSupabase } from "./supabase/get-company-from-supabase";
+import { updateRows } from "../../utils/postgres";
 
 /**
  * Updates an existing company row in Supabase CRM.
@@ -20,8 +21,8 @@ export const updateCompanyInStore = async (
     >
   >,
 ): Promise<Company | null> => {
-  const supabase = requireCrmSupabaseClient();
-  const prev = await getCompanyFromSupabase(supabase, id);
+  const pool = requireCrmPgPool();
+  const prev = await getCompanyFromSupabase(pool, id);
   if (!prev) {
     return null;
   }
@@ -47,9 +48,10 @@ export const updateCompanyInStore = async (
     updatedAt: new Date().toISOString(),
   };
 
-  const { error } = await supabase
-    .from("companies")
-    .update({
+  await updateRows(
+    pool,
+    "companies",
+    {
       name: next.name,
       website: next.website,
       notes: next.notes,
@@ -60,13 +62,9 @@ export const updateCompanyInStore = async (
         ? next.websiteResearchCompletedAt
         : null,
       updated_at: next.updatedAt,
-    })
-    .eq("id", id);
-
-  if (error) {
-    console.error("❌ updateCompanyInStore:", error.message);
-    throw new Error(error.message);
-  }
+    },
+    { id },
+  );
 
   return next;
 };

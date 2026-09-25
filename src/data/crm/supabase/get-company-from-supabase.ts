@@ -1,26 +1,20 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { Company } from "../types";
-import { mapCompanyRow } from "./map-company-row";
+import { mapCompanyRow, type CompanyRow } from "./map-company-row";
+import { selectOneFrom } from "../../../utils/postgres";
 
 /**
  * Loads one company by id from Supabase.
  */
 export const getCompanyFromSupabase = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<Company | null> => {
-  const { data, error } = await supabase
-    .from("companies")
-    .select(
+  const data = await selectOneFrom<CompanyRow>(pool, "companies", {
+    columns:
       "id, name, website, notes, website_urls, playwright_website_url_discovery_attempted, website_research_summary, website_research_completed_at, created_at, updated_at",
-    )
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("❌ getCompanyFromSupabase:", error.message);
-    throw new Error(error.message);
-  }
+    eq: { id },
+  });
 
   return data ? mapCompanyRow(data) : null;
 };

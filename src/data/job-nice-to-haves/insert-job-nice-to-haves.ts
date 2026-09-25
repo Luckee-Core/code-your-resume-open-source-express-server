@@ -1,19 +1,21 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { mapStructuredBulletToRow } from "../job-listing-sections/map-structured-bullet-to-row";
 import type { JobListingStructuredBulletRow } from "../job-listing/types";
+import { insertRows } from "../../utils/postgres";
 
 /**
- * Inserts `job_nice_to_have` rows. Logs PostgREST errors without throwing.
+ * Inserts `job_nice_to_have` rows.
  */
 export const insertJobNiceToHaves = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   rows: JobListingStructuredBulletRow[],
 ): Promise<void> => {
   if (rows.length === 0) {
     return;
   }
-  const { error } = await supabase.from("job_nice_to_have").insert(rows.map(mapStructuredBulletToRow));
-  if (error) {
-    console.error("❌ insertJobNiceToHaves", error.message, error);
-  }
+  await insertRows(
+    pool,
+    "job_nice_to_have",
+    rows.map((row) => ({ ...mapStructuredBulletToRow(row) })),
+  );
 };

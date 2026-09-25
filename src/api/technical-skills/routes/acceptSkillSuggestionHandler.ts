@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import {
   getTechnicalSkillSuggestion,
   acceptTechnicalSkillSuggestion,
@@ -16,12 +16,12 @@ export const acceptSkillSuggestionHandler = async (req: Request, res: Response) 
       return res.status(400).json({ success: false, error: 'suggestionId is required' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    const suggestion = await getTechnicalSkillSuggestion(supabase, suggestionId);
+    const suggestion = await getTechnicalSkillSuggestion(pool, suggestionId);
     if (!suggestion) {
       return res.status(404).json({ success: false, error: 'Suggestion not found' });
     }
@@ -34,7 +34,7 @@ export const acceptSkillSuggestionHandler = async (req: Request, res: Response) 
       return res.status(400).json({ success: false, error: 'Update suggestion missing target skill' });
     }
 
-    await acceptTechnicalSkillSuggestion(supabase, {
+    await acceptTechnicalSkillSuggestion(pool, {
       suggestionId: suggestion.id,
       title: suggestion.title,
       body: suggestion.body,
@@ -43,7 +43,7 @@ export const acceptSkillSuggestionHandler = async (req: Request, res: Response) 
       exchangeId: suggestion.exchange_id,
     });
 
-    const payload = await loadTechnicalSkillsPayload(supabase);
+    const payload = await loadTechnicalSkillsPayload(pool);
     return res.json({ success: true, ...payload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

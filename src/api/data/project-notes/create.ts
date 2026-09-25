@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { createProjectNote } from "../../../data/project-notes";
 
 type Body = {
@@ -26,7 +26,7 @@ export const handleProjectNoteCreate = async (req: Request, res: Response): Prom
       return;
     }
 
-    const data = await createProjectNote(requireCrmSupabaseClient(), {
+    const data = await createProjectNote(requireCrmPgPool(), {
       projectId,
       body: noteBody,
     });

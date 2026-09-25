@@ -1,11 +1,12 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Update ICP display fields (caller must verify ownership).
  * Only keys present in `fields` are written.
  */
 export const updateUserBackgroundProfileMetadata = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   userId: string,
   fields: { name?: string; description?: string | null },
@@ -20,10 +21,10 @@ export const updateUserBackgroundProfileMetadata = async (
     payload.description = fields.description;
   }
 
-  const { error } = await supabase.from('user_background_profiles').update(payload).eq('id', profileId).eq('user_id', userId);
-
-  if (error) {
+  try {
+    await updateRows(pool, 'user_background_profiles', payload, { id: profileId, user_id: userId });
+  } catch (error) {
     console.error('❌ updateUserBackgroundProfileMetadata:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

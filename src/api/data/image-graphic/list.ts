@@ -1,15 +1,15 @@
 import type { Request, Response } from "express";
 import { listImageGraphics } from "../../../data/image-graphics";
-import { getSupabaseForImageGraphicHandler } from "./get-supabase-for-handler";
+import { getPgPoolForImageGraphicHandler } from "./get-pg-pool-for-handler";
 
 /**
  * GET /api/data/image-graphic/list — lists graphics from tenant Supabase.
  */
 export const handleImageGraphicList = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const supabase = getSupabaseForImageGraphicHandler(res);
-    if (!supabase) return;
-    const graphics = await listImageGraphics(supabase);
+    const pool = getPgPoolForImageGraphicHandler(res);
+    if (!pool) return;
+    const graphics = await listImageGraphics(pool);
     res.status(200).json({ success: true, data: { graphics } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed to list image graphics";

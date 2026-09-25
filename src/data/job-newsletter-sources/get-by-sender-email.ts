@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectRowsFrom } from "../../utils/postgres";
 import type { JobNewsletterSource } from "./types";
 
 /**
@@ -10,22 +11,19 @@ export const normalizeSenderEmail = (email: string): string => email.trim().toLo
  * Find an enabled or disabled source row by sender email (case-insensitive).
  */
 export const getJobNewsletterSourceBySenderEmail = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   senderEmail: string,
 ): Promise<JobNewsletterSource | null> => {
   const normalized = normalizeSenderEmail(senderEmail);
-  const { data, error } = await supabase
-    .from("job_newsletter_sources")
-    .select("*");
-
-  if (error) {
-    console.error("❌ getJobNewsletterSourceBySenderEmail:", error.message);
-    throw new Error(error.message);
+  try {
+    const data = await selectRowsFrom<JobNewsletterSource>(pool, "job_newsletter_sources");
+    const match = data.find(
+      (row) => normalizeSenderEmail(String(row.sender_email ?? "")) === normalized,
+    );
+    return match ?? null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ getJobNewsletterSourceBySenderEmail:", message);
+    throw new Error(message);
   }
-
-  const match = (data ?? []).find(
-    (row) => normalizeSenderEmail(String(row.sender_email ?? "")) === normalized,
-  );
-
-  return match ? (match as JobNewsletterSource) : null;
 };

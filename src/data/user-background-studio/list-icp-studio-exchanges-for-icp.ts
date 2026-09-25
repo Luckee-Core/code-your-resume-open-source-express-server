@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundStudioExchangeRow = {
   id: string;
@@ -13,19 +14,17 @@ export type UserBackgroundStudioExchangeRow = {
  * Exchanges for an ICP, oldest first (chat order).
  */
 export const listUserBackgroundStudioExchangesForProfile = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
 ): Promise<UserBackgroundStudioExchangeRow[]> => {
-  const { data, error } = await supabase
-    .from('user_background_studio_exchanges')
-    .select('id, user_id, profile_id, request_id, response_id, created_at')
-    .eq('profile_id', profileId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundStudioExchangeRow>(pool, 'user_background_studio_exchanges', {
+      columns: 'id, user_id, profile_id, request_id, response_id, created_at',
+      eq: { profile_id: profileId },
+      order: [{ column: 'created_at', ascending: true }],
+    });
+  } catch (error) {
     console.error('❌ listUserBackgroundStudioExchangesForProfile:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundStudioExchangeRow[];
 };

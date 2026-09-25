@@ -1,24 +1,22 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 
 /**
  * Resolves `user_background_versions.id` for a profile's numbered snapshot.
  */
 export const getUserBackgroundVersionIdForProfileVersion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   version: number,
 ): Promise<string | null> => {
-  const { data, error } = await supabase
-    .from('user_background_versions')
-    .select('id')
-    .eq('profile_id', profileId)
-    .eq('version', version)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const data = await selectOneFrom<{ id: string }>(pool, 'user_background_versions', {
+      columns: 'id',
+      eq: { profile_id: profileId, version },
+    });
+    return data?.id ?? null;
+  } catch (error) {
     console.error('❌ getUserBackgroundVersionIdForProfileVersion:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return data?.id ?? null;
 };

@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import {
   listTechnicalSkills,
@@ -45,10 +45,10 @@ const buildStructuredPayload = (
 };
 
 const loadRecentChatLines = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   excludeRequestId: string,
 ): Promise<{ role: string; content: string }[]> => {
-  const exchanges = await listTechnicalSkillsExchanges(supabase);
+  const exchanges = await listTechnicalSkillsExchanges(pool);
   const cutoff = Date.now() - MS_24H;
   const completed = exchanges.filter(
     (ex) => ex.response_id && new Date(ex.created_at).getTime() >= cutoff && ex.request_id !== excludeRequestId,
@@ -58,8 +58,8 @@ const loadRecentChatLines = async (
   const requestIds = [...new Set(completed.map((ex) => ex.request_id))];
   const responseIds = completed.map((ex) => ex.response_id as string);
   const [reqRows, resRows] = await Promise.all([
-    listTechnicalSkillsRequestsByIds(supabase, requestIds),
-    listTechnicalSkillsResponsesByIds(supabase, responseIds),
+    listTechnicalSkillsRequestsByIds(pool, requestIds),
+    listTechnicalSkillsResponsesByIds(pool, responseIds),
   ]);
   const reqById = new Map(reqRows.map((r) => [r.id, r]));
   const resById = new Map(resRows.map((r) => [r.id, r]));
@@ -77,7 +77,7 @@ const loadRecentChatLines = async (
 };
 
 const persistExchangeOutcome = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     requestId: string;
     structured: Record<string, unknown>;
@@ -91,13 +91,13 @@ const persistExchangeOutcome = async (
   },
 ): Promise<{ exchangeId: string; responseId: string }> => {
   const responseId = uuidv4();
-  await insertTechnicalSkillsResponse(supabase, responseId, params.structured);
+  await insertTechnicalSkillsResponse(pool, responseId, params.structured);
 
   const exchangeId = uuidv4();
   const totalTokens = params.ai?.totalTokens ?? 0;
   const creditsUsed = params.ai && totalTokens > 0 ? Math.ceil(totalTokens / TOKENS_PER_CREDIT) : 0;
 
-  await insertTechnicalSkillsExchange(supabase, {
+  await insertTechnicalSkillsExchange(pool, {
     id: exchangeId,
     requestId: params.requestId,
     responseId,
@@ -109,7 +109,7 @@ const persistExchangeOutcome = async (
     status: params.status,
   });
 
-  await updateTechnicalSkillsRequestCompletion(supabase, params.requestId, {
+  await updateTechnicalSkillsRequestCompletion(pool, params.requestId, {
     exchangeId,
     responseId,
     status: params.status === 'completed' ? 'completed' : 'failed',
@@ -121,17 +121,17 @@ const persistExchangeOutcome = async (
 /**
  * Persist user request, run coach AI, store response + exchange.
  *
- * @param supabase - Supabase client
+ * @param pool - Supabase client
  * @param anthropic - Anthropic client (null = AI unavailable)
  * @param userMessageContent - User's chat message
  */
 export const processTechnicalSkillsChat = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   anthropic: Anthropic | null,
   userMessageContent: string,
 ): Promise<void> => {
   const requestId = uuidv4();
-  await insertTechnicalSkillsRequest(supabase, {
+  await insertTechnicalSkillsRequest(pool, {
     id: requestId,
     content: userMessageContent,
   });
@@ -140,9 +140,9 @@ export const processTechnicalSkillsChat = async (
     'I could not generate a detailed reply right now. Please try again in a moment.';
 
   try {
-    const recentChat = await loadRecentChatLines(supabase, requestId);
+    const recentChat = await loadRecentChatLines(pool, requestId);
 
-    const skillRows = await listTechnicalSkills(supabase);
+    const skillRows = await listTechnicalSkills(pool);
     const currentSkills = skillRows
       .filter((r) => r.status === 'active')
       .map((r) => ({
@@ -153,7 +153,7 @@ export const processTechnicalSkillsChat = async (
       }));
 
     if (!anthropic) {
-      await persistExchangeOutcome(supabase, {
+      await persistExchangeOutcome(pool, {
         requestId,
         structured: buildStructuredPayload(null, 'AI is not configured. Add API keys to enable the coach.'),
         ai: null,
@@ -163,7 +163,7 @@ export const processTechnicalSkillsChat = async (
     }
 
     const systemPrompt = await loadCrmCoachSystemPrompt(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.TECHNICAL_SKILLS,
     );
     const userPayload = buildTechnicalSkillsCoachUserPayload({
@@ -175,7 +175,7 @@ export const processTechnicalSkillsChat = async (
     const parsed = parseTechnicalSkillsCoachJson(aiResult.responseText);
     const structured = buildStructuredPayload(parsed, fallback);
 
-    const { exchangeId, responseId } = await persistExchangeOutcome(supabase, {
+    const { exchangeId, responseId } = await persistExchangeOutcome(pool, {
       requestId,
       structured,
       ai: {
@@ -200,7 +200,7 @@ export const processTechnicalSkillsChat = async (
           targetSkillId: row.target_skill_id ?? null,
         }));
       if (suggestions.length > 0) {
-        await insertTechnicalSkillsSuggestionsBulk(supabase, {
+        await insertTechnicalSkillsSuggestionsBulk(pool, {
           exchangeId,
           responseId,
           suggestions,
@@ -211,7 +211,7 @@ export const processTechnicalSkillsChat = async (
     console.error('❌ processTechnicalSkillsChat error:', e);
     const msg = e instanceof Error ? e.message : 'Unknown error';
     try {
-      await persistExchangeOutcome(supabase, {
+      await persistExchangeOutcome(pool, {
         requestId,
         structured: buildStructuredPayload(null, `${fallback} (${msg})`),
         ai: null,

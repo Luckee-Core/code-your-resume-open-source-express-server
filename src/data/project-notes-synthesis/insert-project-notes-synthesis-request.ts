@@ -1,26 +1,29 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRow } from "../../utils/postgres";
 import type { ProjectNotesSynthesisRequest } from "./types";
 
 /**
- * Inserts one `project_notes_synthesis_requests` row. Throws on PostgREST error.
+ * Inserts one `project_notes_synthesis_requests` row. Throws on Postgres error.
  */
 export const insertProjectNotesSynthesisRequest = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   row: ProjectNotesSynthesisRequest,
 ): Promise<void> => {
-  const { error } = await supabase.from("project_notes_synthesis_requests").insert({
-    id: row.id,
-    project_id: row.projectId,
-    provider: row.provider,
-    model: row.model,
-    system_prompt: row.systemPrompt,
-    user_message: row.userMessage,
-    request_payload_json: row.requestPayloadJson,
-    created_at: row.createdAt,
-  });
-  if (error) {
-    console.error("❌ insertProjectNotesSynthesisRequest", error.message);
-    throw new Error(`project_notes_synthesis_requests insert failed: ${error.message}`);
+  try {
+    await insertRow(pool, "project_notes_synthesis_requests", {
+      id: row.id,
+      project_id: row.projectId,
+      provider: row.provider,
+      model: row.model,
+      system_prompt: row.systemPrompt,
+      user_message: row.userMessage,
+      request_payload_json: row.requestPayloadJson,
+      created_at: row.createdAt,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ insertProjectNotesSynthesisRequest", message);
+    throw new Error(`project_notes_synthesis_requests insert failed: ${message}`);
   }
   console.log("💾 insertProjectNotesSynthesisRequest", { id: row.id, projectId: row.projectId });
 };

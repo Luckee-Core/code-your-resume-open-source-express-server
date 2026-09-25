@@ -1,25 +1,21 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 import type { CreateJobNewsletterIngestRunInput, JobNewsletterIngestRun } from './types';
 
 /**
  * Insert a new job newsletter ingest run row.
  */
 export const createJobNewsletterIngestRun = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: CreateJobNewsletterIngestRunInput,
 ): Promise<JobNewsletterIngestRun> => {
-  const { data, error } = await supabase
-    .from('job_newsletter_ingest_runs')
-    .insert({
+  try {
+    return await insertRow<JobNewsletterIngestRun>(pool, 'job_newsletter_ingest_runs', {
       source_id: input.source_id,
       status: input.status ?? 'running',
-    })
-    .select('*')
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? 'Failed to create job_newsletter_ingest_runs row');
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message || 'Failed to create job_newsletter_ingest_runs row');
   }
-
-  return data as JobNewsletterIngestRun;
 };

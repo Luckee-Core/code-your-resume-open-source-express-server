@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { getCompanyFromStore } from '../../data/crm';
 import { getJobFromStore } from '../../data/crm';
 import { getVoiceStyle } from '../../data/voice-style/get-voice-style';
@@ -45,12 +45,12 @@ export class JobGenerationContextError extends Error {
 /**
  * Loads job, company, bullets, active skills, voice style, and projects for generate APIs.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param jobId - CRM job id
  * @returns Assembled generation context
  */
 export const loadJobGenerationContext = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
 ): Promise<JobGenerationContext> => {
   const trimmedJobId = jobId.trim();
@@ -68,18 +68,18 @@ export const loadJobGenerationContext = async (
 
   const [respBodies, reqBodies, nthBodies, voiceStyleRow, skillRows, projectRows, projectNotes, tenantProfile] =
     await Promise.all([
-    listSectionBodiesByJobId(supabase, trimmedJobId, 'job_responsibilities'),
-    listSectionBodiesByJobId(supabase, trimmedJobId, 'job_requirements'),
-    listSectionBodiesByJobId(supabase, trimmedJobId, 'job_nice_to_have'),
-    getVoiceStyle(supabase),
-    listTechnicalSkills(supabase),
-    listProjects(supabase),
-    listAllProjectNotes(supabase),
-    getTenantLinkedInProfile(supabase),
+    listSectionBodiesByJobId(pool, trimmedJobId, 'job_responsibilities'),
+    listSectionBodiesByJobId(pool, trimmedJobId, 'job_requirements'),
+    listSectionBodiesByJobId(pool, trimmedJobId, 'job_nice_to_have'),
+    getVoiceStyle(pool),
+    listTechnicalSkills(pool),
+    listProjects(pool),
+    listAllProjectNotes(pool),
+    getTenantLinkedInProfile(pool),
   ]);
 
   const educations = tenantProfile
-    ? await listLinkedInEducationsByProfileId(supabase, tenantProfile.id)
+    ? await listLinkedInEducationsByProfileId(pool, tenantProfile.id)
     : [];
 
   const candidateIdentityInput = {

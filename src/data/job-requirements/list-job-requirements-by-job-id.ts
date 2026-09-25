@@ -1,25 +1,28 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { JobListingSectionRow } from "../job-responsibilities/types";
+import { selectRowsFrom } from "../../utils/postgres";
+
+type RequirementRow = {
+  id: string;
+  job_id: string;
+  body: string;
+  sort_order: number;
+};
 
 /**
  * Lists requirement rows for a job, ordered by sort_order.
  */
 export const listJobRequirementsByJobId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
 ): Promise<JobListingSectionRow[]> => {
-  const { data, error } = await supabase
-    .from("job_requirements")
-    .select("id, job_id, body, sort_order")
-    .eq("job_id", jobId)
-    .order("sort_order");
+  const rows = await selectRowsFrom<RequirementRow>(pool, "job_requirements", {
+    columns: "id, job_id, body, sort_order",
+    eq: { job_id: jobId },
+    order: [{ column: "sort_order" }],
+  });
 
-  if (error) {
-    console.error("❌ listJobRequirementsByJobId:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map((r) => ({
+  return rows.map((r) => ({
     id: r.id,
     jobId: r.job_id,
     body: r.body,

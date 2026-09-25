@@ -1,20 +1,18 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Update suggestion workflow status.
  */
 export const updateUserBackgroundSegmentSuggestionStatus = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   suggestionId: string,
   status: 'accepted' | 'rejected',
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('user_background_segment_suggestions')
-    .update({ status })
-    .eq('id', suggestionId);
-
-  if (error) {
+  try {
+    await updateRows(pool, 'user_background_segment_suggestions', { status }, { id: suggestionId });
+  } catch (error) {
     console.error('❌ updateUserBackgroundSegmentSuggestionStatus:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

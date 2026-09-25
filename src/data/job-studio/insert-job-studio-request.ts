@@ -1,10 +1,11 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRow } from "../../utils/postgres";
 
 /**
  * Create a pending Job Studio chat request (user message).
  */
 export const insertJobStudioRequest = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     id: string;
     jobId: string;
@@ -13,18 +14,18 @@ export const insertJobStudioRequest = async (
   },
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from("job_studio_requests").insert({
-    id: params.id,
-    job_id: params.jobId,
-    user_id: params.userId,
-    content: params.content,
-    status: "pending",
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, "job_studio_requests", {
+      id: params.id,
+      job_id: params.jobId,
+      user_id: params.userId,
+      content: params.content,
+      status: "pending",
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
     console.error("❌ insertJobStudioRequest:", error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

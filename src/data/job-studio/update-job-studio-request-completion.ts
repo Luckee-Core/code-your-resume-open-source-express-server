@@ -1,10 +1,11 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { updateRows } from "../../utils/postgres";
 
 /**
  * Link Job Studio request to exchange/response after AI completes.
  */
 export const updateJobStudioRequestCompletion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   requestId: string,
   params: {
     exchangeId: string;
@@ -12,18 +13,20 @@ export const updateJobStudioRequestCompletion = async (
     status: "completed" | "failed";
   },
 ): Promise<void> => {
-  const { error } = await supabase
-    .from("job_studio_requests")
-    .update({
-      exchange_id: params.exchangeId,
-      response_id: params.responseId,
-      status: params.status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", requestId);
-
-  if (error) {
+  try {
+    await updateRows(
+      pool,
+      "job_studio_requests",
+      {
+        exchange_id: params.exchangeId,
+        response_id: params.responseId,
+        status: params.status,
+        updated_at: new Date().toISOString(),
+      },
+      { id: requestId },
+    );
+  } catch (error) {
     console.error("❌ updateJobStudioRequestCompletion:", error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

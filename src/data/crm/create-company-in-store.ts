@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { Company } from "./types";
-import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { requireCrmPgPool } from "./require-crm-pg-pool";
 import { getCompanyFromSupabase } from "./supabase/get-company-from-supabase";
+import { insertRow } from "../../utils/postgres";
 
 /**
  * Inserts a new company row in Supabase CRM.
@@ -11,10 +12,10 @@ export const createCompanyInStore = async (input: {
   website: string;
   notes: string;
 }): Promise<Company> => {
-  const supabase = requireCrmSupabaseClient();
+  const pool = requireCrmPgPool();
   const id = randomUUID();
   const now = new Date().toISOString();
-  const { error } = await supabase.from("companies").insert({
+  await insertRow(pool, "companies", {
     id,
     name: input.name.trim(),
     website: input.website.trim(),
@@ -27,12 +28,7 @@ export const createCompanyInStore = async (input: {
     updated_at: now,
   });
 
-  if (error) {
-    console.error("❌ createCompanyInStore:", error.message);
-    throw new Error(error.message);
-  }
-
-  const row = await getCompanyFromSupabase(supabase, id);
+  const row = await getCompanyFromSupabase(pool, id);
   if (!row) {
     throw new Error("Failed to load company after insert");
   }

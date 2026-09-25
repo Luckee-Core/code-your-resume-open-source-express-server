@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { requireCrmSupabaseClient } from '../../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../../data/crm/require-crm-pg-pool';
 import { processListRegistryExchanges } from '../../../services/exchange-registry';
 
 /**
@@ -13,7 +13,7 @@ export const handleExchangeRegistryList = async (req: Request, res: Response): P
     const sourceId = typeof req.query.sourceId === 'string' ? req.query.sourceId.trim() : undefined;
     const jobId = typeof req.query.jobId === 'string' ? req.query.jobId.trim() : undefined;
 
-    const result = await processListRegistryExchanges(requireCrmSupabaseClient(), {
+    const result = await processListRegistryExchanges(requireCrmPgPool(), {
       limit,
       sourceId: sourceId || undefined,
       jobId: jobId || undefined,

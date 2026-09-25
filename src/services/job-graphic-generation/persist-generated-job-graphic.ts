@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import {
   insertImageGraphic,
   patchImageGraphicStudioDraft,
@@ -64,12 +64,12 @@ export type PersistGeneratedJobGraphicInput = {
 /**
  * Creates a job-tagged image graphic and saves generated TSX into `metadata.studioDraft`.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Graphic kind, job context, and generated TSX
  * @returns Persisted graphic row
  */
 export const persistGeneratedJobGraphic = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: PersistGeneratedJobGraphicInput,
 ): Promise<ImageGraphic> => {
   const config = KIND_CONFIG[input.kind];
@@ -86,7 +86,7 @@ export const persistGeneratedJobGraphic = async (
     metadata.resumeTsxExchangeId = input.exchangeId.trim();
   }
 
-  const graphic = await insertImageGraphic(supabase, {
+  const graphic = await insertImageGraphic(pool, {
     title: `${config.titlePrefix} ${titleBase}`,
     canvasWidthPx: config.canvasWidthPx,
     canvasHeightPx: config.canvasHeightPx,
@@ -94,7 +94,7 @@ export const persistGeneratedJobGraphic = async (
     metadata,
   });
 
-  const patched = await patchImageGraphicStudioDraft(supabase, graphic.id, input.tsx);
+  const patched = await patchImageGraphicStudioDraft(pool, graphic.id, input.tsx);
   if (!patched) {
     throw new Error(`Failed to patch studio draft for graphic ${graphic.id}`);
   }

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { updateJobQuestion } from "../../../data/job-questions";
 
 type Body = {
@@ -23,7 +23,7 @@ export const handleJobQuestionUpdate = async (req: Request, res: Response): Prom
     if (typeof body.prompt === "string") {
       patch.prompt = body.prompt;
     }
-    const data = await updateJobQuestion(requireCrmSupabaseClient(), id, patch);
+    const data = await updateJobQuestion(requireCrmPgPool(), id, patch);
     if (!data) {
       res.status(404).json({ success: false, error: "Not found" });
       return;

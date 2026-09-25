@@ -2,7 +2,7 @@ import { deleteJobNiceToHavesByJobAndExchange, insertJobNiceToHaves } from "../.
 import { deleteJobRequirementsByJobAndExchange, insertJobRequirements } from "../../data/job-requirements";
 import { deleteJobResponsibilitiesByJobAndExchange, insertJobResponsibilities } from "../../data/job-responsibilities";
 import type { JobListingStructuredBulletRow } from "../../data/job-listing/types";
-import { getSupabaseCrmMirrorClient } from "../supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../postgres";
 
 const pickExchangeScope = (
   responsibilities: JobListingStructuredBulletRow[],
@@ -17,16 +17,16 @@ const pickExchangeScope = (
 };
 
 /**
- * Deletes prior section bullets for this `job_id` + `exchange_id` in Supabase, then inserts the new rows.
- * No-op when Supabase env is unset. Logs PostgREST errors without throwing.
+ * Deletes prior section bullets for this `job_id` + `exchange_id` in Postgres, then inserts the new rows.
+ * No-op when DATABASE_URL is unset.
  */
 export const syncJobListingSectionRowsToSupabase = async (params: {
   responsibilities: JobListingStructuredBulletRow[];
   requirements: JobListingStructuredBulletRow[];
   niceToHaves: JobListingStructuredBulletRow[];
 }): Promise<void> => {
-  const client = getSupabaseCrmMirrorClient();
-  if (!client) {
+  const pool = getManagedPgPool();
+  if (!pool) {
     return;
   }
 
@@ -38,16 +38,16 @@ export const syncJobListingSectionRowsToSupabase = async (params: {
 
   const { jobId, exchangeId } = scope;
 
-  await deleteJobResponsibilitiesByJobAndExchange(client, jobId, exchangeId);
-  await deleteJobRequirementsByJobAndExchange(client, jobId, exchangeId);
-  await deleteJobNiceToHavesByJobAndExchange(client, jobId, exchangeId);
+  await deleteJobResponsibilitiesByJobAndExchange(pool, jobId, exchangeId);
+  await deleteJobRequirementsByJobAndExchange(pool, jobId, exchangeId);
+  await deleteJobNiceToHavesByJobAndExchange(pool, jobId, exchangeId);
 
-  await insertJobResponsibilities(client, responsibilities);
-  await insertJobRequirements(client, requirements);
-  await insertJobNiceToHaves(client, niceToHaves);
+  await insertJobResponsibilities(pool, responsibilities);
+  await insertJobRequirements(pool, requirements);
+  await insertJobNiceToHaves(pool, niceToHaves);
 
   if (responsibilities.length + requirements.length + niceToHaves.length > 0) {
-    console.log("📤 Supabase: replaced job listing section rows for exchange", {
+    console.log("📤 Postgres: replaced job listing section rows for exchange", {
       jobId,
       exchangeId,
       responsibilities: responsibilities.length,

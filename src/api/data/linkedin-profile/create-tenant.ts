@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { getTenantLinkedInProfile, insertTenantLinkedInProfile } from "../../../data/linkedin-profiles";
 import { isLinkedInProfileUrl, normalizeLinkedInProfileUrl } from "../../../utils/linkedin-profile";
 
@@ -34,13 +34,13 @@ export const handleLinkedInProfileCreateTenant = async (
       return;
     }
 
-    const existing = await getTenantLinkedInProfile(requireCrmSupabaseClient());
+    const existing = await getTenantLinkedInProfile(requireCrmPgPool());
     if (existing) {
       res.status(400).json({ success: false, error: "Tenant LinkedIn profile already exists" });
       return;
     }
 
-    const data = await insertTenantLinkedInProfile(requireCrmSupabaseClient(), { linkedinUrl });
+    const data = await insertTenantLinkedInProfile(requireCrmPgPool(), { linkedinUrl });
     console.log("📤 200 POST /api/data/linkedin-profile/create-tenant");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

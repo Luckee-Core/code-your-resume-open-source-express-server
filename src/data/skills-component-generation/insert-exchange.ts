@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertSkillsComponentExchangeInput = {
   id: string;
@@ -10,23 +11,24 @@ export type InsertSkillsComponentExchangeInput = {
 /**
  * Insert a new skills component generation exchange record (status: running).
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Exchange fields
  */
 export const insertSkillsComponentExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertSkillsComponentExchangeInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('skills_component_generation_exchanges').insert({
-    id: input.id,
-    job_id: input.jobId,
-    request_id: input.requestId,
-    agent_id: input.agentId,
-    status: 'running',
-  });
-
-  if (error) {
-    console.error('❌ insertSkillsComponentExchange:', error.message);
-    throw new Error(`Failed to insert skills component exchange record: ${error.message}`);
+  try {
+    await insertRow(pool, 'skills_component_generation_exchanges', {
+      id: input.id,
+      job_id: input.jobId,
+      request_id: input.requestId,
+      agent_id: input.agentId,
+      status: 'running',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertSkillsComponentExchange:', message);
+    throw new Error(`Failed to insert skills component exchange record: ${message}`);
   }
 };

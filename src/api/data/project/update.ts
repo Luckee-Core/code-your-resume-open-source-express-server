@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { updateProject } from "../../../data/projects";
 
 type Body = {
@@ -31,7 +31,7 @@ export const handleProjectUpdate = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const data = await updateProject(requireCrmSupabaseClient(), id, {
+    const data = await updateProject(requireCrmPgPool(), id, {
       businessName: typeof body.businessName === "string" ? body.businessName : undefined,
       description: typeof body.description === "string" ? body.description : undefined,
       url: typeof body.url === "string" ? body.url : undefined,

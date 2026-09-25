@@ -2,7 +2,7 @@ import type { Job } from "../types";
 import { normalizeJob } from "../normalize-job";
 import { toIsoTimestampString } from "../../../utils/crm/to-iso-timestamp-string";
 
-type JobRow = {
+export type JobRow = {
   id: string;
   company_id: string;
   title: string;

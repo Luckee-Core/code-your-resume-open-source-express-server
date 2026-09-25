@@ -2,7 +2,7 @@ import type { Company } from "../types";
 import { normalizeCompany } from "../normalize-company";
 import { toIsoTimestampString } from "../../../utils/crm/to-iso-timestamp-string";
 
-type CompanyRow = {
+export type CompanyRow = {
   id: string;
   name: string;
   website: string | null;

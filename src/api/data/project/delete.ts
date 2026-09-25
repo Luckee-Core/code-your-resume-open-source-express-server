@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { deleteProject } from "../../../data/projects";
 
 /**
@@ -14,7 +14,7 @@ export const handleProjectDelete = async (req: Request, res: Response): Promise<
       return;
     }
 
-    await deleteProject(requireCrmSupabaseClient(), id);
+    await deleteProject(requireCrmPgPool(), id);
 
     console.log("📤 200 DELETE /api/data/project/delete");
     res.status(200).json({ success: true });

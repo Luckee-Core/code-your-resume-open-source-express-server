@@ -1,28 +1,19 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { JOB_QUESTION_SELECT_COLUMNS, type JobQuestion, type JobQuestionRow } from "./types";
 import { mapJobQuestionRow } from "./map-job-question-row";
+import { selectOneFrom } from "../../utils/postgres";
 
 /**
  * Fetches one job question by id.
  */
 export const getJobQuestion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<JobQuestion | null> => {
-  const { data, error } = await supabase
-    .from("job_questions")
-    .select(JOB_QUESTION_SELECT_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
+  const data = await selectOneFrom<JobQuestionRow>(pool, "job_questions", {
+    columns: JOB_QUESTION_SELECT_COLUMNS,
+    eq: { id },
+  });
 
-  if (error) {
-    console.error("❌ getJobQuestion:", error.message);
-    throw new Error(error.message);
-  }
-
-  if (!data) {
-    return null;
-  }
-
-  return mapJobQuestionRow(data as JobQuestionRow);
+  return data ? mapJobQuestionRow(data) : null;
 };

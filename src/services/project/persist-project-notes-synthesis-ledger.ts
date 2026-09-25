@@ -7,7 +7,7 @@ import type {
 } from "../../data/project-notes-synthesis/types";
 import { CRM_AI_FLOW_PROMPT_FLOWS } from "../../constants/crm-ai-flow-prompt-flows";
 import { getActiveCrmAiFlowPromptByFlow } from "../../data/crm-ai-flow-prompt";
-import { requireCrmSupabaseClient } from "../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../data/crm/require-crm-pg-pool";
 import { requireActivePromptText } from "../../utils/ai/require-active-prompt-text";
 import {
   extractProjectNotesWithAnthropic,
@@ -41,12 +41,12 @@ export const persistProjectNotesSynthesisLedger = async (params: {
     synthesisChars: synthesisText.length,
   });
 
-  const supabase = requireCrmSupabaseClient();
+  const pool = requireCrmPgPool();
 
   let systemPrompt: string;
   try {
     const activePrompt = await getActiveCrmAiFlowPromptByFlow(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.PROJECT_NOTES_SYNTHESIS,
     );
     systemPrompt = requireActivePromptText(
@@ -92,7 +92,7 @@ export const persistProjectNotesSynthesisLedger = async (params: {
   };
 
   try {
-    await insertProjectNotesSynthesisRequest(supabase, requestRow);
+    await insertProjectNotesSynthesisRequest(pool, requestRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistProjectNotesSynthesisLedger: failed to persist AI request", err);
@@ -145,7 +145,7 @@ export const persistProjectNotesSynthesisLedger = async (params: {
   }
 
   try {
-    await insertProjectNotesSynthesisResponse(supabase, responseRow);
+    await insertProjectNotesSynthesisResponse(pool, responseRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistProjectNotesSynthesisLedger: failed to persist AI response", err);
@@ -162,7 +162,7 @@ export const persistProjectNotesSynthesisLedger = async (params: {
   };
 
   try {
-    await insertProjectNotesSynthesisExchange(supabase, exchangeRow);
+    await insertProjectNotesSynthesisExchange(pool, exchangeRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistProjectNotesSynthesisLedger: failed to persist AI exchange", err);

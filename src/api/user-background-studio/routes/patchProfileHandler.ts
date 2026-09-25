@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import {
   INITIAL_USER_BACKGROUND_SECTIONS_JSON,
   getUserBackgroundProfileForUser,
@@ -147,43 +147,43 @@ export const patchProfileHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    const profile = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+    const profile = await getUserBackgroundProfileForUser(pool, profileId, userId);
     if (!profile) {
       return res.status(404).json({ success: false, error: 'Profile not found' });
     }
 
     if (hasSegmentItems && parsedSegmentItems) {
-      await replaceUserBackgroundSegmentItemsForProfile(supabase, profileId, parsedSegmentItems);
-      await syncUserBackgroundVersionSectionsFromSegmentItems(supabase, profileId, userId);
+      await replaceUserBackgroundSegmentItemsForProfile(pool, profileId, parsedSegmentItems);
+      await syncUserBackgroundVersionSectionsFromSegmentItems(pool, profileId, userId);
     }
 
     if (hasSections && parsedSections) {
       const asNewVersion = saveSectionsAsNewVersion === true;
       if (asNewVersion) {
-        await saveUserBackgroundSectionsAsNewVersion(supabase, profileId, userId, parsedSections);
+        await saveUserBackgroundSectionsAsNewVersion(pool, profileId, userId, parsedSections);
       } else {
-        await saveUserBackgroundSectionsToCurrentVersion(supabase, profileId, userId, parsedSections);
+        await saveUserBackgroundSectionsToCurrentVersion(pool, profileId, userId, parsedSections);
       }
     }
 
     if (hasNameUpdate || descriptionInBody) {
-      await updateUserBackgroundProfileMetadata(supabase, profileId, userId, {
+      await updateUserBackgroundProfileMetadata(pool, profileId, userId, {
         ...(hasNameUpdate ? { name: nameTrimmed } : {}),
         ...(descriptionInBody ? { description: descriptionForDb ?? null } : {}),
       });
     }
 
-    const updated = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+    const updated = await getUserBackgroundProfileForUser(pool, profileId, userId);
     if (!updated) {
       return res.status(500).json({ success: false, error: 'Failed to reload profile' });
     }
 
-    const profilePayload = await buildUserBackgroundProfilePayload(supabase, updated);
+    const profilePayload = await buildUserBackgroundProfilePayload(pool, updated);
     return res.json({ success: true, profile: profilePayload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

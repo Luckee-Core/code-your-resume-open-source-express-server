@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { INITIAL_USER_BACKGROUND_SECTIONS_JSON } from './initial-sections';
 import { listUserBackgroundSegmentItemsForProfile } from './list-user-background-segment-items-for-profile';
 import { saveUserBackgroundSectionsToCurrentVersion } from './save-icp-sections-current-version';
@@ -25,11 +25,11 @@ const formatSegmentBodyFromItems = (
  * Recompute legacy `user_background_version_sections` bodies from active segment items (coach + blog studio compatibility).
  */
 export const syncUserBackgroundVersionSectionsFromSegmentItems = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   userId: string,
 ): Promise<void> => {
-  const rows = await listUserBackgroundSegmentItemsForProfile(supabase, profileId);
+  const rows = await listUserBackgroundSegmentItemsForProfile(pool, profileId);
   const active = rows.filter((r) => r.status === 'active');
   const byKey = new Map<string, typeof active>();
   for (const r of active) {
@@ -48,5 +48,5 @@ export const syncUserBackgroundVersionSectionsFromSegmentItems = async (
     };
   });
 
-  await saveUserBackgroundSectionsToCurrentVersion(supabase, profileId, userId, drafts);
+  await saveUserBackgroundSectionsToCurrentVersion(pool, profileId, userId, drafts);
 };

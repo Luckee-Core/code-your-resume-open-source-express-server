@@ -1,22 +1,27 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectRowsFrom } from "../../utils/postgres";
 
 export type JobListingSectionTable =
   | "job_responsibilities"
   | "job_requirements"
   | "job_nice_to_have";
 
+type SectionBodyRow = {
+  body: string;
+};
+
 /**
  * Returns ordered bullet bodies for a job listing section table.
  */
 export const listSectionBodiesByJobId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
   table: JobListingSectionTable,
 ): Promise<string[]> => {
-  const { data, error } = await supabase.from(table).select("body").eq("job_id", jobId).order("sort_order");
-  if (error) {
-    console.warn(`⚠️ listSectionBodiesByJobId ${table}:`, error.message);
-    return [];
-  }
-  return (data ?? []).map((r: { body: string }) => r.body).filter(Boolean);
+  const rows = await selectRowsFrom<SectionBodyRow>(pool, table, {
+    columns: "body",
+    eq: { job_id: jobId },
+    order: [{ column: "sort_order" }],
+  });
+  return rows.map((r) => r.body).filter(Boolean);
 };

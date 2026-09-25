@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { deleteRows, insertRows } from '../../utils/postgres';
 
 export type UserBackgroundSegmentItemInsert = {
   id: string;
@@ -15,14 +16,15 @@ export type UserBackgroundSegmentItemInsert = {
  * Replace all segment items for a profile with the provided set (full sync from client).
  */
 export const replaceUserBackgroundSegmentItemsForProfile = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   items: UserBackgroundSegmentItemInsert[],
 ): Promise<void> => {
-  const { error: delErr } = await supabase.from('user_background_segment_items').delete().eq('profile_id', profileId);
-  if (delErr) {
-    console.error('❌ replaceUserBackgroundSegmentItemsForProfile delete:', delErr);
-    throw new Error(delErr.message);
+  try {
+    await deleteRows(pool, 'user_background_segment_items', { profile_id: profileId });
+  } catch (error) {
+    console.error('❌ replaceUserBackgroundSegmentItemsForProfile delete:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
   if (items.length === 0) {
@@ -44,9 +46,10 @@ export const replaceUserBackgroundSegmentItemsForProfile = async (
     updated_at: now,
   }));
 
-  const { error: insErr } = await supabase.from('user_background_segment_items').insert(rows);
-  if (insErr) {
-    console.error('❌ replaceUserBackgroundSegmentItemsForProfile insert:', insErr);
-    throw new Error(insErr.message);
+  try {
+    await insertRows(pool, 'user_background_segment_items', rows);
+  } catch (error) {
+    console.error('❌ replaceUserBackgroundSegmentItemsForProfile insert:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

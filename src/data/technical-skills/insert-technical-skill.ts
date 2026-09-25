@@ -1,10 +1,11 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 /**
  * Insert a single technical skill row.
  */
 export const insertTechnicalSkill = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     id: string;
     sortOrder: number;
@@ -15,19 +16,19 @@ export const insertTechnicalSkill = async (
   },
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from('technical_skills').insert({
-    id: params.id,
-    sort_order: params.sortOrder,
-    title: params.title,
-    body: params.body,
-    status: params.status,
-    source_exchange_id: params.sourceExchangeId ?? null,
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, 'technical_skills', {
+      id: params.id,
+      sort_order: params.sortOrder,
+      title: params.title,
+      body: params.body,
+      status: params.status,
+      source_exchange_id: params.sourceExchangeId ?? null,
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
     console.error('❌ insertTechnicalSkill:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

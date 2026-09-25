@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { getTenantLinkedInProfile, updateLinkedInProfile } from "../../../data/linkedin-profiles";
 import { isLinkedInProfileUrl, normalizeLinkedInProfileUrl } from "../../../utils/linkedin-profile";
 
@@ -34,13 +34,13 @@ export const handleLinkedInProfileUpdateTenantUrl = async (
       return;
     }
 
-    const tenant = await getTenantLinkedInProfile(requireCrmSupabaseClient());
+    const tenant = await getTenantLinkedInProfile(requireCrmPgPool());
     if (!tenant) {
       res.status(400).json({ success: false, error: "Tenant LinkedIn profile is not configured" });
       return;
     }
 
-    const data = await updateLinkedInProfile(requireCrmSupabaseClient(), tenant.id, {
+    const data = await updateLinkedInProfile(requireCrmPgPool(), tenant.id, {
       linkedinUrl,
     });
 

@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 import { initialUserBackgroundSectionsAsInputs } from './initial-sections';
 import { insertUserBackgroundVersionSectionsBulk } from './insert-icp-version-sections-bulk';
 import type { UserBackgroundProfileRow } from './list-icps-for-user';
@@ -7,42 +8,37 @@ import type { UserBackgroundProfileRow } from './list-icps-for-user';
  * Create an ICP and version 1 with empty section scaffolding (normalized rows).
  */
 export const createUserBackgroundProfileWithInitialVersion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   userId: string,
   name: string,
 ): Promise<UserBackgroundProfileRow> => {
-  const { data: icp, error: icpError } = await supabase
-    .from('user_background_profiles')
-    .insert({
+  let icp: UserBackgroundProfileRow;
+  try {
+    icp = await insertRow<UserBackgroundProfileRow>(pool, 'user_background_profiles', {
       user_id: userId,
       name: name.trim(),
       current_version: 1,
-    })
-    .select('id, user_id, name, description, current_version, created_at, updated_at')
-    .single();
-
-  if (icpError || !icp) {
-    console.error('❌ createIcp insert:', icpError);
-    throw new Error(icpError?.message ?? 'Failed to create ICP');
+    });
+  } catch (error) {
+    console.error('❌ createIcp insert:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
-  const { data: ver, error: verError } = await supabase
-    .from('user_background_versions')
-    .insert({
+  let versionId: string;
+  try {
+    const ver = await insertRow<{ id: string }>(pool, 'user_background_versions', {
       profile_id: icp.id,
       version: 1,
       label: 'v1 (current)',
       snapshot_at: new Date().toISOString(),
-    })
-    .select('id')
-    .single();
-
-  if (verError || !ver?.id) {
-    console.error('❌ createIcp version:', verError);
-    throw new Error(verError?.message ?? 'Failed to create initial version');
+    });
+    versionId = ver.id;
+  } catch (error) {
+    console.error('❌ createIcp version:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
-  await insertUserBackgroundVersionSectionsBulk(supabase, ver.id as string, initialUserBackgroundSectionsAsInputs());
+  await insertUserBackgroundVersionSectionsBulk(pool, versionId, initialUserBackgroundSectionsAsInputs());
 
-  return icp as UserBackgroundProfileRow;
+  return icp;
 };

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { getProjectById } from "../../../data/projects";
 
 /**
@@ -14,7 +14,7 @@ export const handleProjectGet = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const data = await getProjectById(requireCrmSupabaseClient(), id);
+    const data = await getProjectById(requireCrmPgPool(), id);
     if (!data) {
       res.status(404).json({ success: false, error: "Project not found" });
       return;

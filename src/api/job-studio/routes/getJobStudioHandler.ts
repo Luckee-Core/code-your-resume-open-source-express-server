@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../../../services/postgres";
 import { getJobFromStore } from "../../../data/crm";
 import { loadJobStudioPayload } from "../loadJobStudioPayload";
 
@@ -22,13 +22,13 @@ export const getJobStudioHandler = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      res.status(500).json({ success: false, error: "Supabase client not configured" });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      res.status(500).json({ success: false, error: "Postgres not configured — set DATABASE_URL" });
       return;
     }
 
-    const payload = await loadJobStudioPayload(supabase, jobId);
+    const payload = await loadJobStudioPayload(pool, jobId);
     res.json({ success: true, ...payload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";

@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { assertSafeIdent, selectRowsFrom } from '../../utils/postgres';
 import type { ExchangeTableRegistryRow } from './types';
 import { listJobListingRegistryExchangeRows } from './list-job-listing-registry-exchange-rows';
 import { listProjectNotesSynthesisRegistryExchangeRows } from './list-project-notes-synthesis-registry-exchange-rows';
@@ -44,7 +45,7 @@ const asString = (value: unknown): string | null =>
  * Reads exchange rows for one registry entry using registry column metadata (tokens + model on exchange).
  */
 export const listExchangeRowsFromRegistryEntry = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   entry: ExchangeTableRegistryRow,
   limit: number,
   filters: ListRegistryExchangeRowsFilters = {},
@@ -52,11 +53,11 @@ export const listExchangeRowsFromRegistryEntry = async (
   const lim = Math.min(Math.max(limit, 1), 200);
 
   if (entry.logical_key === 'job_listing') {
-    return listJobListingRegistryExchangeRows(supabase, lim, filters.jobId);
+    return listJobListingRegistryExchangeRows(pool, lim, filters.jobId);
   }
 
   if (entry.logical_key === 'project_notes_synthesis') {
-    return listProjectNotesSynthesisRegistryExchangeRows(supabase, lim);
+    return listProjectNotesSynthesisRegistryExchangeRows(pool, lim);
   }
 
   const columnSet = new Set<string>(['id', 'status']);
@@ -74,38 +75,44 @@ export const listExchangeRowsFromRegistryEntry = async (
     }
   }
 
-  let query = supabase
-    .from(entry.table_name)
-    .select([...columnSet].join(', '))
-    .order(entry.occurred_at_column, { ascending: false })
-    .limit(lim);
-
+  const eq: Record<string, unknown> = {};
   if (filters.jobId?.trim() && columnSet.has('job_id')) {
-    query = query.eq('job_id', filters.jobId.trim());
+    eq.job_id = filters.jobId.trim();
   }
   if (filters.sourceId?.trim() && columnSet.has('source_id')) {
-    query = query.eq('source_id', filters.sourceId.trim());
+    eq.source_id = filters.sourceId.trim();
   }
 
-  const { data, error } = await query;
-  if (error) return { error: error.message };
+  try {
+    const tableName = assertSafeIdent(entry.table_name);
+    const occurredAtColumn = assertSafeIdent(entry.occurred_at_column);
+    const data = await selectRowsFrom(pool, tableName, {
+      columns: [...columnSet].join(', '),
+      eq,
+      order: [{ column: occurredAtColumn, ascending: false }],
+      limit: lim,
+    });
 
-  const rows = (data ?? []).map((raw) => {
-    const row = raw as unknown as Record<string, unknown>;
+    const rows = data.map((raw) => {
+      const row = raw as Record<string, unknown>;
 
-    return {
-      exchange_id: String(row.id),
-      status: String(row.status ?? ''),
-      input_tokens: asInt(row[entry.input_tokens_column]),
-      output_tokens: asInt(row[entry.output_tokens_column]),
-      model_used: entry.model_column ? asString(row[entry.model_column]) : null,
-      occurred_at: String(row[entry.occurred_at_column] ?? ''),
-      job_id: columnSet.has('job_id') ? asString(row.job_id) : null,
-      source_id: columnSet.has('source_id') ? asString(row.source_id) : null,
-      context_label: columnSet.has('context_label') ? asString(row.context_label) : null,
-      profile_id: columnSet.has('profile_id') ? asString(row.profile_id) : null,
-    };
-  });
+      return {
+        exchange_id: String(row.id),
+        status: String(row.status ?? ''),
+        input_tokens: asInt(row[entry.input_tokens_column]),
+        output_tokens: asInt(row[entry.output_tokens_column]),
+        model_used: entry.model_column ? asString(row[entry.model_column]) : null,
+        occurred_at: String(row[entry.occurred_at_column] ?? ''),
+        job_id: columnSet.has('job_id') ? asString(row.job_id) : null,
+        source_id: columnSet.has('source_id') ? asString(row.source_id) : null,
+        context_label: columnSet.has('context_label') ? asString(row.context_label) : null,
+        profile_id: columnSet.has('profile_id') ? asString(row.profile_id) : null,
+      };
+    });
 
-  return { rows };
+    return { rows };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { error: message };
+  }
 };

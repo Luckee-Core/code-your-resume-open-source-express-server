@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import type { Pool } from "pg";
+import { getManagedPgPool } from "../../../services/postgres";
 import { runCoverLetterGeneration } from "../../../services/cover-letter-generation";
 import {
   assertHasNarrativeContext,
@@ -19,7 +19,7 @@ const MAX_POINT_OF_EMPHASIS_CHARS = 2000;
  * Runs Cursor cover letter generation and persists the graphic on Express (client-independent).
  */
 const runCoverLetterGenerationInBackground = (
-  supabase: SupabaseClient,
+  pool: Pool,
   context: JobGenerationContext,
   pointOfEmphasis?: string,
 ): void => {
@@ -28,7 +28,7 @@ const runCoverLetterGenerationInBackground = (
   scheduleBackgroundJobGraphicGeneration(label, async () => {
     console.log(`🚀 Background ${label} — starting Cursor agent`);
 
-    const result = await runCoverLetterGeneration(supabase, {
+    const result = await runCoverLetterGeneration(pool, {
       jobId: context.jobId,
       jobTitle: context.jobTitle,
       companyName: context.companyName,
@@ -41,7 +41,7 @@ const runCoverLetterGenerationInBackground = (
       pointOfEmphasis,
     });
 
-    const graphic = await persistGeneratedJobGraphic(supabase, {
+    const graphic = await persistGeneratedJobGraphic(pool, {
       kind: "coverLetter",
       jobId: context.jobId,
       jobTitle: context.jobTitle,
@@ -65,11 +65,11 @@ export const handleCoverLetterGenerate = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
+    const pool = getManagedPgPool();
+    if (!pool) {
       return res.status(500).json({
         success: false,
-        error: "Supabase client not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
+        error: "Postgres not configured — set DATABASE_URL",
       });
     }
 
@@ -88,7 +88,7 @@ export const handleCoverLetterGenerate = async (
     }
     const pointOfEmphasis = rawEmphasis || undefined;
 
-    const context = await loadJobGenerationContext(supabase, jobId);
+    const context = await loadJobGenerationContext(pool, jobId);
     assertHasNarrativeContext(context);
 
     console.log(
@@ -97,7 +97,7 @@ export const handleCoverLetterGenerate = async (
       }`,
     );
 
-    runCoverLetterGenerationInBackground(supabase, context, pointOfEmphasis);
+    runCoverLetterGenerationInBackground(pool, context, pointOfEmphasis);
 
     console.log(`📤 202 POST /api/data/cover-letter/generate — queued job ${context.jobId}`);
     return res.status(202).json({ success: true, accepted: true, jobId: context.jobId });

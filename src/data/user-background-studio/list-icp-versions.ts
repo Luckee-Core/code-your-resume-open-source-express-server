@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundVersionRow = {
   id: string;
@@ -13,19 +14,17 @@ export type UserBackgroundVersionRow = {
  * All version snapshots for an ICP, highest version first.
  */
 export const listUserBackgroundVersions = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
 ): Promise<UserBackgroundVersionRow[]> => {
-  const { data, error } = await supabase
-    .from('user_background_versions')
-    .select('id, profile_id, version, label, snapshot_at, created_at')
-    .eq('profile_id', profileId)
-    .order('version', { ascending: false });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundVersionRow>(pool, 'user_background_versions', {
+      columns: 'id, profile_id, version, label, snapshot_at, created_at',
+      eq: { profile_id: profileId },
+      order: [{ column: 'version', ascending: false }],
+    });
+  } catch (error) {
     console.error('❌ listUserBackgroundVersions:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundVersionRow[];
 };

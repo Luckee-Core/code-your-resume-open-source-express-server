@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { listJobRequirementsByJobId } from "../../../data/job-requirements";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../../../services/postgres";
 
 /**
  * GET /api/data/job-requirements/list?jobId=<id>
@@ -15,14 +15,14 @@ export const handleJobRequirementsList = async (req: Request, res: Response): Pr
     return;
   }
 
-  const supabase = getSupabaseCrmMirrorClient();
-  if (!supabase) {
+  const pool = getManagedPgPool();
+  if (!pool) {
     res.status(500).json({ success: false, error: "Supabase client unavailable" });
     return;
   }
 
   try {
-    const data = await listJobRequirementsByJobId(supabase, jobId);
+    const data = await listJobRequirementsByJobId(pool, jobId);
     console.log("📤 200 GET /api/data/job-requirements/list");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

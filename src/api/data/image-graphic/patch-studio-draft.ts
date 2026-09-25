@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { patchImageGraphicStudioDraft } from "../../../data/image-graphics";
-import { getSupabaseForImageGraphicHandler } from "./get-supabase-for-handler";
+import { getPgPoolForImageGraphicHandler } from "./get-pg-pool-for-handler";
 
 type Body = {
   graphicId?: unknown;
@@ -15,8 +15,8 @@ export const handleImageGraphicPatchStudioDraft = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const supabase = getSupabaseForImageGraphicHandler(res);
-    if (!supabase) return;
+    const pool = getPgPoolForImageGraphicHandler(res);
+    if (!pool) return;
     const body = req.body as Body;
     const graphicId = typeof body.graphicId === "string" ? body.graphicId.trim() : "";
     const tsx = typeof body.tsx === "string" ? body.tsx : "";
@@ -24,7 +24,7 @@ export const handleImageGraphicPatchStudioDraft = async (
       res.status(400).json({ success: false, error: "graphicId is required" });
       return;
     }
-    const row = await patchImageGraphicStudioDraft(supabase, graphicId, tsx);
+    const row = await patchImageGraphicStudioDraft(pool, graphicId, tsx);
     if (!row) {
       res.status(404).json({ success: false, error: "Graphic not found" });
       return;

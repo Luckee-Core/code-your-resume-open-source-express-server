@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundProfileRow = {
   id: string;
@@ -10,56 +11,60 @@ export type UserBackgroundProfileRow = {
   updated_at: string;
 };
 
-const isMissingDescriptionColumnError = (error: {
-  code?: string;
-  message?: string;
-}): boolean => {
-  const msg = error.message ?? '';
-  return msg.includes('column user_background_profiles.description does not exist');
+const PROFILE_COLUMNS = 'id, user_id, name, current_version, created_at, updated_at';
+
+const isMissingDescriptionColumnError = (error: unknown): boolean => {
+  const err = error as { code?: string; message?: string };
+  const msg = err.message ?? '';
+  return (
+    err.code === '42703' ||
+    (msg.includes('does not exist') && msg.toLowerCase().includes('description'))
+  );
 };
 
 /**
  * List ICP profile rows for a user, newest first.
  */
 export const listUserBackgroundProfilesForUser = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   userId: string,
 ): Promise<UserBackgroundProfileRow[]> => {
-  const baseSelect = 'id, user_id, name, current_version, created_at, updated_at';
   console.log('[icp-studio:data] listUserBackgroundProfilesForUser query start (tenant-wide)', { userId });
 
-  const { data, error } = await supabase
-    .from('user_background_profiles')
-    .select(`${baseSelect}, description`)
-    .order('updated_at', { ascending: false });
-
-  if (error) {
+  try {
+    const rows = await selectRowsFrom<UserBackgroundProfileRow>(pool, 'user_background_profiles', {
+      columns: `${PROFILE_COLUMNS}, description`,
+      order: [{ column: 'updated_at', ascending: false }],
+    });
+    console.log('[icp-studio:data] listUserBackgroundProfilesForUser query success', {
+      userId,
+      rowCount: rows.length,
+    });
+    return rows;
+  } catch (error) {
     if (isMissingDescriptionColumnError(error)) {
       console.warn('[icp-studio:data] description column missing, using fallback query', { userId });
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('user_background_profiles')
-        .select(baseSelect)
-        .order('updated_at', { ascending: false });
-
-      if (fallbackError) {
+      try {
+        const fallbackData = await selectRowsFrom<Omit<UserBackgroundProfileRow, 'description'>>(
+          pool,
+          'user_background_profiles',
+          {
+            columns: PROFILE_COLUMNS,
+            order: [{ column: 'updated_at', ascending: false }],
+          },
+        );
+        const rows = fallbackData.map((row) => ({
+          ...row,
+          description: null,
+        }));
+        console.log('[icp-studio:data] fallback query success', { userId, rowCount: rows.length });
+        return rows;
+      } catch (fallbackError) {
         console.error('❌ listUserBackgroundProfilesForUser fallback:', fallbackError);
-        throw new Error(fallbackError.message);
+        throw fallbackError instanceof Error ? fallbackError : new Error(String(fallbackError));
       }
-
-      const rows = ((fallbackData ?? []) as Omit<UserBackgroundProfileRow, 'description'>[]).map((row) => ({
-        ...row,
-        description: null,
-      }));
-      console.log('[icp-studio:data] fallback query success', { userId, rowCount: rows.length });
-      return rows;
     }
     console.error('❌ listUserBackgroundProfilesForUser:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  console.log('[icp-studio:data] listUserBackgroundProfilesForUser query success', {
-    userId,
-    rowCount: data?.length ?? 0,
-  });
-  return (data ?? []) as UserBackgroundProfileRow[];
 };

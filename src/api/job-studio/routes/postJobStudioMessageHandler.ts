@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../../../services/postgres";
 import { getAnthropicClient } from "../../../services/ai/get-anthropic-client";
 import { getJobFromStore } from "../../../data/crm";
 import { getCompanyFromStore } from "../../../data/crm";
@@ -38,9 +38,9 @@ export const postJobStudioMessageHandler = async (req: Request, res: Response): 
       return;
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      res.status(500).json({ success: false, error: "Supabase client not configured" });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      res.status(500).json({ success: false, error: "Postgres not configured — set DATABASE_URL" });
       return;
     }
 
@@ -50,9 +50,9 @@ export const postJobStudioMessageHandler = async (req: Request, res: Response): 
     }
 
     const company = job.companyId ? await getCompanyFromStore(job.companyId) : null;
-    const coachContext = await loadJobStudioCoachContext(supabase, job, company?.name ?? null);
+    const coachContext = await loadJobStudioCoachContext(pool, job, company?.name ?? null);
 
-    await processJobStudioChat(supabase, anthropic, {
+    await processJobStudioChat(pool, anthropic, {
       jobId: jid,
       userId: uid,
       userMessageContent: text,
@@ -60,7 +60,7 @@ export const postJobStudioMessageHandler = async (req: Request, res: Response): 
       coachContext,
     });
 
-    const payload = await loadJobStudioPayload(supabase, jid);
+    const payload = await loadJobStudioPayload(pool, jid);
     res.json({ success: true, ...payload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";

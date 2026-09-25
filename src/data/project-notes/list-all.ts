@@ -1,20 +1,15 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ProjectNote } from "./types";
+import type { Pool } from "pg";
+import type { ProjectNote, ProjectNoteRow } from "./types";
 import { mapProjectNoteRow } from "./map-project-note-row";
+import { selectRowsFrom } from "../../utils/postgres";
 
 /**
  * List all project notes (for AI generation context), newest first per project.
  */
-export const listAllProjectNotes = async (supabase: SupabaseClient): Promise<ProjectNote[]> => {
-  const { data, error } = await supabase
-    .from("project_notes")
-    .select("*")
-    .order("created_at", { ascending: false });
+export const listAllProjectNotes = async (pool: Pool): Promise<ProjectNote[]> => {
+  const rows = await selectRowsFrom<ProjectNoteRow>(pool, "project_notes", {
+    order: [{ column: "created_at", ascending: false }],
+  });
 
-  if (error) {
-    console.error("❌ listAllProjectNotes:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map((row) => mapProjectNoteRow(row));
+  return rows.map((row) => mapProjectNoteRow(row));
 };

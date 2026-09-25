@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRows } from '../../utils/postgres';
 
 export type UserBackgroundSegmentSuggestionInsert = {
   id: string;
@@ -13,7 +14,7 @@ export type UserBackgroundSegmentSuggestionInsert = {
  * Insert pending segment suggestions tied to a coach exchange/response.
  */
 export const insertUserBackgroundSegmentSuggestionsBulk = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     profileId: string;
     exchangeId: string;
@@ -38,9 +39,10 @@ export const insertUserBackgroundSegmentSuggestionsBulk = async (
     created_at: now,
   }));
 
-  const { error } = await supabase.from('user_background_segment_suggestions').insert(rows);
-  if (error) {
+  try {
+    await insertRows(pool, 'user_background_segment_suggestions', rows);
+  } catch (error) {
     console.error('❌ insertUserBackgroundSegmentSuggestionsBulk:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

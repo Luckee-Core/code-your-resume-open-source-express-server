@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { Job, JobStatus, JobType } from "./types";
 import { isJobStatus } from "./is-job-status";
-import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { requireCrmPgPool } from "./require-crm-pg-pool";
 import { getJobFromSupabase } from "./supabase/get-job-from-supabase";
+import { insertRow } from "../../utils/postgres";
 
 /**
  * Inserts a new job row in Supabase CRM.
@@ -14,12 +15,12 @@ export const createJobInStore = async (input: {
   url: string;
   status: JobStatus;
 }): Promise<Job> => {
-  const supabase = requireCrmSupabaseClient();
+  const pool = requireCrmPgPool();
   const id = randomUUID();
   const now = new Date().toISOString();
   const status = isJobStatus(input.status) ? input.status : "draft";
 
-  const { error } = await supabase.from("jobs").insert({
+  await insertRow(pool, "jobs", {
     id,
     company_id: input.companyId,
     title: input.title.trim(),
@@ -33,12 +34,7 @@ export const createJobInStore = async (input: {
     updated_at: now,
   });
 
-  if (error) {
-    console.error("❌ createJobInStore:", error.message);
-    throw new Error(error.message);
-  }
-
-  const row = await getJobFromSupabase(supabase, id);
+  const row = await getJobFromSupabase(pool, id);
   if (!row) {
     throw new Error("Failed to load job after insert");
   }

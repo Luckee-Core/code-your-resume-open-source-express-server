@@ -1,33 +1,31 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { ImageGraphic } from "./types";
 import { getImageGraphic } from "./get-image-graphic";
+import { updateRows } from "../../utils/postgres";
 
 /**
  * Updates title and canvas dimensions for one graphic.
  */
 export const updateImageGraphicDetails = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   graphicId: string,
   patch: { title: string; canvasWidthPx: number; canvasHeightPx: number },
 ): Promise<ImageGraphic | null> => {
-  const prev = await getImageGraphic(supabase, graphicId);
+  const prev = await getImageGraphic(pool, graphicId);
   if (!prev) return null;
 
   const updatedAt = new Date().toISOString();
-  const { error } = await supabase
-    .from("image_graphics")
-    .update({
+  await updateRows(
+    pool,
+    "image_graphics",
+    {
       title: patch.title.trim() || "Untitled graphic",
       canvas_width_px: patch.canvasWidthPx,
       canvas_height_px: patch.canvasHeightPx,
       updated_at: updatedAt,
-    })
-    .eq("id", graphicId);
+    },
+    { id: graphicId },
+  );
 
-  if (error) {
-    console.error("❌ updateImageGraphicDetails:", error.message);
-    throw new Error(error.message);
-  }
-
-  return getImageGraphic(supabase, graphicId);
+  return getImageGraphic(pool, graphicId);
 };

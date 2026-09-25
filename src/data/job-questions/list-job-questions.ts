@@ -1,20 +1,16 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { JOB_QUESTION_SELECT_COLUMNS, type JobQuestion, type JobQuestionRow } from "./types";
 import { mapJobQuestionRow } from "./map-job-question-row";
+import { selectRowsFrom } from "../../utils/postgres";
 
 /**
  * Lists all job questions (newest `updated_at` first).
  */
-export const listJobQuestions = async (supabase: SupabaseClient): Promise<JobQuestion[]> => {
-  const { data, error } = await supabase
-    .from("job_questions")
-    .select(JOB_QUESTION_SELECT_COLUMNS)
-    .order("updated_at", { ascending: false });
+export const listJobQuestions = async (pool: Pool): Promise<JobQuestion[]> => {
+  const rows = await selectRowsFrom<JobQuestionRow>(pool, "job_questions", {
+    columns: JOB_QUESTION_SELECT_COLUMNS,
+    order: [{ column: "updated_at", ascending: false }],
+  });
 
-  if (error) {
-    console.error("❌ listJobQuestions:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map((row) => mapJobQuestionRow(row as JobQuestionRow));
+  return rows.map((row) => mapJobQuestionRow(row));
 };

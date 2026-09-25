@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { INITIAL_USER_BACKGROUND_SECTIONS_JSON } from './initial-sections';
 import { getUserBackgroundProfileForUser } from './get-icp-for-user';
 import { insertUserBackgroundVersionWithSections } from './insert-icp-version';
@@ -37,12 +37,12 @@ export const mergeUbSectionDraftsToInputs = (incoming: UserBackgroundSectionDraf
  * Persist user-edited sections as a new immutable version and point current_version at it.
  */
 export const saveUserBackgroundSectionsAsNewVersion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   userId: string,
   drafts: UserBackgroundSectionDraftInput[],
 ): Promise<void> => {
-  const icp = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+  const icp = await getUserBackgroundProfileForUser(pool, profileId, userId);
   if (!icp) {
     throw new Error('ICP not found');
   }
@@ -51,7 +51,7 @@ export const saveUserBackgroundSectionsAsNewVersion = async (
   const nextVersion = icp.current_version + 1;
   const label = `v${nextVersion} (current)`;
 
-  await insertUserBackgroundVersionWithSections(supabase, profileId, nextVersion, label, sections);
-  await setUserBackgroundProfileCurrentVersion(supabase, profileId, userId, nextVersion);
-  await relabelUserBackgroundVersionsForCurrent(supabase, profileId, nextVersion);
+  await insertUserBackgroundVersionWithSections(pool, profileId, nextVersion, label, sections);
+  await setUserBackgroundProfileCurrentVersion(pool, profileId, userId, nextVersion);
+  await relabelUserBackgroundVersionsForCurrent(pool, profileId, nextVersion);
 };

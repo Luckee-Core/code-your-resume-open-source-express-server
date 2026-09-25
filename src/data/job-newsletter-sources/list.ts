@@ -1,21 +1,20 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectRowsFrom } from "../../utils/postgres";
 import type { JobNewsletterSource } from "./types";
 
 /**
  * List all job newsletter sources, newest first.
  */
 export const listJobNewsletterSources = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<JobNewsletterSource[]> => {
-  const { data, error } = await supabase
-    .from("job_newsletter_sources")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("❌ listJobNewsletterSources:", error.message);
-    throw new Error(error.message);
+  try {
+    return await selectRowsFrom<JobNewsletterSource>(pool, "job_newsletter_sources", {
+      order: [{ column: "created_at", ascending: false }],
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ listJobNewsletterSources:", message);
+    throw new Error(message);
   }
-
-  return (data ?? []) as JobNewsletterSource[];
 };

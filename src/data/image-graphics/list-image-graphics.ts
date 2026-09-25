@@ -1,22 +1,18 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { IMAGE_GRAPHIC_SELECT_COLUMNS, type ImageGraphic, type ImageGraphicRow } from "./types";
 import { mapImageGraphicRow } from "./map-image-graphic-row";
+import { selectRowsFrom } from "../../utils/postgres";
 
 /**
  * Lists all image graphics (newest `updated_at` first).
  */
-export const listImageGraphics = async (supabase: SupabaseClient): Promise<ImageGraphic[]> => {
-  const { data, error } = await supabase
-    .from("image_graphics")
-    .select(IMAGE_GRAPHIC_SELECT_COLUMNS)
-    .order("updated_at", { ascending: false });
+export const listImageGraphics = async (pool: Pool): Promise<ImageGraphic[]> => {
+  const rows = await selectRowsFrom<ImageGraphicRow>(pool, "image_graphics", {
+    columns: IMAGE_GRAPHIC_SELECT_COLUMNS,
+    order: [{ column: "updated_at", ascending: false }],
+  });
 
-  if (error) {
-    console.error("❌ listImageGraphics:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data ?? [])
-    .map((row) => mapImageGraphicRow(row as ImageGraphicRow))
+  return rows
+    .map((row) => mapImageGraphicRow(row))
     .filter((g): g is ImageGraphic => g !== null);
 };

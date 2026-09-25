@@ -1,24 +1,33 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom, updateRows } from '../../utils/postgres';
 import type { JobNewsletterIngestRun, UpdateJobNewsletterIngestRunInput } from './types';
 
 /**
  * Update an existing job newsletter ingest run row.
  */
 export const updateJobNewsletterIngestRun = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   input: UpdateJobNewsletterIngestRunInput,
 ): Promise<JobNewsletterIngestRun> => {
-  const { data, error } = await supabase
-    .from('job_newsletter_ingest_runs')
-    .update(input)
-    .eq('id', id)
-    .select('*')
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? 'Failed to update job_newsletter_ingest_runs row');
+  const updates: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) updates[key] = value;
   }
 
-  return data as JobNewsletterIngestRun;
+  try {
+    if (Object.keys(updates).length > 0) {
+      await updateRows(pool, 'job_newsletter_ingest_runs', updates, { id });
+    }
+    const data = await selectOneFrom<JobNewsletterIngestRun>(pool, 'job_newsletter_ingest_runs', {
+      eq: { id },
+    });
+    if (!data) {
+      throw new Error('Failed to update job_newsletter_ingest_runs row');
+    }
+    return data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message || 'Failed to update job_newsletter_ingest_runs row');
+  }
 };

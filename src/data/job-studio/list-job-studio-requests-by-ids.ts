@@ -1,4 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectRowsFrom } from "../../utils/postgres";
 
 export type JobStudioRequestRow = {
   id: string;
@@ -13,20 +14,18 @@ export type JobStudioRequestRow = {
  * Fetch Job Studio request rows by id list.
  */
 export const listJobStudioRequestsByIds = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   ids: string[],
 ): Promise<JobStudioRequestRow[]> => {
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from("job_studio_requests")
-    .select("id, job_id, user_id, content, status, created_at")
-    .in("id", ids);
-
-  if (error) {
+  try {
+    return await selectRowsFrom<JobStudioRequestRow>(pool, "job_studio_requests", {
+      columns: "id, job_id, user_id, content, status, created_at",
+      in: { id: ids },
+    });
+  } catch (error) {
     console.error("❌ listJobStudioRequestsByIds:", error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as JobStudioRequestRow[];
 };

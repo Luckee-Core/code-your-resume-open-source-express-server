@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import {
   getUserBackgroundSegmentSuggestionForUser,
   acceptUserBackgroundSegmentSuggestion,
@@ -19,17 +19,17 @@ export const acceptSegmentSuggestionHandler = async (req: Request, res: Response
       return res.status(400).json({ success: false, error: 'profileId, suggestionId, and userId are required' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    const profile = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+    const profile = await getUserBackgroundProfileForUser(pool, profileId, userId);
     if (!profile) {
       return res.status(404).json({ success: false, error: 'Profile not found' });
     }
 
-    const suggestion = await getUserBackgroundSegmentSuggestionForUser(supabase, suggestionId, userId);
+    const suggestion = await getUserBackgroundSegmentSuggestionForUser(pool, suggestionId, userId);
     if (!suggestion) {
       return res.status(404).json({ success: false, error: 'Suggestion not found' });
     }
@@ -45,7 +45,7 @@ export const acceptSegmentSuggestionHandler = async (req: Request, res: Response
       return res.status(400).json({ success: false, error: 'Update suggestion missing target item' });
     }
 
-    await acceptUserBackgroundSegmentSuggestion(supabase, {
+    await acceptUserBackgroundSegmentSuggestion(pool, {
       suggestionId: suggestion.id,
       userId,
       profileId: suggestion.profile_id,
@@ -57,11 +57,11 @@ export const acceptSegmentSuggestionHandler = async (req: Request, res: Response
       exchangeId: suggestion.exchange_id,
     });
 
-    const updated = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+    const updated = await getUserBackgroundProfileForUser(pool, profileId, userId);
     if (!updated) {
       return res.status(500).json({ success: false, error: 'Failed to reload profile' });
     }
-    const payload = await buildUserBackgroundProfilePayload(supabase, updated);
+    const payload = await buildUserBackgroundProfilePayload(pool, updated);
     return res.json({ success: true, profile: payload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

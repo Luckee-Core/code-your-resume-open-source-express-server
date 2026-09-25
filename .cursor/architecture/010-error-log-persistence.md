@@ -12,7 +12,7 @@ Typed error tables (`thunk_errors`, `ui_errors`, `api_errors`) are normal data e
 
 Follow **mentorai-server** colocation: one folder per table under `src/data/{entity}/` containing:
 
-- `insert-*.ts` — Supabase `.from(table).insert(...)`
+- `insert-*.ts` — parameterized INSERT via `src/utils/postgres`
 - `router.ts` — `createXRouter()` with route handlers (validate inline, call insert)
 - `types.ts`, `index.ts`
 
@@ -30,8 +30,7 @@ Server enriches `app_slug`, `environment`, `release` via `resolveAppErrorInsertM
 
 | Variable | Purpose |
 |----------|---------|
-| `SUPABASE_URL` | Tenant project |
-| `SUPABASE_SERVICE_ROLE_KEY` | Insert from Express |
+| `DATABASE_URL` | Local Postgres |
 | `APP_SLUG` | Default `code-your-resume` |
 | `GIT_COMMIT_SHA` | Optional `release` column |
 

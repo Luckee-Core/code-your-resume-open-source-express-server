@@ -1,23 +1,21 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 import type { TechnicalSkillSuggestionRow } from './list-technical-skills-suggestions-by-response-ids';
 
 /**
  * Load a single technical skill suggestion row by id.
  */
 export const getTechnicalSkillSuggestion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   suggestionId: string,
 ): Promise<TechnicalSkillSuggestionRow | null> => {
-  const { data, error } = await supabase
-    .from('technical_skills_suggestions')
-    .select('id, exchange_id, response_id, title, body, op, target_skill_id, status, created_at')
-    .eq('id', suggestionId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    return await selectOneFrom<TechnicalSkillSuggestionRow>(pool, 'technical_skills_suggestions', {
+      columns: 'id, exchange_id, response_id, title, body, op, target_skill_id, status, created_at',
+      eq: { id: suggestionId },
+    });
+  } catch (error) {
     console.error('❌ getTechnicalSkillSuggestion:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data as TechnicalSkillSuggestionRow | null) ?? null;
 };

@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertIdealCandidateRequestInput = {
   id: string;
@@ -12,25 +13,26 @@ export type InsertIdealCandidateRequestInput = {
 /**
  * Insert a new ideal candidate generation request record (status: pending).
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Request fields
  */
 export const insertIdealCandidateRequest = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertIdealCandidateRequestInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('ideal_candidate_generation_requests').insert({
-    id: input.id,
-    job_id: input.jobId,
-    skills: input.skills,
-    canvas_width_px: input.canvasWidthPx,
-    canvas_height_px: input.canvasHeightPx,
-    prompt_text: input.promptText,
-    status: 'pending',
-  });
-
-  if (error) {
-    console.error('❌ insertIdealCandidateRequest:', error.message);
-    throw new Error(`Failed to insert ideal candidate request record: ${error.message}`);
+  try {
+    await insertRow(pool, 'ideal_candidate_generation_requests', {
+      id: input.id,
+      job_id: input.jobId,
+      skills: input.skills,
+      canvas_width_px: input.canvasWidthPx,
+      canvas_height_px: input.canvasHeightPx,
+      prompt_text: input.promptText,
+      status: 'pending',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertIdealCandidateRequest:', message);
+    throw new Error(`Failed to insert ideal candidate request record: ${message}`);
   }
 };

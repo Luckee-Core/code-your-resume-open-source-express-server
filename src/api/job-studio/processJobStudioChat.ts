@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { v4 as uuidv4 } from "uuid";
 import type { Job } from "../../data/crm/types";
 import {
@@ -32,11 +32,11 @@ const buildStructuredPayload = (
 };
 
 const loadRecentChatLines = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
   excludeRequestId: string,
 ): Promise<{ role: string; content: string }[]> => {
-  const exchanges = await listJobStudioExchangesByJobId(supabase, jobId);
+  const exchanges = await listJobStudioExchangesByJobId(pool, jobId);
   const cutoff = Date.now() - MS_24H;
   const completed = exchanges.filter(
     (ex) =>
@@ -49,8 +49,8 @@ const loadRecentChatLines = async (
   const requestIds = [...new Set(completed.map((ex) => ex.request_id))];
   const responseIds = completed.map((ex) => ex.response_id as string);
   const [reqRows, resRows] = await Promise.all([
-    listJobStudioRequestsByIds(supabase, requestIds),
-    listJobStudioResponsesByIds(supabase, responseIds),
+    listJobStudioRequestsByIds(pool, requestIds),
+    listJobStudioResponsesByIds(pool, responseIds),
   ]);
   const reqById = new Map(reqRows.map((r) => [r.id, r]));
   const resById = new Map(resRows.map((r) => [r.id, r]));
@@ -68,7 +68,7 @@ const loadRecentChatLines = async (
 };
 
 const persistExchangeOutcome = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     jobId: string;
     requestId: string;
@@ -83,13 +83,13 @@ const persistExchangeOutcome = async (
   },
 ): Promise<{ exchangeId: string; responseId: string }> => {
   const responseId = uuidv4();
-  await insertJobStudioResponse(supabase, responseId, params.structured);
+  await insertJobStudioResponse(pool, responseId, params.structured);
 
   const exchangeId = uuidv4();
   const totalTokens = params.ai?.totalTokens ?? 0;
   const creditsUsed = params.ai && totalTokens > 0 ? Math.ceil(totalTokens / TOKENS_PER_CREDIT) : 0;
 
-  await insertJobStudioExchange(supabase, {
+  await insertJobStudioExchange(pool, {
     id: exchangeId,
     jobId: params.jobId,
     requestId: params.requestId,
@@ -102,7 +102,7 @@ const persistExchangeOutcome = async (
     status: params.status,
   });
 
-  await updateJobStudioRequestCompletion(supabase, params.requestId, {
+  await updateJobStudioRequestCompletion(pool, params.requestId, {
     exchangeId,
     responseId,
     status: params.status === "completed" ? "completed" : "failed",
@@ -115,7 +115,7 @@ const persistExchangeOutcome = async (
  * Persist user request, run Job Studio coach AI, store response + exchange.
  */
 export const processJobStudioChat = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   anthropic: Anthropic | null,
   params: {
     jobId: string;
@@ -126,7 +126,7 @@ export const processJobStudioChat = async (
   },
 ): Promise<void> => {
   const requestId = uuidv4();
-  await insertJobStudioRequest(supabase, {
+  await insertJobStudioRequest(pool, {
     id: requestId,
     jobId: params.jobId,
     userId: params.userId,
@@ -137,10 +137,10 @@ export const processJobStudioChat = async (
     "I could not generate a detailed reply right now. Please try again in a moment.";
 
   try {
-    const recentChat = await loadRecentChatLines(supabase, params.jobId, requestId);
+    const recentChat = await loadRecentChatLines(pool, params.jobId, requestId);
 
     if (!anthropic) {
-      await persistExchangeOutcome(supabase, {
+      await persistExchangeOutcome(pool, {
         jobId: params.jobId,
         requestId,
         structured: buildStructuredPayload(
@@ -154,7 +154,7 @@ export const processJobStudioChat = async (
     }
 
     const systemPrompt = await loadCrmCoachSystemPrompt(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.JOB_STUDIO,
     );
     const userPayload = buildJobStudioCoachUserPayload({
@@ -166,7 +166,7 @@ export const processJobStudioChat = async (
     const parsed = parseJobStudioCoachJson(aiResult.responseText);
     const structured = buildStructuredPayload(parsed, fallback);
 
-    await persistExchangeOutcome(supabase, {
+    await persistExchangeOutcome(pool, {
       jobId: params.jobId,
       requestId,
       structured,
@@ -182,7 +182,7 @@ export const processJobStudioChat = async (
     console.error("❌ processJobStudioChat error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
     try {
-      await persistExchangeOutcome(supabase, {
+      await persistExchangeOutcome(pool, {
         jobId: params.jobId,
         requestId,
         structured: buildStructuredPayload(null, `${fallback} (${msg})`),

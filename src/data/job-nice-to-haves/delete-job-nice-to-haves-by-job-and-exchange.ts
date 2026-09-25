@@ -1,19 +1,16 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { deleteRows } from "../../utils/postgres";
 
 /**
- * Deletes `job_nice_to_have` rows for one job + listing AI exchange. Logs PostgREST errors without throwing.
+ * Deletes `job_nice_to_have` rows for one job + listing AI exchange.
  */
 export const deleteJobNiceToHavesByJobAndExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
   exchangeId: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from("job_nice_to_have")
-    .delete()
-    .eq("job_id", jobId)
-    .eq("exchange_id", exchangeId);
-  if (error) {
-    console.error("❌ deleteJobNiceToHavesByJobAndExchange", error.message, error);
-  }
+  await deleteRows(pool, "job_nice_to_have", {
+    job_id: jobId,
+    exchange_id: exchangeId,
+  });
 };

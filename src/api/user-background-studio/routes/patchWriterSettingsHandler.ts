@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import { setUserBlogLinkedBackgroundProfileId } from '../../../data/user-background-studio';
 
 /**
@@ -24,12 +24,12 @@ export const patchWriterSettingsHandler = async (req: Request, res: Response) =>
           ? raw.trim()
           : null;
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    await setUserBlogLinkedBackgroundProfileId(supabase, userId, next);
+    await setUserBlogLinkedBackgroundProfileId(pool, userId, next);
     return res.json({ success: true, linkedUserBackgroundProfileId: next });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundStudioResponseListRow = {
   id: string;
@@ -7,20 +8,18 @@ export type UserBackgroundStudioResponseListRow = {
 };
 
 export const listUserBackgroundStudioResponsesByIds = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   ids: string[],
 ): Promise<UserBackgroundStudioResponseListRow[]> => {
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from('user_background_studio_responses')
-    .select('id, structured, created_at')
-    .in('id', ids);
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundStudioResponseListRow>(pool, 'user_background_studio_responses', {
+      columns: 'id, structured, created_at',
+      in: { id: ids },
+    });
+  } catch (error) {
     console.error('❌ listUserBackgroundStudioResponsesByIds:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundStudioResponseListRow[];
 };

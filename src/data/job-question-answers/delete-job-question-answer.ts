@@ -1,21 +1,13 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { deleteRows } from "../../utils/postgres";
 
 /**
  * Deletes a job question answer (unlink question from job).
  */
 export const deleteJobQuestionAnswer = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<boolean> => {
-  const { error, count } = await supabase
-    .from("job_question_answers")
-    .delete({ count: "exact" })
-    .eq("id", id);
-
-  if (error) {
-    console.error("❌ deleteJobQuestionAnswer:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (count ?? 0) > 0;
+  const count = await deleteRows(pool, "job_question_answers", { id });
+  return count > 0;
 };

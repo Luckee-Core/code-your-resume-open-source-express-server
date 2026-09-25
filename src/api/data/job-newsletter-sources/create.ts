@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { createJobNewsletterSource } from "../../../data/job-newsletter-sources";
 
 type Body = {
@@ -32,7 +32,7 @@ export const handleJobNewsletterSourceCreate = async (
       return;
     }
 
-    const data = await createJobNewsletterSource(requireCrmSupabaseClient(), {
+    const data = await createJobNewsletterSource(requireCrmPgPool(), {
       name,
       sender_email: senderEmail,
       enabled: typeof body.enabled === "boolean" ? body.enabled : true,

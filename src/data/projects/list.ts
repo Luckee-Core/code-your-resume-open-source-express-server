@@ -1,20 +1,15 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Project } from "./types";
+import type { Pool } from "pg";
+import type { Project, ProjectRow } from "./types";
 import { mapProjectRow } from "./map-project-row";
+import { selectRowsFrom } from "../../utils/postgres";
 
 /**
  * List all projects, newest first.
  */
-export const listProjects = async (supabase: SupabaseClient): Promise<Project[]> => {
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("created_at", { ascending: false });
+export const listProjects = async (pool: Pool): Promise<Project[]> => {
+  const rows = await selectRowsFrom<ProjectRow>(pool, "projects", {
+    order: [{ column: "created_at", ascending: false }],
+  });
 
-  if (error) {
-    console.error("❌ listProjects:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map((row) => mapProjectRow(row));
+  return rows.map((row) => mapProjectRow(row));
 };

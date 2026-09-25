@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundVersionSectionRow = {
   id: string;
@@ -14,42 +15,38 @@ export type UserBackgroundVersionSectionRow = {
  * All section rows for one version snapshot, ordered for display.
  */
 export const listUserBackgroundVersionSections = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   icpVersionId: string,
 ): Promise<UserBackgroundVersionSectionRow[]> => {
-  const { data, error } = await supabase
-    .from('user_background_version_sections')
-    .select('id, profile_version_id, section_key, title, body, last_version, sort_order')
-    .eq('profile_version_id', icpVersionId)
-    .order('sort_order', { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundVersionSectionRow>(pool, 'user_background_version_sections', {
+      columns: 'id, profile_version_id, section_key, title, body, last_version, sort_order',
+      eq: { profile_version_id: icpVersionId },
+      order: [{ column: 'sort_order', ascending: true }],
+    });
+  } catch (error) {
     console.error('❌ listUserBackgroundVersionSections:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundVersionSectionRow[];
 };
 
 /**
  * Batch-load sections for many version ids (one query).
  */
 export const listUserBackgroundVersionSectionsForVersionIds = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   icpVersionIds: string[],
 ): Promise<UserBackgroundVersionSectionRow[]> => {
   if (icpVersionIds.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from('user_background_version_sections')
-    .select('id, profile_version_id, section_key, title, body, last_version, sort_order')
-    .in('profile_version_id', icpVersionIds)
-    .order('sort_order', { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundVersionSectionRow>(pool, 'user_background_version_sections', {
+      columns: 'id, profile_version_id, section_key, title, body, last_version, sort_order',
+      in: { profile_version_id: icpVersionIds },
+      order: [{ column: 'sort_order', ascending: true }],
+    });
+  } catch (error) {
     console.error('❌ listUserBackgroundVersionSectionsForVersionIds:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundVersionSectionRow[];
 };

@@ -1,21 +1,22 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 
 /**
  * Read persisted Blog Studio writer link for a user.
  */
 export const getUserBlogLinkedBackgroundProfileId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   userId: string,
 ): Promise<string | null> => {
-  const { data, error } = await supabase
-    .from('users')
-    .select('blog_linked_user_background_profile_id')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) {
+  let data: { blog_linked_user_background_profile_id: string | null } | null;
+  try {
+    data = await selectOneFrom<{ blog_linked_user_background_profile_id: string | null }>(pool, 'users', {
+      columns: 'blog_linked_user_background_profile_id',
+      eq: { id: userId },
+    });
+  } catch (error) {
     console.error('❌ getUserBlogLinkedBackgroundProfileId:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
   const raw = data?.blog_linked_user_background_profile_id;

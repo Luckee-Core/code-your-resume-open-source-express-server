@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRows } from "../../utils/postgres";
 import type { LinkedInEducationInsert } from "../../utils/linkedin-profile";
 import type { LinkedInEducation } from "./types";
 import { listLinkedInEducationsByProfileId } from "./list-linkedin-educations-by-profile-id";
@@ -8,7 +9,7 @@ import { listLinkedInEducationsByProfileId } from "./list-linkedin-educations-by
  * Inserts LinkedIn education rows for one profile.
  */
 export const insertLinkedInEducationsBatch = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   rows: LinkedInEducationInsert[],
 ): Promise<LinkedInEducation[]> => {
@@ -30,12 +31,13 @@ export const insertLinkedInEducationsBatch = async (
     updated_at: now,
   }));
 
-  const { error } = await supabase.from("linkedin_educations").insert(payload);
-
-  if (error) {
-    console.error("❌ insertLinkedInEducationsBatch:", error.message);
-    throw new Error(error.message);
+  try {
+    await insertRows(pool, "linkedin_educations", payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ insertLinkedInEducationsBatch:", message);
+    throw new Error(message);
   }
 
-  return listLinkedInEducationsByProfileId(supabase, profileId);
+  return listLinkedInEducationsByProfileId(pool, profileId);
 };

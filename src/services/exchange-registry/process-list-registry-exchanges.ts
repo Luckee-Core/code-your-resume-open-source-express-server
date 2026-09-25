@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { CRM_AI_FLOW_PROMPT_FLOW_LABELS } from '../../constants/crm-ai-flow-prompt-flows';
 import {
   enrichRegistryExchangeContextLabels,
@@ -19,13 +19,13 @@ const FLOW_LABELS: Record<string, string> = {
  * Lists exchanges from all enabled `exchange_table_registry` rows (tokens + model on exchange tables).
  */
 export const processListRegistryExchanges = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: ListRegistryExchangesInput = {},
 ): Promise<ListRegistryExchangesResult | { error: string }> => {
   const limitRaw = typeof input.limit === 'number' ? input.limit : 100;
   const perSourceLimit = Math.min(Math.max(limitRaw, 1), 200);
 
-  const registryResult = await listEnabledExchangeRegistryRows(supabase);
+  const registryResult = await listEnabledExchangeRegistryRows(pool);
   if ('error' in registryResult) return { error: registryResult.error };
 
   if (registryResult.rows.length === 0) {
@@ -35,7 +35,7 @@ export const processListRegistryExchanges = async (
   const merged: ListedExchangeRow[] = [];
 
   for (const entry of registryResult.rows) {
-    const result = await listExchangeRowsFromRegistryEntry(supabase, entry, perSourceLimit, {
+    const result = await listExchangeRowsFromRegistryEntry(pool, entry, perSourceLimit, {
       sourceId: input.sourceId,
       jobId: input.jobId,
     });
@@ -47,7 +47,7 @@ export const processListRegistryExchanges = async (
 
     if (result.rows.length === 0) continue;
 
-    const contextLabels = await enrichRegistryExchangeContextLabels(supabase, result.rows);
+    const contextLabels = await enrichRegistryExchangeContextLabels(pool, result.rows);
     const flowLabel = FLOW_LABELS[entry.logical_key] ?? entry.logical_key;
 
     for (const row of result.rows) {

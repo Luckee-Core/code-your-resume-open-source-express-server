@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { requireCrmSupabaseClient } from '../../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../../data/crm/require-crm-pg-pool';
 import { listJobListingAiPrompts } from '../../../data/job-listing-ai-prompt';
 
 /**
@@ -8,7 +8,7 @@ import { listJobListingAiPrompts } from '../../../data/job-listing-ai-prompt';
 export const handleJobListingAiPromptsList = async (_req: Request, res: Response): Promise<void> => {
   console.log('📥 GET /api/data/job-listing-ai-prompts/list');
   try {
-    const rows = await listJobListingAiPrompts(requireCrmSupabaseClient());
+    const rows = await listJobListingAiPrompts(requireCrmPgPool());
     const data = rows.map((row) => ({
       id: row.id,
       name: row.name,

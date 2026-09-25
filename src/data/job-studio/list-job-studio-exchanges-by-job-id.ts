@@ -1,4 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectRowsFrom } from "../../utils/postgres";
 
 export type JobStudioExchangeRow = {
   id: string;
@@ -12,19 +13,17 @@ export type JobStudioExchangeRow = {
  * List Job Studio exchanges for one job, oldest first (chat order).
  */
 export const listJobStudioExchangesByJobId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
 ): Promise<JobStudioExchangeRow[]> => {
-  const { data, error } = await supabase
-    .from("job_studio_exchanges")
-    .select("id, job_id, request_id, response_id, created_at")
-    .eq("job_id", jobId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<JobStudioExchangeRow>(pool, "job_studio_exchanges", {
+      columns: "id, job_id, request_id, response_id, created_at",
+      eq: { job_id: jobId },
+      order: [{ column: "created_at", ascending: true }],
+    });
+  } catch (error) {
     console.error("❌ listJobStudioExchangesByJobId:", error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as JobStudioExchangeRow[];
 };

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { insertJobQuestionAnswer } from "../../../data/job-question-answers";
 
 type Body = {
@@ -24,7 +24,7 @@ export const handleJobQuestionAnswerCreate = async (req: Request, res: Response)
     }
     const answer = typeof body.answer === "string" ? body.answer : "";
     const sortOrder = typeof body.sortOrder === "number" ? body.sortOrder : undefined;
-    const data = await insertJobQuestionAnswer(requireCrmSupabaseClient(), {
+    const data = await insertJobQuestionAnswer(requireCrmPgPool(), {
       jobId,
       jobQuestionId,
       answer,

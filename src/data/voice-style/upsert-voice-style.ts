@@ -1,23 +1,24 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { upsertRows } from '../../utils/postgres';
 
 /**
  * Upsert the singleton voice_style row.
  */
 export const upsertVoiceStyle = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   body: string,
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from('voice_style').upsert(
-    {
-      id: 'default',
-      body,
-      updated_at: now,
-    },
-    { onConflict: 'id' },
+  await upsertRows(
+    pool,
+    'voice_style',
+    [
+      {
+        id: 'default',
+        body,
+        updated_at: now,
+      },
+    ],
+    ['id'],
   );
-
-  if (error) {
-    throw error;
-  }
 };

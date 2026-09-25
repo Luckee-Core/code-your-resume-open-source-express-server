@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { requireCrmSupabaseClient } from '../../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../../data/crm/require-crm-pg-pool';
 import { listJobNewsletterIngestRunsBySourceId } from '../../../data/job-newsletter-ingest-runs';
 
 /**
@@ -20,7 +20,7 @@ export const handleJobNewsletterIngestRunsList = async (
     const limitRaw = typeof req.query.limit === 'string' ? Number(req.query.limit) : 50;
     const limit = Number.isFinite(limitRaw) ? limitRaw : 50;
     const data = await listJobNewsletterIngestRunsBySourceId(
-      requireCrmSupabaseClient(),
+      requireCrmPgPool(),
       sourceId,
       limit,
     );

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { requireCrmSupabaseClient } from '../../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../../data/crm/require-crm-pg-pool';
 import { processListRegistryExchanges } from '../../../services/exchange-registry';
 
 /**
@@ -21,7 +21,7 @@ export const handleJobNewsletterIngestAiCostsList = async (
     const limitRaw = typeof req.query.limit === 'string' ? Number(req.query.limit) : 100;
     const limit = Number.isFinite(limitRaw) ? limitRaw : 100;
 
-    const result = await processListRegistryExchanges(requireCrmSupabaseClient(), {
+    const result = await processListRegistryExchanges(requireCrmPgPool(), {
       limit,
       sourceId,
     });

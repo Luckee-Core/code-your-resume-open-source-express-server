@@ -1,5 +1,5 @@
 import type { ProjectNote } from "../../data/project-notes/types";
-import { requireCrmSupabaseClient } from "../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../data/crm/require-crm-pg-pool";
 import { createProjectNote } from "../../data/project-notes/create";
 import { deleteProjectNotesByProjectId } from "../../data/project-notes/delete-by-project-id";
 import { getProjectById } from "../../data/projects/get-by-id";
@@ -53,11 +53,11 @@ export const runProjectNotesSynthesis = async (input: {
     cappedChars: cappedText.length,
   });
 
-  const supabase = requireCrmSupabaseClient();
+  const pool = requireCrmPgPool();
 
   let project;
   try {
-    project = await getProjectById(supabase, projectId);
+    project = await getProjectById(pool, projectId);
   } catch {
     return { ok: false, statusCode: 500, error: "Failed to load project" };
   }
@@ -86,11 +86,11 @@ export const runProjectNotesSynthesis = async (input: {
   }
 
   try {
-    await deleteProjectNotesByProjectId(supabase, projectId);
+    await deleteProjectNotesByProjectId(pool, projectId);
 
     const createdNotes: ProjectNote[] = [];
     for (const body of noteBodies) {
-      const note = await createProjectNote(supabase, { projectId, body });
+      const note = await createProjectNote(pool, { projectId, body });
       createdNotes.push(note);
     }
 

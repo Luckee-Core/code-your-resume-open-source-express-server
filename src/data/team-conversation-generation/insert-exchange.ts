@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertTeamConversationExchangeInput = {
   id: string;
@@ -10,23 +11,24 @@ export type InsertTeamConversationExchangeInput = {
 /**
  * Insert a new team conversation generation exchange record (status: running).
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Exchange fields
  */
 export const insertTeamConversationExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertTeamConversationExchangeInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('team_conversation_generation_exchanges').insert({
-    id: input.id,
-    job_id: input.jobId,
-    request_id: input.requestId,
-    agent_id: input.agentId,
-    status: 'running',
-  });
-
-  if (error) {
-    console.error('❌ insertTeamConversationExchange:', error.message);
-    throw new Error(`Failed to insert team conversation exchange record: ${error.message}`);
+  try {
+    await insertRow(pool, 'team_conversation_generation_exchanges', {
+      id: input.id,
+      job_id: input.jobId,
+      request_id: input.requestId,
+      agent_id: input.agentId,
+      status: 'running',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertTeamConversationExchange:', message);
+    throw new Error(`Failed to insert team conversation exchange record: ${message}`);
   }
 };

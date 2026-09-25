@@ -1,10 +1,11 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 /**
  * Create a pending ICP Studio chat request (user message).
  */
 export const insertUserBackgroundStudioRequest = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     id: string;
     userId: string;
@@ -13,18 +14,18 @@ export const insertUserBackgroundStudioRequest = async (
   },
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from('user_background_studio_requests').insert({
-    id: params.id,
-    user_id: params.userId,
-    profile_id: params.profileId,
-    content: params.content,
-    status: 'pending',
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, 'user_background_studio_requests', {
+      id: params.id,
+      user_id: params.userId,
+      profile_id: params.profileId,
+      content: params.content,
+      status: 'pending',
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
     console.error('❌ insertUserBackgroundStudioRequest:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

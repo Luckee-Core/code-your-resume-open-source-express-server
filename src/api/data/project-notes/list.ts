@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { listProjectNotesByProjectId } from "../../../data/project-notes";
 
 /**
@@ -14,7 +14,7 @@ export const handleProjectNoteList = async (req: Request, res: Response): Promis
       return;
     }
 
-    const data = await listProjectNotesByProjectId(requireCrmSupabaseClient(), projectId);
+    const data = await listProjectNotesByProjectId(requireCrmPgPool(), projectId);
 
     console.log("📤 200 GET /api/data/project-notes/list");
     res.status(200).json({ success: true, data });

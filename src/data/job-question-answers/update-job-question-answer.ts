@@ -1,16 +1,17 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { JobQuestionAnswer } from "./types";
 import { getJobQuestionAnswer } from "./get-job-question-answer";
+import { updateRows } from "../../utils/postgres";
 
 /**
  * Updates a job question answer row.
  */
 export const updateJobQuestionAnswer = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   patch: Partial<Pick<JobQuestionAnswer, "answer" | "sortOrder">>,
 ): Promise<JobQuestionAnswer | null> => {
-  const prev = await getJobQuestionAnswer(supabase, id);
+  const prev = await getJobQuestionAnswer(pool, id);
   if (!prev) {
     return null;
   }
@@ -19,19 +20,16 @@ export const updateJobQuestionAnswer = async (
   const sortOrder = patch.sortOrder !== undefined ? patch.sortOrder : prev.sortOrder;
   const updatedAt = new Date().toISOString();
 
-  const { error } = await supabase
-    .from("job_question_answers")
-    .update({
+  await updateRows(
+    pool,
+    "job_question_answers",
+    {
       answer,
       sort_order: sortOrder,
       updated_at: updatedAt,
-    })
-    .eq("id", id);
+    },
+    { id },
+  );
 
-  if (error) {
-    console.error("❌ updateJobQuestionAnswer:", error.message);
-    throw new Error(error.message);
-  }
-
-  return getJobQuestionAnswer(supabase, id);
+  return getJobQuestionAnswer(pool, id);
 };

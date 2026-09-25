@@ -1,8 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { createCompanyInStore, createJobInStore } from '../../data/crm';
 import { findCompanyByNameFromSupabase } from '../../data/crm/supabase/find-company-by-name-from-supabase';
 import { findJobByUrlFromSupabase } from '../../data/crm/supabase/find-job-by-url-from-supabase';
-import { requireCrmSupabaseClient } from '../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../data/crm/require-crm-pg-pool';
 import { updateJobInStore } from '../../data/crm/update-job-in-store';
 import { createJobNewsletterIngestAiExchange } from '../../data/job-newsletter-ingest-ai-exchange';
 import { getActiveJobNewsletterIngestAiPrompt } from '../../data/job-newsletter-ingest-ai-prompt';
@@ -37,8 +37,8 @@ const resolveCompanyId = async (
   sourceName: string,
   counters: { companiesCreated: number },
 ): Promise<string> => {
-  const supabase = requireCrmSupabaseClient();
-  const existing = await findCompanyByNameFromSupabase(supabase, companyName);
+  const pool = requireCrmPgPool();
+  const existing = await findCompanyByNameFromSupabase(pool, companyName);
   if (existing) {
     return existing.id;
   }
@@ -68,8 +68,8 @@ const ingestListing = async (
     };
   }
 
-  const supabase = requireCrmSupabaseClient();
-  const existingJob = await findJobByUrlFromSupabase(supabase, url);
+  const pool = requireCrmPgPool();
+  const existingJob = await findJobByUrlFromSupabase(pool, url);
   if (existingJob) {
     counters.jobsSkipped += 1;
     return {
@@ -120,11 +120,11 @@ type LogExchangeParams = {
  * Persist an AI exchange row for newsletter parse token tracking.
  */
 const logExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: LogExchangeParams,
 ): Promise<void> => {
   try {
-    await createJobNewsletterIngestAiExchange(supabase, {
+    await createJobNewsletterIngestAiExchange(pool, {
       source_id: params.sourceId,
       run_id: params.runId ?? null,
       gmail_message_id: params.gmailMessageId,
@@ -153,8 +153,8 @@ export const processJobNewsletterIngest = async (
     runId: input.runId ?? null,
   });
 
-  const supabase = requireCrmSupabaseClient();
-  const activePrompt = await getActiveJobNewsletterIngestAiPrompt(supabase);
+  const pool = requireCrmPgPool();
+  const activePrompt = await getActiveJobNewsletterIngestAiPrompt(pool);
   const systemPrompt = activePrompt?.system_prompt?.trim() ?? '';
   const activePromptId = activePrompt?.id ?? null;
 
@@ -186,7 +186,7 @@ export const processJobNewsletterIngest = async (
       continue;
     }
 
-    const source = await getJobNewsletterSourceBySenderEmail(supabase, fromEmail);
+    const source = await getJobNewsletterSourceBySenderEmail(pool, fromEmail);
     if (!source) {
       emailResults.push({
         gmailMessageId: email.gmailMessageId,
@@ -244,7 +244,7 @@ export const processJobNewsletterIngest = async (
     });
 
     if (parseOutcome.kind === 'skipped') {
-      await logExchange(supabase, {
+      await logExchange(pool, {
         sourceId: source.id,
         runId: input.runId,
         gmailMessageId: email.gmailMessageId,
@@ -271,7 +271,7 @@ export const processJobNewsletterIngest = async (
     }
 
     if (parseOutcome.kind === 'error') {
-      await logExchange(supabase, {
+      await logExchange(pool, {
         sourceId: source.id,
         runId: input.runId,
         gmailMessageId: email.gmailMessageId,
@@ -297,7 +297,7 @@ export const processJobNewsletterIngest = async (
       continue;
     }
 
-    await logExchange(supabase, {
+    await logExchange(pool, {
       sourceId: source.id,
       runId: input.runId,
       gmailMessageId: email.gmailMessageId,

@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertSkillsComponentRequestInput = {
   id: string;
@@ -12,25 +13,26 @@ export type InsertSkillsComponentRequestInput = {
 /**
  * Insert a new skills component generation request record (status: pending).
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Request fields
  */
 export const insertSkillsComponentRequest = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertSkillsComponentRequestInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('skills_component_generation_requests').insert({
-    id: input.id,
-    job_id: input.jobId,
-    skills: input.skills,
-    canvas_width_px: input.canvasWidthPx,
-    canvas_height_px: input.canvasHeightPx,
-    prompt_text: input.promptText,
-    status: 'pending',
-  });
-
-  if (error) {
-    console.error('❌ insertSkillsComponentRequest:', error.message);
-    throw new Error(`Failed to insert skills component request record: ${error.message}`);
+  try {
+    await insertRow(pool, 'skills_component_generation_requests', {
+      id: input.id,
+      job_id: input.jobId,
+      skills: input.skills,
+      canvas_width_px: input.canvasWidthPx,
+      canvas_height_px: input.canvasHeightPx,
+      prompt_text: input.promptText,
+      status: 'pending',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertSkillsComponentRequest:', message);
+    throw new Error(`Failed to insert skills component request record: ${message}`);
   }
 };

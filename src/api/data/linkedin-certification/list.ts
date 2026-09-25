@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { listLinkedInCertificationsByProfileId } from "../../../data/linkedin-certifications";
 
 /**
@@ -17,7 +17,7 @@ export const handleLinkedInCertificationList = async (
       return;
     }
 
-    const data = await listLinkedInCertificationsByProfileId(requireCrmSupabaseClient(), profileId);
+    const data = await listLinkedInCertificationsByProfileId(requireCrmPgPool(), profileId);
     console.log("📤 200 GET /api/data/linkedin-certification/list");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

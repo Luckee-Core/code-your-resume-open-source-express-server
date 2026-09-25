@@ -1,5 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { completeCursorGenerationExchange } from '../../utils/cursor-generation';
+import { updateRows } from '../../utils/postgres';
 
 export type UpdateCompanyInterestExchangeCompletedInput = {
   id: string;
@@ -12,14 +13,14 @@ export type UpdateCompanyInterestExchangeCompletedInput = {
 /**
  * Mark a company interest exchange as completed with token usage.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Completion data
  */
 export const updateCompanyInterestExchangeCompleted = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: UpdateCompanyInterestExchangeCompletedInput,
 ): Promise<void> => {
-  await completeCursorGenerationExchange(supabase, {
+  await completeCursorGenerationExchange(pool, {
     tableName: 'company_interest_generation_exchanges',
     id: input.id,
     responseId: input.responseId,
@@ -33,25 +34,28 @@ export const updateCompanyInterestExchangeCompleted = async (
 /**
  * Mark a company interest exchange as failed with an error message.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Exchange ID
  * @param errorMessage - Failure reason
  */
 export const updateCompanyInterestExchangeFailed = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   errorMessage: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('company_interest_generation_exchanges')
-    .update({
-      status: 'failed',
-      error_message: errorMessage,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateCompanyInterestExchangeFailed:', error.message);
+  try {
+    await updateRows(
+      pool,
+      'company_interest_generation_exchanges',
+      {
+        status: 'failed',
+        error_message: errorMessage,
+        updated_at: new Date().toISOString(),
+      },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateCompanyInterestExchangeFailed:', message);
   }
 };

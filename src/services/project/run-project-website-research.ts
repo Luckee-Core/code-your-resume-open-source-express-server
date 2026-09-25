@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getModelConfig } from "../ai/model-config";
-import { requireCrmSupabaseClient } from "../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../data/crm/require-crm-pg-pool";
 import { getProjectById } from "../../data/projects/get-by-id";
 import { updateProject } from "../../data/projects/update";
 import type { Project } from "../../data/projects/types";
@@ -91,9 +91,9 @@ export const runProjectWebsiteResearch = async (
   projectId: string,
 ): Promise<RunProjectWebsiteResearchResult> => {
   console.log("🚀 Project website research: start", { projectId });
-  const supabase = requireCrmSupabaseClient();
+  const pool = requireCrmPgPool();
 
-  const project = await getProjectById(supabase, projectId);
+  const project = await getProjectById(pool, projectId);
   if (!project) {
     return { ok: false, code: "not_found", message: "Project not found" };
   }
@@ -139,7 +139,7 @@ export const runProjectWebsiteResearch = async (
   );
   const now = new Date().toISOString();
 
-  const next = await updateProject(supabase, projectId, {
+  const next = await updateProject(pool, projectId, {
     websiteResearchSummary: summary,
     websiteResearchCompletedAt: now,
   });

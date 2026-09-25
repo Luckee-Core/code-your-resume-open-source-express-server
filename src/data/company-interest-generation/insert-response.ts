@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertCompanyInterestResponseInput = {
   id: string;
@@ -9,21 +10,22 @@ export type InsertCompanyInterestResponseInput = {
 /**
  * Insert a company interest generation response record containing extracted TSX.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Response fields
  */
 export const insertCompanyInterestResponse = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertCompanyInterestResponseInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('company_interest_generation_responses').insert({
-    id: input.id,
-    tsx_code: input.tsxCode,
-    agent_summary: input.agentSummary,
-  });
-
-  if (error) {
-    console.error('❌ insertCompanyInterestResponse:', error.message);
-    throw new Error(`Failed to insert company interest response record: ${error.message}`);
+  try {
+    await insertRow(pool, 'company_interest_generation_responses', {
+      id: input.id,
+      tsx_code: input.tsxCode,
+      agent_summary: input.agentSummary,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertCompanyInterestResponse:', message);
+    throw new Error(`Failed to insert company interest response record: ${message}`);
   }
 };

@@ -6,7 +6,7 @@
 
 ## Context
 
-To keep domain code maintainable and testable, database access must be isolated from handlers, routers, and business logic. This document defines strict boundaries for CRUD behavior, Supabase client usage, and file organization.
+To keep domain code maintainable and testable, database access must be isolated from handlers, routers, and business logic. This document defines strict boundaries for CRUD behavior, Postgres pool usage, and file organization.
 
 ## Decision
 
@@ -14,7 +14,7 @@ To keep domain code maintainable and testable, database access must be isolated 
 
 1. All database CRUD operations live in `src/data/{entity}/`.
 2. Never inline SQL/query-builder calls in domain handlers or business logic.
-3. The data layer is the only layer that talks directly to Supabase tables.
+3. The data layer is the only layer that talks directly to Postgres tables.
 
 ### 2) One function per file in the data layer
 
@@ -22,12 +22,12 @@ To keep domain code maintainable and testable, database access must be isolated 
 2. File names describe the action (for example: `getUserById.ts`, `createUser.ts`, `updateUserById.ts`, `deleteUserById.ts`).
 3. Every function has JSDoc.
 
-### 3) Supabase client contract
+### 3) Postgres pool contract
 
-1. Every data-layer function accepts `SupabaseClient` as the first parameter.
-2. Domain code must not call `createClient()` directly.
-3. Domain handlers obtain clients via `getManagedSupabaseClient()` and pass the client into data functions.
-4. Handlers must check for null managed clients and return HTTP 500 if unavailable.
+1. Every data-layer function accepts `Pool` as the first parameter (except CRM store helpers that call `requireCrmPgPool()` internally).
+2. Domain code must not call `new Pool()` directly.
+3. Domain handlers obtain the pool via `getManagedPgPool()` / `requireCrmPgPool()` and pass it into data functions.
+4. Handlers must check for null managed pools and return HTTP 500 if unavailable.
 
 ### 4) Domain architecture
 

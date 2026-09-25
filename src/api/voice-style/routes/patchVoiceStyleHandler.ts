@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import { getVoiceStyle, upsertVoiceStyle } from '../../../data/voice-style';
 
 /**
@@ -16,13 +16,13 @@ export const patchVoiceStyleHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'body must be a string' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    await upsertVoiceStyle(supabase, body.body);
-    const fresh = await getVoiceStyle(supabase);
+    await upsertVoiceStyle(pool, body.body);
+    const fresh = await getVoiceStyle(pool);
     return res.json({
       success: true,
       body: fresh.body,

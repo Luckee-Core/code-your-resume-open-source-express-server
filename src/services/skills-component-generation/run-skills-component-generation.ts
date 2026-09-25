@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
@@ -60,12 +60,12 @@ const DEFAULT_CANVAS_HEIGHT = 1150;
  *
  * On any failure, updates exchange + request to failed before re-throwing.
  *
- * @param supabase - Supabase service-role client for ledger writes
+ * @param pool - Supabase service-role client for ledger writes
  * @param input - Skills list and optional canvas dimensions
  * @returns Generated TSX string and ledger IDs
  */
 export const runSkillsComponentGeneration = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: RunSkillsComponentGenerationInput,
 ): Promise<RunSkillsComponentGenerationResult> => {
   const {
@@ -96,7 +96,7 @@ export const runSkillsComponentGeneration = async (
 
   try {
     const template = await loadCrmGenerationPromptTemplate(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.SKILLS_COMPONENT_GENERATION,
     );
     const promptBase = buildSkillsComponentPromptFromTemplate(template, {
@@ -118,7 +118,7 @@ export const runSkillsComponentGeneration = async (
       ? `${promptBase}\n\n${appendedPromptSections.trim()}`
       : promptBase;
 
-    await insertSkillsComponentRequest(supabase, {
+    await insertSkillsComponentRequest(pool, {
       id: requestId,
       jobId,
       skills,
@@ -140,7 +140,7 @@ export const runSkillsComponentGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertSkillsComponentExchange(supabase, {
+    await insertSkillsComponentExchange(pool, {
       id: exchangeId,
       jobId,
       requestId,
@@ -152,7 +152,7 @@ export const runSkillsComponentGeneration = async (
     const tsx = await extractTsxFromConversation(cursorClient, agent.id, agent.runId);
 
     const responseId = randomUUID();
-    await insertSkillsComponentResponse(supabase, {
+    await insertSkillsComponentResponse(pool, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
@@ -160,7 +160,7 @@ export const runSkillsComponentGeneration = async (
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
 
-    await updateSkillsComponentExchangeCompleted(supabase, {
+    await updateSkillsComponentExchangeCompleted(pool, {
       id: exchangeId,
       responseId,
       inputTokens: 0,
@@ -168,7 +168,7 @@ export const runSkillsComponentGeneration = async (
       modelUsed: agent.modelId,
     });
 
-    await updateSkillsComponentRequestCompleted(supabase, requestId);
+    await updateSkillsComponentRequestCompleted(pool, requestId);
 
     console.log(`✅ Skills component generation complete (${durationSeconds}s)`);
 
@@ -178,9 +178,9 @@ export const runSkillsComponentGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateSkillsComponentExchangeFailed(supabase, exchangeId, err.message);
+        await updateSkillsComponentExchangeFailed(pool, exchangeId, err.message);
       }
-      await updateSkillsComponentRequestFailed(supabase, requestId);
+      await updateSkillsComponentRequestFailed(pool, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

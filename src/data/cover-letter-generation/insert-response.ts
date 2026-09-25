@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertCoverLetterResponseInput = {
   id: string;
@@ -9,21 +10,22 @@ export type InsertCoverLetterResponseInput = {
 /**
  * Insert a cover letter generation response record containing extracted TSX.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Response fields
  */
 export const insertCoverLetterResponse = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertCoverLetterResponseInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('cover_letter_generation_responses').insert({
-    id: input.id,
-    tsx_code: input.tsxCode,
-    agent_summary: input.agentSummary,
-  });
-
-  if (error) {
-    console.error('❌ insertCoverLetterResponse:', error.message);
-    throw new Error(`Failed to insert cover letter response record: ${error.message}`);
+  try {
+    await insertRow(pool, 'cover_letter_generation_responses', {
+      id: input.id,
+      tsx_code: input.tsxCode,
+      agent_summary: input.agentSummary,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertCoverLetterResponse:', message);
+    throw new Error(`Failed to insert cover letter response record: ${message}`);
   }
 };

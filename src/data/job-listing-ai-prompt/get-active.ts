@@ -1,23 +1,20 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 import type { JobListingAiPrompt } from './types';
 
 /**
  * Returns the active job listing AI prompt, or null.
  */
 export const getActiveJobListingAiPrompt = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<JobListingAiPrompt | null> => {
-  const { data, error } = await supabase
-    .from('job_listing_ai_prompt')
-    .select('*')
-    .eq('is_active', true)
-    .order('version', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
+  try {
+    return await selectOneFrom<JobListingAiPrompt>(pool, 'job_listing_ai_prompt', {
+      eq: { is_active: true },
+      order: [{ column: 'version', ascending: false }],
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message);
   }
-
-  return (data as JobListingAiPrompt | null) ?? null;
 };

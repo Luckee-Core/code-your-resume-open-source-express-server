@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRows } from "../../utils/postgres";
 import type { LinkedInEmploymentInsert } from "../../utils/linkedin-profile";
 import type { LinkedInEmployment } from "./types";
 import { listLinkedInEmploymentsByProfileId } from "./list-linkedin-employments-by-profile-id";
@@ -8,7 +9,7 @@ import { listLinkedInEmploymentsByProfileId } from "./list-linkedin-employments-
  * Inserts LinkedIn employment rows for one profile.
  */
 export const insertLinkedInEmploymentsBatch = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   rows: LinkedInEmploymentInsert[],
 ): Promise<LinkedInEmployment[]> => {
@@ -36,12 +37,13 @@ export const insertLinkedInEmploymentsBatch = async (
     updated_at: now,
   }));
 
-  const { error } = await supabase.from("linkedin_employments").insert(payload);
-
-  if (error) {
-    console.error("❌ insertLinkedInEmploymentsBatch:", error.message);
-    throw new Error(error.message);
+  try {
+    await insertRows(pool, "linkedin_employments", payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ insertLinkedInEmploymentsBatch:", message);
+    throw new Error(message);
   }
 
-  return listLinkedInEmploymentsByProfileId(supabase, profileId);
+  return listLinkedInEmploymentsByProfileId(pool, profileId);
 };

@@ -1,22 +1,24 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Set current_version on icps row (caller verifies ownership).
  */
 export const setUserBackgroundProfileCurrentVersion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   userId: string,
   currentVersion: number,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('user_background_profiles')
-    .update({ current_version: currentVersion, updated_at: new Date().toISOString() })
-    .eq('id', profileId)
-    .eq('user_id', userId);
-
-  if (error) {
+  try {
+    await updateRows(
+      pool,
+      'user_background_profiles',
+      { current_version: currentVersion, updated_at: new Date().toISOString() },
+      { id: profileId, user_id: userId },
+    );
+  } catch (error) {
     console.error('❌ setUserBackgroundProfileCurrentVersion:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

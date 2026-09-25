@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type TechnicalSkillSuggestionRow = {
   id: string;
@@ -16,21 +17,19 @@ export type TechnicalSkillSuggestionRow = {
  * List technical skill suggestions for the given coach response ids.
  */
 export const listTechnicalSkillsSuggestionsByResponseIds = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   responseIds: string[],
 ): Promise<TechnicalSkillSuggestionRow[]> => {
   if (responseIds.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from('technical_skills_suggestions')
-    .select('id, exchange_id, response_id, title, body, op, target_skill_id, status, created_at')
-    .in('response_id', responseIds)
-    .order('created_at', { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<TechnicalSkillSuggestionRow>(pool, 'technical_skills_suggestions', {
+      columns: 'id, exchange_id, response_id, title, body, op, target_skill_id, status, created_at',
+      in: { response_id: responseIds },
+      order: [{ column: 'created_at', ascending: true }],
+    });
+  } catch (error) {
     console.error('❌ listTechnicalSkillsSuggestionsByResponseIds:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as TechnicalSkillSuggestionRow[];
 };

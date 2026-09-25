@@ -1,4 +1,4 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import {
   listJobStudioExchangesByJobId,
   listJobStudioRequestsByIds,
@@ -47,17 +47,17 @@ export type JobStudioPayload = {
  * Build Job Studio chat transcript for one job from Supabase ledger rows.
  */
 export const loadJobStudioPayload = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   jobId: string,
 ): Promise<JobStudioPayload> => {
-  const exchangeRows = await listJobStudioExchangesByJobId(supabase, jobId);
+  const exchangeRows = await listJobStudioExchangesByJobId(pool, jobId);
   const withResponse = exchangeRows.filter((ex) => ex.response_id);
   const requestIds = [...new Set(withResponse.map((ex) => ex.request_id))];
   const responseIds = withResponse.map((ex) => ex.response_id as string);
 
   const [reqRows, resRows] = await Promise.all([
-    listJobStudioRequestsByIds(supabase, requestIds),
-    listJobStudioResponsesByIds(supabase, responseIds),
+    listJobStudioRequestsByIds(pool, requestIds),
+    listJobStudioResponsesByIds(pool, responseIds),
   ]);
   const reqById = new Map(reqRows.map((r) => [r.id, r]));
   const resById = new Map(resRows.map((r) => [r.id, r]));

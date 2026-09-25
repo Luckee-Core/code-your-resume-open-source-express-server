@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
@@ -47,12 +47,12 @@ const COMPANY_INTEREST_COMPONENT_NAME = 'GeneratedCompanyInterestPreview';
 /**
  * Run the company-interest generation pipeline: prompt → ledger → Cursor → extract TSX.
  *
- * @param supabase - Supabase service-role client for ledger writes
+ * @param pool - Supabase service-role client for ledger writes
  * @param input - Job context, background segments, optional skills
  * @returns Generated TSX string and ledger IDs
  */
 export const runCompanyInterestGeneration = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: RunCompanyInterestGenerationInput,
 ): Promise<RunCompanyInterestGenerationResult> => {
   const {
@@ -80,7 +80,7 @@ export const runCompanyInterestGeneration = async (
 
   try {
     const template = await loadCrmGenerationPromptTemplate(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.COMPANY_INTEREST_GENERATION,
     );
     const prompt = buildCompanyInterestPromptFromTemplate(template, {
@@ -97,7 +97,7 @@ export const runCompanyInterestGeneration = async (
       skills,
     });
 
-    await insertCompanyInterestRequest(supabase, {
+    await insertCompanyInterestRequest(pool, {
       id: requestId,
       jobId,
       skills,
@@ -117,7 +117,7 @@ export const runCompanyInterestGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertCompanyInterestExchange(supabase, {
+    await insertCompanyInterestExchange(pool, {
       id: exchangeId,
       jobId,
       requestId,
@@ -131,7 +131,7 @@ export const runCompanyInterestGeneration = async (
     });
 
     const responseId = randomUUID();
-    await insertCompanyInterestResponse(supabase, {
+    await insertCompanyInterestResponse(pool, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
@@ -139,7 +139,7 @@ export const runCompanyInterestGeneration = async (
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
 
-    await updateCompanyInterestExchangeCompleted(supabase, {
+    await updateCompanyInterestExchangeCompleted(pool, {
       id: exchangeId,
       responseId,
       inputTokens: 0,
@@ -147,7 +147,7 @@ export const runCompanyInterestGeneration = async (
       modelUsed: agent.modelId,
     });
 
-    await updateCompanyInterestRequestCompleted(supabase, requestId);
+    await updateCompanyInterestRequestCompleted(pool, requestId);
 
     console.log(`✅ Company interest generation complete (${durationSeconds}s)`);
 
@@ -157,9 +157,9 @@ export const runCompanyInterestGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateCompanyInterestExchangeFailed(supabase, exchangeId, err.message);
+        await updateCompanyInterestExchangeFailed(pool, exchangeId, err.message);
       }
-      await updateCompanyInterestRequestFailed(supabase, requestId);
+      await updateCompanyInterestRequestFailed(pool, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

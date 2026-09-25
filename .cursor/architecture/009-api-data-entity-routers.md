@@ -4,9 +4,9 @@
 
 - **HTTP:** Entity CRUD and actions mounted under `/api/data/...`.
 - **Mount:** `app.use('/api/data', createApiDataRouter())` in `index.ts`.
-- **CRM persistence (required):** Supabase tables (`companies`, `employees`, `jobs`, `job_applications`, `employments`, `job_questions`, …). DDL in `docs/crm-postgres-schema.sql`.
-- **Graphics:** Supabase `image_graphics` — routes under `/api/data/image-graphic/*`.
-- **Job-listing ledger (JSON sidecar):** Append-only files under `JOB_LISTING_DATA_DIR` for scrape runs and AI exchanges — see `src/data/job-listing/`. Supabase is the live CRM source of truth; JSON is for debugging.
+- **CRM persistence (required):** Postgres tables (`companies`, `jobs`, `job_questions`, …). DDL in `migrations/` (assembled from `docs/*.sql`).
+- **Graphics:** Postgres `image_graphics` — routes under `/api/data/image-graphic/*`.
+- **Job-listing ledger (JSON sidecar):** Append-only files under `JOB_LISTING_DATA_DIR` for scrape runs — see `src/data/job-listing/`. Postgres is the live CRM source of truth; JSON is for debugging.
 
 ## Fork exception (this repo)
 
@@ -18,8 +18,7 @@ Default OSS pattern (Lead Studio): `createDataService()` with routers in `src/da
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `SUPABASE_URL` | **Yes** | CRM, graphics, studios |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Yes** | Server-side Supabase client |
+| `DATABASE_URL` | **Yes** | Local Postgres connection string |
 | `CRM_DATA_DIR` | No | Job-listing JSON ledger paths |
 | `JOB_LISTING_DATA_DIR` | No | Override job-listing JSON location |
 | `ANTHROPIC_API_KEY` | No | Job import extract, website research, coach chat |

@@ -1,4 +1,4 @@
-import { requireCrmSupabaseClient } from '../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../data/crm/require-crm-pg-pool';
 import {
   createJobNewsletterIngestRun,
   updateJobNewsletterIngestRun,
@@ -35,10 +35,10 @@ export const processJobNewslettersFromEmailManager = async (
 
   const senderFilter = input.senderFilter?.trim();
   if (senderFilter) {
-    const supabase = requireCrmSupabaseClient();
-    const source = await getJobNewsletterSourceBySenderEmail(supabase, senderFilter);
+    const pool = requireCrmPgPool();
+    const source = await getJobNewsletterSourceBySenderEmail(pool, senderFilter);
     if (source) {
-      const run = await createJobNewsletterIngestRun(supabase, { source_id: source.id });
+      const run = await createJobNewsletterIngestRun(pool, { source_id: source.id });
       runId = run.id;
     }
   }
@@ -47,7 +47,7 @@ export const processJobNewslettersFromEmailManager = async (
     patch: Parameters<typeof updateJobNewsletterIngestRun>[2],
   ): Promise<void> => {
     if (!runId) return;
-    await updateJobNewsletterIngestRun(requireCrmSupabaseClient(), runId, {
+    await updateJobNewsletterIngestRun(requireCrmPgPool(), runId, {
       ...patch,
       completed_at: patch.completed_at ?? new Date().toISOString(),
     });

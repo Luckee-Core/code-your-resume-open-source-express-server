@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRows } from '../../utils/postgres';
 
 export type TechnicalSkillSuggestionInsert = {
   id: string;
@@ -12,7 +13,7 @@ export type TechnicalSkillSuggestionInsert = {
  * Insert pending technical skill suggestions tied to a coach exchange/response.
  */
 export const insertTechnicalSkillsSuggestionsBulk = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     exchangeId: string;
     responseId: string;
@@ -34,9 +35,10 @@ export const insertTechnicalSkillsSuggestionsBulk = async (
     created_at: now,
   }));
 
-  const { error } = await supabase.from('technical_skills_suggestions').insert(rows);
-  if (error) {
+  try {
+    await insertRows(pool, 'technical_skills_suggestions', rows);
+  } catch (error) {
     console.error('❌ insertTechnicalSkillsSuggestionsBulk:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

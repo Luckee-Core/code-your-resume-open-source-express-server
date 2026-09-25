@@ -1,10 +1,10 @@
 import type { Job } from "./types";
-import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { requireCrmPgPool } from "./require-crm-pg-pool";
 import { listJobsFromSupabase } from "./supabase/list-jobs-from-supabase";
 
 /**
  * Lists all jobs from Supabase CRM.
  */
 export const listJobsFromStore = async (): Promise<Job[]> => {
-  return listJobsFromSupabase(requireCrmSupabaseClient());
+  return listJobsFromSupabase(requireCrmPgPool());
 };

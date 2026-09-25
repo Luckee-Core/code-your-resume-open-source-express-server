@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { updateImageGraphicDetails } from "../../../data/image-graphics";
-import { getSupabaseForImageGraphicHandler } from "./get-supabase-for-handler";
+import { getPgPoolForImageGraphicHandler } from "./get-pg-pool-for-handler";
 
 type Body = {
   graphicId?: unknown;
@@ -17,8 +17,8 @@ export const handleImageGraphicUpdateDetails = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const supabase = getSupabaseForImageGraphicHandler(res);
-    if (!supabase) return;
+    const pool = getPgPoolForImageGraphicHandler(res);
+    if (!pool) return;
     const body = req.body as Body;
     const graphicId = typeof body.graphicId === "string" ? body.graphicId.trim() : "";
     const title = typeof body.title === "string" ? body.title : "";
@@ -28,7 +28,7 @@ export const handleImageGraphicUpdateDetails = async (
       res.status(400).json({ success: false, error: "graphicId is required" });
       return;
     }
-    const row = await updateImageGraphicDetails(supabase, graphicId, {
+    const row = await updateImageGraphicDetails(pool, graphicId, {
       title,
       canvasWidthPx,
       canvasHeightPx,

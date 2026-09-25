@@ -1,42 +1,49 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Mark a skills component generation request as completed.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Request ID
  */
 export const updateSkillsComponentRequestCompleted = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('skills_component_generation_requests')
-    .update({ status: 'completed', updated_at: new Date().toISOString() })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateSkillsComponentRequestCompleted:', error.message);
-    throw new Error(`Failed to update skills component request record: ${error.message}`);
+  try {
+    await updateRows(
+      pool,
+      'skills_component_generation_requests',
+      { status: 'completed', updated_at: new Date().toISOString() },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateSkillsComponentRequestCompleted:', message);
+    throw new Error(`Failed to update skills component request record: ${message}`);
   }
 };
 
 /**
  * Mark a skills component generation request as failed.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Request ID
  */
 export const updateSkillsComponentRequestFailed = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('skills_component_generation_requests')
-    .update({ status: 'failed', updated_at: new Date().toISOString() })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateSkillsComponentRequestFailed:', error.message);
+  try {
+    await updateRows(
+      pool,
+      'skills_component_generation_requests',
+      { status: 'failed', updated_at: new Date().toISOString() },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateSkillsComponentRequestFailed:', message);
   }
 };

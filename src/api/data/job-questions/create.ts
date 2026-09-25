@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { insertJobQuestion } from "../../../data/job-questions";
 
 type Body = {
@@ -18,7 +18,7 @@ export const handleJobQuestionCreate = async (req: Request, res: Response): Prom
       res.status(400).json({ success: false, error: "prompt is required" });
       return;
     }
-    const data = await insertJobQuestion(requireCrmSupabaseClient(), { prompt });
+    const data = await insertJobQuestion(requireCrmPgPool(), { prompt });
     console.log("📤 200 POST /api/data/job-questions/create");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

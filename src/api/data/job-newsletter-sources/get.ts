@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { getJobNewsletterSourceById } from "../../../data/job-newsletter-sources";
 
 /**
@@ -17,7 +17,7 @@ export const handleJobNewsletterSourceGet = async (
       return;
     }
 
-    const data = await getJobNewsletterSourceById(requireCrmSupabaseClient(), id);
+    const data = await getJobNewsletterSourceById(requireCrmPgPool(), id);
     if (!data) {
       res.status(404).json({ success: false, error: "Newsletter source not found" });
       return;

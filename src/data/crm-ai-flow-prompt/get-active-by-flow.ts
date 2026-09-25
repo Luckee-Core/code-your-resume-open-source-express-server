@@ -1,25 +1,21 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 import type { CrmAiFlowPrompt } from './types';
 
 /**
  * Returns the active prompt for a CRM AI flow, or null.
  */
 export const getActiveCrmAiFlowPromptByFlow = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   flow: string,
 ): Promise<CrmAiFlowPrompt | null> => {
-  const { data, error } = await supabase
-    .from('crm_ai_flow_prompt')
-    .select('*')
-    .eq('flow', flow)
-    .eq('is_active', true)
-    .order('version', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
+  try {
+    return await selectOneFrom<CrmAiFlowPrompt>(pool, 'crm_ai_flow_prompt', {
+      eq: { flow, is_active: true },
+      order: [{ column: 'version', ascending: false }],
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message);
   }
-
-  return (data as CrmAiFlowPrompt | null) ?? null;
 };

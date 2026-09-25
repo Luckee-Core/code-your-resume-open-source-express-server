@@ -1,25 +1,24 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 import type { JobNewsletterIngestRun } from './types';
 
 /**
  * List ingest runs for a newsletter source (newest first).
  */
 export const listJobNewsletterIngestRunsBySourceId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   sourceId: string,
   limit = 50,
 ): Promise<JobNewsletterIngestRun[]> => {
   const capped = Math.min(Math.max(limit, 1), 200);
-  const { data, error } = await supabase
-    .from('job_newsletter_ingest_runs')
-    .select('*')
-    .eq('source_id', sourceId)
-    .order('started_at', { ascending: false })
-    .limit(capped);
-
-  if (error) {
-    throw new Error(error.message);
+  try {
+    return await selectRowsFrom<JobNewsletterIngestRun>(pool, 'job_newsletter_ingest_runs', {
+      eq: { source_id: sourceId },
+      order: [{ column: 'started_at', ascending: false }],
+      limit: capped,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message);
   }
-
-  return (data ?? []) as JobNewsletterIngestRun[];
 };

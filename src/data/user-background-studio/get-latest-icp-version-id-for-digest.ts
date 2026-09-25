@@ -1,38 +1,35 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 
 /**
  * Picks the most recently updated user background profile and returns its current version row id.
  */
 export const getLatestUserBackgroundVersionIdForDigest = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<string | null> => {
-  const { data: profile, error: profileErr } = await supabase
-    .from('user_background_profiles')
-    .select('id, current_version')
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (profileErr) {
-    console.error('❌ getLatestUserBackgroundVersionIdForDigest profiles:', profileErr);
-    throw new Error(profileErr.message);
+  let profile: { id: string; current_version: number } | null;
+  try {
+    profile = await selectOneFrom<{ id: string; current_version: number }>(pool, 'user_background_profiles', {
+      columns: 'id, current_version',
+      order: [{ column: 'updated_at', ascending: false }],
+    });
+  } catch (error) {
+    console.error('❌ getLatestUserBackgroundVersionIdForDigest profiles:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
   if (!profile) {
     return null;
   }
 
-  const { data: ver, error: verErr } = await supabase
-    .from('user_background_versions')
-    .select('id')
-    .eq('profile_id', profile.id)
-    .eq('version', profile.current_version)
-    .maybeSingle();
-
-  if (verErr) {
-    console.error('❌ getLatestUserBackgroundVersionIdForDigest versions:', verErr);
-    throw new Error(verErr.message);
+  try {
+    const ver = await selectOneFrom<{ id: string }>(pool, 'user_background_versions', {
+      columns: 'id',
+      eq: { profile_id: profile.id, version: profile.current_version },
+    });
+    return ver?.id ?? null;
+  } catch (error) {
+    console.error('❌ getLatestUserBackgroundVersionIdForDigest versions:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return ver?.id ?? null;
 };

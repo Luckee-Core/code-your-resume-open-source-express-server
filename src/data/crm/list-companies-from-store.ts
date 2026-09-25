@@ -1,10 +1,10 @@
 import type { Company } from "./types";
-import { requireCrmSupabaseClient } from "./require-crm-supabase-client";
+import { requireCrmPgPool } from "./require-crm-pg-pool";
 import { listCompaniesFromSupabase } from "./supabase/list-companies-from-supabase";
 
 /**
  * Lists all companies from Supabase CRM.
  */
 export const listCompaniesFromStore = async (): Promise<Company[]> => {
-  return listCompaniesFromSupabase(requireCrmSupabaseClient());
+  return listCompaniesFromSupabase(requireCrmPgPool());
 };

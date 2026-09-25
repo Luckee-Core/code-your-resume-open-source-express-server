@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { LinkedInCertification } from "../../data/linkedin-certifications";
 import {
   deleteLinkedInCertificationsByProfileId,
@@ -38,9 +38,9 @@ export type LinkedInProfileBundle = {
  * Scrapes the tenant LinkedIn profile URL and persists normalized rows.
  */
 export const syncTenantLinkedInProfileFromApify = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<LinkedInProfileBundle | { error: string }> => {
-  const tenant = await getTenantLinkedInProfile(supabase);
+  const tenant = await getTenantLinkedInProfile(pool);
   if (!tenant) {
     return { error: "Tenant LinkedIn profile is not configured" };
   }
@@ -59,7 +59,7 @@ export const syncTenantLinkedInProfileFromApify = async (
 
   const mapped = mapApifyProfileToRows(scrapeResult.item);
 
-  const profile = await updateLinkedInProfile(supabase, tenant.id, {
+  const profile = await updateLinkedInProfile(pool, tenant.id, {
     publicIdentifier: mapped.profile.publicIdentifier,
     apifyProfileId: mapped.profile.apifyProfileId,
     name: mapped.profile.name,
@@ -72,17 +72,17 @@ export const syncTenantLinkedInProfileFromApify = async (
     return { error: "Failed to update LinkedIn profile after sync" };
   }
 
-  await deleteLinkedInEmploymentsByProfileId(supabase, profile.id);
-  await deleteLinkedInEducationsByProfileId(supabase, profile.id);
-  await deleteLinkedInCertificationsByProfileId(supabase, profile.id);
+  await deleteLinkedInEmploymentsByProfileId(pool, profile.id);
+  await deleteLinkedInEducationsByProfileId(pool, profile.id);
+  await deleteLinkedInCertificationsByProfileId(pool, profile.id);
 
-  await insertLinkedInEmploymentsBatch(supabase, profile.id, mapped.employments);
-  await insertLinkedInEducationsBatch(supabase, profile.id, mapped.educations);
-  await insertLinkedInCertificationsBatch(supabase, profile.id, mapped.certifications);
+  await insertLinkedInEmploymentsBatch(pool, profile.id, mapped.employments);
+  await insertLinkedInEducationsBatch(pool, profile.id, mapped.educations);
+  await insertLinkedInCertificationsBatch(pool, profile.id, mapped.certifications);
 
-  const employments = await listLinkedInEmploymentsByProfileId(supabase, profile.id);
-  const educations = await listLinkedInEducationsByProfileId(supabase, profile.id);
-  const certifications = await listLinkedInCertificationsByProfileId(supabase, profile.id);
+  const employments = await listLinkedInEmploymentsByProfileId(pool, profile.id);
+  const educations = await listLinkedInEducationsByProfileId(pool, profile.id);
+  const certifications = await listLinkedInCertificationsByProfileId(pool, profile.id);
 
   console.log(
     `✅ ${LOG} profileId=${profile.id} employments=${employments.length} educations=${educations.length} certifications=${certifications.length}`,

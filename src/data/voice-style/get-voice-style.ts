@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 
 type Row = {
   body: string;
@@ -9,25 +10,19 @@ type Row = {
  * Load the singleton voice_style row; returns empty body if missing.
  */
 export const getVoiceStyle = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<{ body: string; updatedAt: string | null }> => {
-  const { data, error } = await supabase
-    .from('voice_style')
-    .select('body, updated_at')
-    .eq('id', 'default')
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
+  const data = await selectOneFrom<Row>(pool, 'voice_style', {
+    columns: 'body, updated_at',
+    eq: { id: 'default' },
+  });
 
   if (!data) {
     return { body: '', updatedAt: null };
   }
 
-  const row = data as Row;
   return {
-    body: typeof row.body === 'string' ? row.body : '',
-    updatedAt: row.updated_at,
+    body: typeof data.body === 'string' ? data.body : '',
+    updatedAt: data.updated_at,
   };
 };

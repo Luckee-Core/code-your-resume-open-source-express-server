@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { Job } from "../../data/crm/types";
 import { listSectionBodiesByJobId } from "../../data/job-listing-sections";
 
@@ -13,19 +13,19 @@ export type JobStudioCoachContext = {
 };
 
 /**
- * Assemble CRM + Supabase bullet text for the Job Studio coach prompt.
+ * Assemble CRM + Postgres bullet text for the Job Studio coach prompt.
  */
 export const loadJobStudioCoachContext = async (
-  supabase: SupabaseClient | null,
+  pool: Pool | null,
   job: Job,
   companyName: string | null,
 ): Promise<JobStudioCoachContext> => {
   const jobId = job.id;
-  const [respBodies, reqBodies, nthBodies] = supabase
+  const [respBodies, reqBodies, nthBodies] = pool
     ? await Promise.all([
-        listSectionBodiesByJobId(supabase, jobId, "job_responsibilities"),
-        listSectionBodiesByJobId(supabase, jobId, "job_requirements"),
-        listSectionBodiesByJobId(supabase, jobId, "job_nice_to_have"),
+        listSectionBodiesByJobId(pool, jobId, "job_responsibilities"),
+        listSectionBodiesByJobId(pool, jobId, "job_requirements"),
+        listSectionBodiesByJobId(pool, jobId, "job_nice_to_have"),
       ])
     : [[], [], []];
 

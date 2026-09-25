@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import {
   listUserBackgroundVersions,
   listUserBackgroundVersionSectionsForVersionIds,
@@ -78,7 +78,7 @@ const normalizeSuggestedSections = (structured: StructuredCoach): { key: string;
  * Build API profile payload (camelCase) for one user background profile.
  */
 export const buildUserBackgroundProfilePayload = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profile: UserBackgroundProfileRow,
 ): Promise<{
   id: string;
@@ -121,9 +121,9 @@ export const buildUserBackgroundProfilePayload = async (
     rawTime: string;
   }[];
 }> => {
-  const versionRows = await listUserBackgroundVersions(supabase, profile.id);
+  const versionRows = await listUserBackgroundVersions(pool, profile.id);
   const versionIds = versionRows.map((v: UserBackgroundVersionRow) => v.id);
-  const allSectionRows = await listUserBackgroundVersionSectionsForVersionIds(supabase, versionIds);
+  const allSectionRows = await listUserBackgroundVersionSectionsForVersionIds(pool, versionIds);
   const byVersionId = new Map<string, UserBackgroundVersionSectionRow[]>();
   for (const row of allSectionRows) {
     const list = byVersionId.get(row.profile_version_id) ?? [];
@@ -141,7 +141,7 @@ export const buildUserBackgroundProfilePayload = async (
     sections: (byVersionId.get(v.id) ?? []).map(sectionRowToApi),
   }));
 
-  const segmentItemRows = await listUserBackgroundSegmentItemsForProfile(supabase, profile.id);
+  const segmentItemRows = await listUserBackgroundSegmentItemsForProfile(pool, profile.id);
   const segmentItems = segmentItemRows.map((r) => ({
     id: r.id,
     segmentKey: r.segment_key,
@@ -153,18 +153,18 @@ export const buildUserBackgroundProfilePayload = async (
     metadata: (r.metadata ?? {}) as Record<string, unknown>,
   }));
 
-  const exchangeRows = await listUserBackgroundStudioExchangesForProfile(supabase, profile.id);
+  const exchangeRows = await listUserBackgroundStudioExchangesForProfile(pool, profile.id);
   const withResponse = exchangeRows.filter((ex) => ex.response_id);
   const requestIds = [...new Set(withResponse.map((ex) => ex.request_id))];
   const responseIds = withResponse.map((ex) => ex.response_id as string);
   const [reqRows, resRows] = await Promise.all([
-    listUserBackgroundStudioRequestsByIds(supabase, requestIds),
-    listUserBackgroundStudioResponsesByIds(supabase, responseIds),
+    listUserBackgroundStudioRequestsByIds(pool, requestIds),
+    listUserBackgroundStudioResponsesByIds(pool, responseIds),
   ]);
   const reqById = new Map(reqRows.map((r) => [r.id, r]));
   const resById = new Map(resRows.map((r) => [r.id, r]));
 
-  const suggestionRows = await listUserBackgroundSegmentSuggestionsByResponseIds(supabase, responseIds);
+  const suggestionRows = await listUserBackgroundSegmentSuggestionsByResponseIds(pool, responseIds);
   const pendingSuggestionsByResponse = new Map<
     string,
     {

@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectOneFrom, updateRows } from "../../utils/postgres";
 import type { JobNewsletterSource, UpdateJobNewsletterSourceInput } from "./types";
 import { normalizeSenderEmail } from "./get-by-sender-email";
 
@@ -6,7 +7,7 @@ import { normalizeSenderEmail } from "./get-by-sender-email";
  * Update a job newsletter source by id.
  */
 export const updateJobNewsletterSource = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   input: UpdateJobNewsletterSourceInput,
 ): Promise<JobNewsletterSource> => {
@@ -20,17 +21,18 @@ export const updateJobNewsletterSource = async (
     updates.parse_instructions = input.parse_instructions.trim();
   }
 
-  const { data, error } = await supabase
-    .from("job_newsletter_sources")
-    .update(updates)
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (error) {
-    console.error("❌ updateJobNewsletterSource:", error.message);
-    throw new Error(error.message);
+  try {
+    await updateRows(pool, "job_newsletter_sources", updates, { id });
+    const data = await selectOneFrom<JobNewsletterSource>(pool, "job_newsletter_sources", {
+      eq: { id },
+    });
+    if (!data) {
+      throw new Error("Failed to load job_newsletter_sources row after update");
+    }
+    return data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ updateJobNewsletterSource:", message);
+    throw new Error(message);
   }
-
-  return data as JobNewsletterSource;
 };

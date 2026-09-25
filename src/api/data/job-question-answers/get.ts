@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { getJobQuestionAnswer } from "../../../data/job-question-answers";
 
 /**
@@ -13,7 +13,7 @@ export const handleJobQuestionAnswerGet = async (req: Request, res: Response): P
       res.status(400).json({ success: false, error: "id is required" });
       return;
     }
-    const data = await getJobQuestionAnswer(requireCrmSupabaseClient(), id);
+    const data = await getJobQuestionAnswer(requireCrmPgPool(), id);
     if (!data) {
       res.status(404).json({ success: false, error: "Not found" });
       return;

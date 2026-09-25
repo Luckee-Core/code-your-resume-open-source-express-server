@@ -1,26 +1,26 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { isMissingTableError } from '../../utils/supabase/is-missing-table-error';
+import type { Pool } from 'pg';
+import { isMissingTableError, selectRowsFrom } from '../../utils/postgres';
 import type { JobListingAiPrompt } from './types';
 
 /**
  * List all job listing AI prompt versions.
  */
 export const listJobListingAiPrompts = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<JobListingAiPrompt[]> => {
-  const { data, error } = await supabase
-    .from('job_listing_ai_prompt')
-    .select('*')
-    .order('name', { ascending: true })
-    .order('version', { ascending: false });
-
-  if (error) {
-    if (isMissingTableError(error)) {
+  try {
+    return await selectRowsFrom<JobListingAiPrompt>(pool, 'job_listing_ai_prompt', {
+      order: [
+        { column: 'name', ascending: true },
+        { column: 'version', ascending: false },
+      ],
+    });
+  } catch (error) {
+    const err = error as { code?: string; message?: string };
+    if (isMissingTableError(err)) {
       console.warn('⚠️ job_listing_ai_prompt table missing; returning [].');
       return [];
     }
-    throw new Error(error.message);
+    throw new Error(err.message ?? String(error));
   }
-
-  return (data ?? []) as JobListingAiPrompt[];
 };

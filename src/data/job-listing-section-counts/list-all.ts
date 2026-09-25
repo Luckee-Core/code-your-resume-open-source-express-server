@@ -1,35 +1,27 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { countRowsByJobId } from "./count-rows-by-job-id";
 import type { JobListingSectionCountsRow } from "./types";
+import { selectRowsFrom } from "../../utils/postgres";
+
+type JobIdRow = {
+  job_id: string;
+};
 
 /**
  * Returns responsibility / requirement / nice-to-have row counts per job (all jobs).
  */
 export const listAllJobListingSectionCounts = async (
-  supabase: SupabaseClient
+  pool: Pool
 ): Promise<JobListingSectionCountsRow[]> => {
-  const [respResult, reqResult, nthResult] = await Promise.all([
-    supabase.from("job_responsibilities").select("job_id"),
-    supabase.from("job_requirements").select("job_id"),
-    supabase.from("job_nice_to_have").select("job_id"),
+  const [respRows, reqRows, nthRows] = await Promise.all([
+    selectRowsFrom<JobIdRow>(pool, "job_responsibilities", { columns: "job_id" }),
+    selectRowsFrom<JobIdRow>(pool, "job_requirements", { columns: "job_id" }),
+    selectRowsFrom<JobIdRow>(pool, "job_nice_to_have", { columns: "job_id" }),
   ]);
 
-  if (respResult.error) {
-    console.error("❌ listAllJobListingSectionCounts responsibilities:", respResult.error.message);
-    throw new Error(respResult.error.message);
-  }
-  if (reqResult.error) {
-    console.error("❌ listAllJobListingSectionCounts requirements:", reqResult.error.message);
-    throw new Error(reqResult.error.message);
-  }
-  if (nthResult.error) {
-    console.error("❌ listAllJobListingSectionCounts nice_to_have:", nthResult.error.message);
-    throw new Error(nthResult.error.message);
-  }
-
-  const respCounts = countRowsByJobId(respResult.data ?? []);
-  const reqCounts = countRowsByJobId(reqResult.data ?? []);
-  const nthCounts = countRowsByJobId(nthResult.data ?? []);
+  const respCounts = countRowsByJobId(respRows);
+  const reqCounts = countRowsByJobId(reqRows);
+  const nthCounts = countRowsByJobId(nthRows);
 
   const jobIds = new Set<string>([
     ...respCounts.keys(),

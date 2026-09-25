@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import { listUserBackgroundProfilesForUser } from '../../../data/user-background-studio';
 import { buildUserBackgroundProfilePayload } from '../mapUserBackgroundProfile';
 
@@ -16,17 +16,17 @@ export const listProfilesHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'userId is required' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
     console.log('[icp-studio:api] listProfiles start', { requestId, userId });
-    const rows = await listUserBackgroundProfilesForUser(supabase, userId);
+    const rows = await listUserBackgroundProfilesForUser(pool, userId);
     console.log('[icp-studio:api] profile rows fetched', { requestId, userId, rowCount: rows.length });
     const profileResults = await Promise.allSettled(
       rows.map(async (profile) => {
-        return await buildUserBackgroundProfilePayload(supabase, profile);
+        return await buildUserBackgroundProfilePayload(pool, profile);
       })
     );
     const profiles = profileResults.map((result, index) => {

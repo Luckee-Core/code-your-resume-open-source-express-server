@@ -1,14 +1,15 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { JobListingAiResponse } from "../job-listing/types";
+import { insertRow } from "../../utils/postgres";
 
 /**
- * Inserts one `job_listing_ai_responses` row. Throws on PostgREST error.
+ * Inserts one `job_listing_ai_responses` row.
  */
 export const insertJobListingAiResponse = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   row: JobListingAiResponse,
 ): Promise<void> => {
-  const { error } = await supabase.from("job_listing_ai_responses").insert({
+  await insertRow(pool, "job_listing_ai_responses", {
     id: row.id,
     request_id: row.requestId,
     model: row.model,
@@ -20,9 +21,5 @@ export const insertJobListingAiResponse = async (
     usage_output_tokens: row.usageOutputTokens,
     created_at: row.createdAt,
   });
-  if (error) {
-    console.error("❌ insertJobListingAiResponse", error.message, error);
-    throw new Error(`job_listing_ai_responses insert failed: ${error.message}`);
-  }
   console.log("💾 insertJobListingAiResponse", { id: row.id, requestId: row.requestId });
 };

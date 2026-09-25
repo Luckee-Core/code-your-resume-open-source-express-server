@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundSegmentSuggestionRow = {
   id: string;
@@ -18,23 +19,24 @@ export type UserBackgroundSegmentSuggestionRow = {
  * List segment suggestions for the given coach response ids (typically pending only in UI).
  */
 export const listUserBackgroundSegmentSuggestionsByResponseIds = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   responseIds: string[],
 ): Promise<UserBackgroundSegmentSuggestionRow[]> => {
   if (responseIds.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from('user_background_segment_suggestions')
-    .select(
-      'id, profile_id, exchange_id, response_id, segment_key, title, body, op, target_item_id, status, created_at',
-    )
-    .in('response_id', responseIds)
-    .order('created_at', { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundSegmentSuggestionRow>(
+      pool,
+      'user_background_segment_suggestions',
+      {
+        columns:
+          'id, profile_id, exchange_id, response_id, segment_key, title, body, op, target_item_id, status, created_at',
+        in: { response_id: responseIds },
+        order: [{ column: 'created_at', ascending: true }],
+      },
+    );
+  } catch (error) {
     console.error('❌ listUserBackgroundSegmentSuggestionsByResponseIds:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundSegmentSuggestionRow[];
 };

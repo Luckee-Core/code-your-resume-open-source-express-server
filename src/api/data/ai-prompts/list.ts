@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { requireCrmSupabaseClient } from '../../../data/crm/require-crm-supabase-client';
+import { requireCrmPgPool } from '../../../data/crm/require-crm-pg-pool';
 import { CRM_AI_FLOW_PROMPT_FLOW_LABELS } from '../../../constants/crm-ai-flow-prompt-flows';
 import { listCrmAiFlowPrompts } from '../../../data/crm-ai-flow-prompt';
 import { listJobListingAiPrompts } from '../../../data/job-listing-ai-prompt';
@@ -11,12 +11,12 @@ import { listJobNewsletterIngestAiPrompts } from '../../../data/job-newsletter-i
 export const handleAiPromptsList = async (_req: Request, res: Response): Promise<void> => {
   console.log('📥 GET /api/data/ai-prompts/list');
   try {
-    const supabase = requireCrmSupabaseClient();
+    const pool = requireCrmPgPool();
 
     const [newsletterPrompts, listingPrompts, flowPrompts] = await Promise.all([
-      listJobNewsletterIngestAiPrompts(supabase),
-      listJobListingAiPrompts(supabase),
-      listCrmAiFlowPrompts(supabase),
+      listJobNewsletterIngestAiPrompts(pool),
+      listJobListingAiPrompts(pool),
+      listCrmAiFlowPrompts(pool),
     ]);
 
     const warnings: string[] = [];

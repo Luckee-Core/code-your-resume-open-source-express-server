@@ -1,16 +1,12 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { deleteRows } from "../../utils/postgres";
 
 /**
  * Delete all project notes for a project id.
  */
 export const deleteProjectNotesByProjectId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   projectId: string,
 ): Promise<void> => {
-  const { error } = await supabase.from("project_notes").delete().eq("project_id", projectId.trim());
-
-  if (error) {
-    console.error("❌ deleteProjectNotesByProjectId:", error.message);
-    throw new Error(error.message);
-  }
+  await deleteRows(pool, "project_notes", { project_id: projectId.trim() });
 };

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { getSupabaseCrmMirrorClient } from "../../services/supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../../services/postgres";
 import { resolveAppErrorInsertMeta } from "../../utils/resolve-app-error-insert-meta";
 import { insertThunkError } from "./insert-thunk-error";
 import type { ThunkErrorSeverity } from "./types";
@@ -23,11 +23,11 @@ type ReportBody = {
 export const handleThunkErrorReport = async (req: Request, res: Response): Promise<void> => {
   console.log("📥 POST /api/data/thunk-errors/report");
   try {
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
+    const pool = getManagedPgPool();
+    if (!pool) {
       res.status(500).json({
         success: false,
-        error: "Supabase client not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
+        error: "Postgres not configured — set DATABASE_URL",
       });
       return;
     }
@@ -53,7 +53,7 @@ export const handleThunkErrorReport = async (req: Request, res: Response): Promi
 
     const meta = resolveAppErrorInsertMeta();
 
-    await insertThunkError(supabase, {
+    await insertThunkError(pool, {
       event,
       severity,
       message,

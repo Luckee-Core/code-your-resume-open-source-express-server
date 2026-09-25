@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectRowsFrom } from "../../utils/postgres";
 import {
   LINKEDIN_EMPLOYMENT_SELECT_COLUMNS,
   type LinkedInEmployment,
@@ -10,19 +11,19 @@ import { mapLinkedInEmploymentRow } from "./map-linkedin-employment-row";
  * Lists LinkedIn employment rows for one profile.
  */
 export const listLinkedInEmploymentsByProfileId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
 ): Promise<LinkedInEmployment[]> => {
-  const { data, error } = await supabase
-    .from("linkedin_employments")
-    .select(LINKEDIN_EMPLOYMENT_SELECT_COLUMNS)
-    .eq("linkedin_profile_id", profileId)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("❌ listLinkedInEmploymentsByProfileId:", error.message);
-    throw new Error(error.message);
+  try {
+    const data = await selectRowsFrom<LinkedInEmploymentRow>(pool, "linkedin_employments", {
+      columns: LINKEDIN_EMPLOYMENT_SELECT_COLUMNS,
+      eq: { linkedin_profile_id: profileId },
+      order: [{ column: "sort_order", ascending: true }],
+    });
+    return data.map((row) => mapLinkedInEmploymentRow(row));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ listLinkedInEmploymentsByProfileId:", message);
+    throw new Error(message);
   }
-
-  return (data ?? []).map((row) => mapLinkedInEmploymentRow(row as LinkedInEmploymentRow));
 };

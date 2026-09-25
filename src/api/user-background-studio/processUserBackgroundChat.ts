@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import {
   getUserBackgroundProfileForUser,
@@ -49,11 +49,11 @@ const buildStructuredPayload = (
 };
 
 const loadRecentChatLines = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   excludeRequestId: string,
 ): Promise<{ role: string; content: string }[]> => {
-  const exchanges = await listUserBackgroundStudioExchangesForProfile(supabase, profileId);
+  const exchanges = await listUserBackgroundStudioExchangesForProfile(pool, profileId);
   const cutoff = Date.now() - MS_24H;
   const completed = exchanges.filter(
     (ex) => ex.response_id && new Date(ex.created_at).getTime() >= cutoff && ex.request_id !== excludeRequestId,
@@ -63,8 +63,8 @@ const loadRecentChatLines = async (
   const requestIds = [...new Set(completed.map((ex) => ex.request_id))];
   const responseIds = completed.map((ex) => ex.response_id as string);
   const [reqRows, resRows] = await Promise.all([
-    listUserBackgroundStudioRequestsByIds(supabase, requestIds),
-    listUserBackgroundStudioResponsesByIds(supabase, responseIds),
+    listUserBackgroundStudioRequestsByIds(pool, requestIds),
+    listUserBackgroundStudioResponsesByIds(pool, responseIds),
   ]);
   const reqById = new Map(reqRows.map((r) => [r.id, r]));
   const resById = new Map(resRows.map((r) => [r.id, r]));
@@ -82,7 +82,7 @@ const loadRecentChatLines = async (
 };
 
 const persistExchangeOutcome = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     userId: string;
     profileId: string;
@@ -98,13 +98,13 @@ const persistExchangeOutcome = async (
   },
 ): Promise<{ exchangeId: string; responseId: string }> => {
   const responseId = uuidv4();
-  await insertUserBackgroundStudioResponse(supabase, responseId, params.structured);
+  await insertUserBackgroundStudioResponse(pool, responseId, params.structured);
 
   const exchangeId = uuidv4();
   const totalTokens = params.ai?.totalTokens ?? 0;
   const creditsUsed = params.ai && totalTokens > 0 ? Math.ceil(totalTokens / TOKENS_PER_CREDIT) : 0;
 
-  await insertUserBackgroundStudioExchange(supabase, {
+  await insertUserBackgroundStudioExchange(pool, {
     id: exchangeId,
     userId: params.userId,
     profileId: params.profileId,
@@ -118,14 +118,14 @@ const persistExchangeOutcome = async (
     status: params.status,
   });
 
-  await updateUserBackgroundStudioRequestCompletion(supabase, params.requestId, {
+  await updateUserBackgroundStudioRequestCompletion(pool, params.requestId, {
     exchangeId,
     responseId,
     status: params.status === 'completed' ? 'completed' : 'failed',
   });
 
   if (params.status === 'completed' && creditsUsed > 0) {
-    await deductCredits(supabase, params.userId, creditsUsed, exchangeId, 'user_background_studio');
+    await deductCredits(pool, params.userId, creditsUsed, exchangeId, 'user_background_studio');
   }
 
   return { exchangeId, responseId };
@@ -135,26 +135,26 @@ const persistExchangeOutcome = async (
  * Persist user request, run coach AI, store response + exchange.
  * Only technical_skills segment items are sent to the model and accepted back.
  *
- * @param supabase - Supabase client
+ * @param pool - Supabase client
  * @param anthropic - Anthropic client (null = AI unavailable)
  * @param userId - User ID
  * @param profileId - Profile ID
  * @param userMessageContent - User's chat message
  */
 export const processUserBackgroundChat = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   anthropic: Anthropic | null,
   userId: string,
   profileId: string,
   userMessageContent: string,
 ): Promise<void> => {
-  const profile = await getUserBackgroundProfileForUser(supabase, profileId, userId);
+  const profile = await getUserBackgroundProfileForUser(pool, profileId, userId);
   if (!profile) {
     throw new Error('Profile not found');
   }
 
   const requestId = uuidv4();
-  await insertUserBackgroundStudioRequest(supabase, {
+  await insertUserBackgroundStudioRequest(pool, {
     id: requestId,
     userId,
     profileId,
@@ -165,9 +165,9 @@ export const processUserBackgroundChat = async (
     'I could not generate a detailed reply right now. Please try again in a moment.';
 
   try {
-    const recentChat = await loadRecentChatLines(supabase, profileId, requestId);
+    const recentChat = await loadRecentChatLines(pool, profileId, requestId);
 
-    const segmentRows = await listUserBackgroundSegmentItemsForProfile(supabase, profileId);
+    const segmentRows = await listUserBackgroundSegmentItemsForProfile(pool, profileId);
     const currentSegmentItems = segmentRows
       .filter((r) => r.status === 'active' && r.segment_key === 'technical_skills')
       .map((r) => ({
@@ -179,7 +179,7 @@ export const processUserBackgroundChat = async (
       }));
 
     if (!anthropic) {
-      await persistExchangeOutcome(supabase, {
+      await persistExchangeOutcome(pool, {
         userId,
         profileId,
         requestId,
@@ -190,7 +190,7 @@ export const processUserBackgroundChat = async (
       return;
     }
 
-    const systemPrompt = await resolveUserBackgroundStudioSystemPrompt(supabase, userId);
+    const systemPrompt = await resolveUserBackgroundStudioSystemPrompt(pool, userId);
     const userPayload = buildUserBackgroundCoachUserPayload({
       currentSegmentItems,
       recentChat,
@@ -200,7 +200,7 @@ export const processUserBackgroundChat = async (
     const parsed = parseUserBackgroundCoachJson(aiResult.responseText);
     const structured = buildStructuredPayload(parsed, fallback);
 
-    const { exchangeId, responseId } = await persistExchangeOutcome(supabase, {
+    const { exchangeId, responseId } = await persistExchangeOutcome(pool, {
       userId,
       profileId,
       requestId,
@@ -228,7 +228,7 @@ export const processUserBackgroundChat = async (
           targetItemId: row.target_item_id ?? null,
         }));
       if (suggestions.length > 0) {
-        await insertUserBackgroundSegmentSuggestionsBulk(supabase, {
+        await insertUserBackgroundSegmentSuggestionsBulk(pool, {
           profileId,
           exchangeId,
           responseId,
@@ -240,7 +240,7 @@ export const processUserBackgroundChat = async (
     console.error('❌ processUserBackgroundChat error:', e);
     const msg = e instanceof Error ? e.message : 'Unknown error';
     try {
-      await persistExchangeOutcome(supabase, {
+      await persistExchangeOutcome(pool, {
         userId,
         profileId,
         requestId,

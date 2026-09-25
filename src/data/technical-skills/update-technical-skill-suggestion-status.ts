@@ -1,20 +1,18 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Update technical skill suggestion workflow status.
  */
 export const updateTechnicalSkillSuggestionStatus = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   suggestionId: string,
   status: 'accepted' | 'rejected',
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('technical_skills_suggestions')
-    .update({ status })
-    .eq('id', suggestionId);
-
-  if (error) {
+  try {
+    await updateRows(pool, 'technical_skills_suggestions', { status }, { id: suggestionId });
+  } catch (error) {
     console.error('❌ updateTechnicalSkillSuggestionStatus:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

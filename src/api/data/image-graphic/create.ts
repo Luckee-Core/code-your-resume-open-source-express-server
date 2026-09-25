@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { insertImageGraphic } from "../../../data/image-graphics";
-import { getSupabaseForImageGraphicHandler } from "./get-supabase-for-handler";
+import { getPgPoolForImageGraphicHandler } from "./get-pg-pool-for-handler";
 
 type Body = {
   title?: unknown;
@@ -16,8 +16,8 @@ type Body = {
  */
 export const handleImageGraphicCreate = async (req: Request, res: Response): Promise<void> => {
   try {
-    const supabase = getSupabaseForImageGraphicHandler(res);
-    if (!supabase) return;
+    const pool = getPgPoolForImageGraphicHandler(res);
+    if (!pool) return;
     const body = req.body as Body;
     const title = typeof body.title === "string" ? body.title : "";
     const canvasWidthPx = typeof body.canvasWidthPx === "number" ? body.canvasWidthPx : 960;
@@ -28,7 +28,7 @@ export const handleImageGraphicCreate = async (req: Request, res: Response): Pro
         ? (body.metadata as Record<string, unknown>)
         : {};
     const id = typeof body.id === "string" ? body.id : undefined;
-    const row = await insertImageGraphic(supabase, {
+    const row = await insertImageGraphic(pool, {
       title,
       canvasWidthPx,
       canvasHeightPx,

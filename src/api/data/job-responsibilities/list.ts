@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { listJobResponsibilitiesByJobId } from "../../../data/job-responsibilities";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../../../services/postgres";
 
 /**
  * GET /api/data/job-responsibilities/list?jobId=<id>
@@ -15,14 +15,14 @@ export const handleJobResponsibilitiesList = async (req: Request, res: Response)
     return;
   }
 
-  const supabase = getSupabaseCrmMirrorClient();
-  if (!supabase) {
+  const pool = getManagedPgPool();
+  if (!pool) {
     res.status(500).json({ success: false, error: "Supabase client unavailable" });
     return;
   }
 
   try {
-    const data = await listJobResponsibilitiesByJobId(supabase, jobId);
+    const data = await listJobResponsibilitiesByJobId(pool, jobId);
     console.log("📤 200 GET /api/data/job-responsibilities/list");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

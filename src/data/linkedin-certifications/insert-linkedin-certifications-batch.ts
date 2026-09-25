@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRows } from "../../utils/postgres";
 import type { LinkedInCertificationInsert } from "../../utils/linkedin-profile";
 import type { LinkedInCertification } from "./types";
 import { listLinkedInCertificationsByProfileId } from "./list-linkedin-certifications-by-profile-id";
@@ -8,7 +9,7 @@ import { listLinkedInCertificationsByProfileId } from "./list-linkedin-certifica
  * Inserts LinkedIn certification rows for one profile.
  */
 export const insertLinkedInCertificationsBatch = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   rows: LinkedInCertificationInsert[],
 ): Promise<LinkedInCertification[]> => {
@@ -27,12 +28,13 @@ export const insertLinkedInCertificationsBatch = async (
     updated_at: now,
   }));
 
-  const { error } = await supabase.from("linkedin_certifications").insert(payload);
-
-  if (error) {
-    console.error("❌ insertLinkedInCertificationsBatch:", error.message);
-    throw new Error(error.message);
+  try {
+    await insertRows(pool, "linkedin_certifications", payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ insertLinkedInCertificationsBatch:", message);
+    throw new Error(message);
   }
 
-  return listLinkedInCertificationsByProfileId(supabase, profileId);
+  return listLinkedInCertificationsByProfileId(pool, profileId);
 };

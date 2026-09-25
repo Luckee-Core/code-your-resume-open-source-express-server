@@ -1,23 +1,21 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 
 /**
  * Return max sort_order for active technical skill rows, or -1 if none.
  */
 export const getMaxSortOrderForTechnicalSkills = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<number> => {
-  const { data, error } = await supabase
-    .from('technical_skills')
-    .select('sort_order')
-    .eq('status', 'active')
-    .order('sort_order', { ascending: false })
-    .limit(1);
-
-  if (error) {
+  try {
+    const row = await selectOneFrom<{ sort_order: number }>(pool, 'technical_skills', {
+      columns: 'sort_order',
+      eq: { status: 'active' },
+      order: [{ column: 'sort_order', ascending: false }],
+    });
+    return row?.sort_order ?? -1;
+  } catch (error) {
     console.error('❌ getMaxSortOrderForTechnicalSkills:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  const row = data?.[0] as { sort_order: number } | undefined;
-  return row?.sort_order ?? -1;
 };

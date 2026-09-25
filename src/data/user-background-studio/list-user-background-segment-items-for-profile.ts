@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom } from '../../utils/postgres';
 
 export type UserBackgroundSegmentItemRow = {
   id: string;
@@ -18,22 +19,21 @@ export type UserBackgroundSegmentItemRow = {
  * List segment item rows for a profile (active first by segment + sort_order).
  */
 export const listUserBackgroundSegmentItemsForProfile = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
 ): Promise<UserBackgroundSegmentItemRow[]> => {
-  const { data, error } = await supabase
-    .from('user_background_segment_items')
-    .select(
-      'id, profile_id, segment_key, sort_order, title, body, metadata, status, source_exchange_id, created_at, updated_at',
-    )
-    .eq('profile_id', profileId)
-    .order('segment_key', { ascending: true })
-    .order('sort_order', { ascending: true });
-
-  if (error) {
+  try {
+    return await selectRowsFrom<UserBackgroundSegmentItemRow>(pool, 'user_background_segment_items', {
+      columns:
+        'id, profile_id, segment_key, sort_order, title, body, metadata, status, source_exchange_id, created_at, updated_at',
+      eq: { profile_id: profileId },
+      order: [
+        { column: 'segment_key', ascending: true },
+        { column: 'sort_order', ascending: true },
+      ],
+    });
+  } catch (error) {
     console.error('❌ listUserBackgroundSegmentItemsForProfile:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return (data ?? []) as UserBackgroundSegmentItemRow[];
 };

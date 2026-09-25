@@ -1,30 +1,32 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectRowsFrom, updateRows } from '../../utils/postgres';
 
 /**
  * Refresh version labels after bumping current (e.g. v2 (current) on latest, plain v1 on older).
  */
 export const relabelUserBackgroundVersionsForCurrent = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   currentVersion: number,
 ): Promise<void> => {
-  const { data: rows, error: fetchError } = await supabase
-    .from('user_background_versions')
-    .select('id, version')
-    .eq('profile_id', profileId);
-
-  if (fetchError) {
-    console.error('❌ relabelIcpVersions fetch:', fetchError);
-    throw new Error(fetchError.message);
+  let rows: { id: string; version: number }[];
+  try {
+    rows = await selectRowsFrom<{ id: string; version: number }>(pool, 'user_background_versions', {
+      columns: 'id, version',
+      eq: { profile_id: profileId },
+    });
+  } catch (error) {
+    console.error('❌ relabelIcpVersions fetch:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
-  for (const row of rows ?? []) {
-    const v = row.version as number;
-    const label = v === currentVersion ? `v${v} (current)` : `v${v}`;
-    const { error } = await supabase.from('user_background_versions').update({ label }).eq('id', row.id);
-    if (error) {
+  for (const row of rows) {
+    const label = row.version === currentVersion ? `v${row.version} (current)` : `v${row.version}`;
+    try {
+      await updateRows(pool, 'user_background_versions', { label }, { id: row.id });
+    } catch (error) {
       console.error('❌ relabelIcpVersions update:', error);
-      throw new Error(error.message);
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 };

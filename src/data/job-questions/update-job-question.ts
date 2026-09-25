@@ -1,16 +1,17 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import type { JobQuestion } from "./types";
 import { getJobQuestion } from "./get-job-question";
+import { updateRows } from "../../utils/postgres";
 
 /**
  * Updates a job question prompt.
  */
 export const updateJobQuestion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   patch: Partial<Pick<JobQuestion, "prompt">>,
 ): Promise<JobQuestion | null> => {
-  const prev = await getJobQuestion(supabase, id);
+  const prev = await getJobQuestion(pool, id);
   if (!prev) {
     return null;
   }
@@ -21,15 +22,7 @@ export const updateJobQuestion = async (
   }
 
   const updatedAt = new Date().toISOString();
-  const { error } = await supabase
-    .from("job_questions")
-    .update({ prompt, updated_at: updatedAt })
-    .eq("id", id);
+  await updateRows(pool, "job_questions", { prompt, updated_at: updatedAt }, { id });
 
-  if (error) {
-    console.error("❌ updateJobQuestion:", error.message);
-    throw new Error(error.message);
-  }
-
-  return getJobQuestion(supabase, id);
+  return getJobQuestion(pool, id);
 };

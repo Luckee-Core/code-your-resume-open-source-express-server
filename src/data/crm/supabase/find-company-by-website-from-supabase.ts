@@ -1,16 +1,17 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
 import { websitesMatchForCompanyDedup } from "../../../utils/company/websites-match-for-company-dedup";
 import type { Company } from "../types";
-import { mapCompanyRow } from "./map-company-row";
+import { mapCompanyRow, type CompanyRow } from "./map-company-row";
+import { selectRowsFrom } from "../../../utils/postgres";
 
 /**
  * Find a company whose `website` hostname matches the given URL (normalized comparison).
  *
- * @param supabase - CRM Supabase client
+ * @param pool - CRM Postgres pool
  * @param websiteUrl - Company website URL to match
  */
 export const findCompanyByWebsiteFromSupabase = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   websiteUrl: string,
 ): Promise<Company | null> => {
   const target = websiteUrl.trim();
@@ -18,18 +19,12 @@ export const findCompanyByWebsiteFromSupabase = async (
     return null;
   }
 
-  const { data, error } = await supabase
-    .from("companies")
-    .select(
+  const rows = await selectRowsFrom<CompanyRow>(pool, "companies", {
+    columns:
       "id, name, website, notes, website_urls, playwright_website_url_discovery_attempted, website_research_summary, website_research_completed_at, created_at, updated_at",
-    );
+  });
 
-  if (error) {
-    console.error("❌ findCompanyByWebsiteFromSupabase:", error.message);
-    throw new Error(error.message);
-  }
-
-  const match = (data ?? []).find((row) =>
+  const match = rows.find((row) =>
     websitesMatchForCompanyDedup(String(row.website ?? ""), target),
   );
 

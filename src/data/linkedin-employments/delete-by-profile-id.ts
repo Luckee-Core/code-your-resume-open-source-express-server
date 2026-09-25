@@ -1,19 +1,18 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { deleteRows } from "../../utils/postgres";
 
 /**
  * Deletes all LinkedIn employment rows for one profile.
  */
 export const deleteLinkedInEmploymentsByProfileId = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from("linkedin_employments")
-    .delete()
-    .eq("linkedin_profile_id", profileId);
-
-  if (error) {
-    console.error("❌ deleteLinkedInEmploymentsByProfileId:", error.message);
-    throw new Error(error.message);
+  try {
+    await deleteRows(pool, "linkedin_employments", { linkedin_profile_id: profileId });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ deleteLinkedInEmploymentsByProfileId:", message);
+    throw new Error(message);
   }
 };

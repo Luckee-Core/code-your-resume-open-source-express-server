@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import {
   replaceTechnicalSkills,
   type TechnicalSkillInsert,
@@ -67,14 +67,14 @@ export const patchSkillsHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Invalid technicalSkills payload' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    await replaceTechnicalSkills(supabase, parsedSkills);
+    await replaceTechnicalSkills(pool, parsedSkills);
 
-    const payload = await loadTechnicalSkillsPayload(supabase);
+    const payload = await loadTechnicalSkillsPayload(pool);
     return res.json({ success: true, ...payload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

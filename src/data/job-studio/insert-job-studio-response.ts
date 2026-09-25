@@ -1,23 +1,24 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRow } from "../../utils/postgres";
 
 /**
  * Persist parsed Job Studio coach payload (content, coachSections).
  */
 export const insertJobStudioResponse = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   structured: unknown,
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from("job_studio_responses").insert({
-    id,
-    structured,
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, "job_studio_responses", {
+      id,
+      structured,
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
     console.error("❌ insertJobStudioResponse:", error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

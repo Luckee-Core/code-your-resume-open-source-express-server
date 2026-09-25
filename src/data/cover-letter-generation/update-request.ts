@@ -1,42 +1,49 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { updateRows } from '../../utils/postgres';
 
 /**
  * Mark a cover letter generation request as completed.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Request ID
  */
 export const updateCoverLetterRequestCompleted = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('cover_letter_generation_requests')
-    .update({ status: 'completed', updated_at: new Date().toISOString() })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateCoverLetterRequestCompleted:', error.message);
-    throw new Error(`Failed to update cover letter request record: ${error.message}`);
+  try {
+    await updateRows(
+      pool,
+      'cover_letter_generation_requests',
+      { status: 'completed', updated_at: new Date().toISOString() },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateCoverLetterRequestCompleted:', message);
+    throw new Error(`Failed to update cover letter request record: ${message}`);
   }
 };
 
 /**
  * Mark a cover letter generation request as failed.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Request ID
  */
 export const updateCoverLetterRequestFailed = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('cover_letter_generation_requests')
-    .update({ status: 'failed', updated_at: new Date().toISOString() })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateCoverLetterRequestFailed:', error.message);
+  try {
+    await updateRows(
+      pool,
+      'cover_letter_generation_requests',
+      { status: 'failed', updated_at: new Date().toISOString() },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateCoverLetterRequestFailed:', message);
   }
 };

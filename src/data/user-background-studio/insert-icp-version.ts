@@ -1,33 +1,28 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 import { insertUserBackgroundVersionSectionsBulk, type SectionInput } from './insert-icp-version-sections-bulk';
 
 /**
  * Append an immutable version snapshot (metadata row + normalized section rows).
  */
 export const insertUserBackgroundVersionWithSections = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   version: number,
   label: string,
   sections: SectionInput[],
 ): Promise<string> => {
-  const { data, error } = await supabase
-    .from('user_background_versions')
-    .insert({
+  try {
+    const inserted = await insertRow<{ id: string }>(pool, 'user_background_versions', {
       profile_id: profileId,
       version,
       label,
       snapshot_at: new Date().toISOString(),
-    })
-    .select('id')
-    .single();
-
-  if (error || !data?.id) {
+    });
+    await insertUserBackgroundVersionSectionsBulk(pool, inserted.id, sections);
+    return inserted.id;
+  } catch (error) {
     console.error('❌ insertUserBackgroundVersionWithSections:', error);
-    throw new Error(error?.message ?? 'Failed to insert user_background_versions row');
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  const versionId = data.id as string;
-  await insertUserBackgroundVersionSectionsBulk(supabase, versionId, sections);
-  return versionId;
 };

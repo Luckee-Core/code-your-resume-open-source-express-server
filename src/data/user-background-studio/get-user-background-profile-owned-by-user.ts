@@ -1,54 +1,52 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 import type { UserBackgroundProfileRow } from './list-icps-for-user';
 
-const isMissingDescriptionColumnError = (error: {
-  code?: string;
-  message?: string;
-}): boolean => {
-  const msg = error.message ?? '';
-  return msg.includes('column user_background_profiles.description does not exist');
+const PROFILE_COLUMNS = 'id, user_id, name, current_version, created_at, updated_at';
+
+const isMissingDescriptionColumnError = (error: unknown): boolean => {
+  const err = error as { code?: string; message?: string };
+  const msg = err.message ?? '';
+  return (
+    err.code === '42703' ||
+    (msg.includes('does not exist') && msg.toLowerCase().includes('description'))
+  );
 };
 
 /**
  * Fetches one user_background_profiles row only if it belongs to the given user.
  */
 export const getUserBackgroundProfileOwnedByUser = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   profileId: string,
   userId: string,
 ): Promise<UserBackgroundProfileRow | null> => {
-  const baseSelect = 'id, user_id, name, current_version, created_at, updated_at';
-
-  const { data, error } = await supabase
-    .from('user_background_profiles')
-    .select(`${baseSelect}, description`)
-    .eq('id', profileId)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    return await selectOneFrom<UserBackgroundProfileRow>(pool, 'user_background_profiles', {
+      columns: `${PROFILE_COLUMNS}, description`,
+      eq: { id: profileId, user_id: userId },
+    });
+  } catch (error) {
     if (isMissingDescriptionColumnError(error)) {
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('user_background_profiles')
-        .select(baseSelect)
-        .eq('id', profileId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (fallbackError) {
+      try {
+        const fallbackData = await selectOneFrom<Omit<UserBackgroundProfileRow, 'description'>>(
+          pool,
+          'user_background_profiles',
+          {
+            columns: PROFILE_COLUMNS,
+            eq: { id: profileId, user_id: userId },
+          },
+        );
+        if (!fallbackData) {
+          return null;
+        }
+        return { ...fallbackData, description: null };
+      } catch (fallbackError) {
         console.error('❌ getUserBackgroundProfileOwnedByUser fallback:', fallbackError);
-        throw new Error(fallbackError.message);
+        throw fallbackError instanceof Error ? fallbackError : new Error(String(fallbackError));
       }
-
-      if (!fallbackData) {
-        return null;
-      }
-
-      return { ...(fallbackData as Omit<UserBackgroundProfileRow, 'description'>), description: null };
     }
     console.error('❌ getUserBackgroundProfileOwnedByUser:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return data as UserBackgroundProfileRow | null;
 };

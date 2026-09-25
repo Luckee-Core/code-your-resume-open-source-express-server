@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import { createUserBackgroundProfileWithInitialVersion } from '../../../data/user-background-studio';
 import { buildUserBackgroundProfilePayload } from '../mapUserBackgroundProfile';
 
@@ -14,13 +14,13 @@ export const createProfileHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'userId and name are required' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
-    const row = await createUserBackgroundProfileWithInitialVersion(supabase, userId, name);
-    const profile = await buildUserBackgroundProfilePayload(supabase, row);
+    const row = await createUserBackgroundProfileWithInitialVersion(pool, userId, name);
+    const profile = await buildUserBackgroundProfilePayload(pool, row);
 
     return res.status(201).json({ success: true, profile });
   } catch (error: unknown) {

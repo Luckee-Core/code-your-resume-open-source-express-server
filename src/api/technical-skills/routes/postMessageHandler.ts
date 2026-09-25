@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseCrmMirrorClient } from '../../../services/supabase/get-supabase-crm-mirror-client';
+import { getManagedPgPool } from '../../../services/postgres';
 import { getAnthropicClient } from '../../../services/ai/get-anthropic-client';
 import { processTechnicalSkillsChat } from '../processTechnicalSkillsChat';
 import { loadTechnicalSkillsPayload } from '../loadTechnicalSkillsPayload';
@@ -15,9 +15,9 @@ export const postMessageHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'content is required' });
     }
 
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
-      return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+    const pool = getManagedPgPool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Postgres not configured — set DATABASE_URL' });
     }
 
     const anthropic = getAnthropicClient();
@@ -25,9 +25,9 @@ export const postMessageHandler = async (req: Request, res: Response) => {
       console.warn('⚠️ Anthropic client unavailable for Technical Skills chat');
     }
 
-    await processTechnicalSkillsChat(supabase, anthropic, content.trim());
+    await processTechnicalSkillsChat(pool, anthropic, content.trim());
 
-    const payload = await loadTechnicalSkillsPayload(supabase);
+    const payload = await loadTechnicalSkillsPayload(pool);
     return res.json({ success: true, ...payload });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

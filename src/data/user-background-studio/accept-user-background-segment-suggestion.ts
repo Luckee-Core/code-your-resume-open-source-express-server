@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { getMaxSortOrderForUserBackgroundSegment } from './max-sort-order-for-segment';
 import { insertUserBackgroundSegmentItem } from './insert-user-background-segment-item';
@@ -13,7 +13,7 @@ const VALID_KEYS = new Set<string>(INITIAL_USER_BACKGROUND_SECTIONS_JSON.map((s)
  * Apply a pending coach suggestion: mutate segment items and refresh denormalized section bodies.
  */
 export const acceptUserBackgroundSegmentSuggestion = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     suggestionId: string;
     userId: string;
@@ -31,8 +31,8 @@ export const acceptUserBackgroundSegmentSuggestion = async (
   }
 
   if (params.op === 'add') {
-    const max = await getMaxSortOrderForUserBackgroundSegment(supabase, params.profileId, params.segmentKey);
-    await insertUserBackgroundSegmentItem(supabase, {
+    const max = await getMaxSortOrderForUserBackgroundSegment(pool, params.profileId, params.segmentKey);
+    await insertUserBackgroundSegmentItem(pool, {
       id: uuidv4(),
       profileId: params.profileId,
       segmentKey: params.segmentKey,
@@ -46,13 +46,13 @@ export const acceptUserBackgroundSegmentSuggestion = async (
     if (!params.targetItemId) {
       throw new Error('targetItemId required for update');
     }
-    await updateUserBackgroundSegmentItem(supabase, params.targetItemId, {
+    await updateUserBackgroundSegmentItem(pool, params.targetItemId, {
       title: params.title.trim() || undefined,
       body: params.body,
       sourceExchangeId: params.exchangeId,
     });
   }
 
-  await updateUserBackgroundSegmentSuggestionStatus(supabase, params.suggestionId, 'accepted');
-  await syncUserBackgroundVersionSectionsFromSegmentItems(supabase, params.profileId, params.userId);
+  await updateUserBackgroundSegmentSuggestionStatus(pool, params.suggestionId, 'accepted');
+  await syncUserBackgroundVersionSectionsFromSegmentItems(pool, params.profileId, params.userId);
 };

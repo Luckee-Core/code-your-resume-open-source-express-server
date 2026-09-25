@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseCrmMirrorClient } from "../../../services/supabase/get-supabase-crm-mirror-client";
+import type { Pool } from "pg";
+import { getManagedPgPool } from "../../../services/postgres";
 import { runSkillsComponentGeneration } from "../../../services/skills-component-generation";
 import {
   assertHasActiveSkills,
@@ -20,7 +20,7 @@ const MAX_POINT_OF_EMPHASIS_CHARS = 2000;
  * Runs Cursor skills generation and persists the graphic on Express (client-independent).
  */
 const runSkillsComponentGenerationInBackground = (
-  supabase: SupabaseClient,
+  pool: Pool,
   context: JobGenerationContext,
   pointOfEmphasis?: string,
 ): void => {
@@ -29,7 +29,7 @@ const runSkillsComponentGenerationInBackground = (
   scheduleBackgroundJobGraphicGeneration(label, async () => {
     console.log(`🚀 Background ${label} — starting Cursor agent`);
 
-    const result = await runSkillsComponentGeneration(supabase, {
+    const result = await runSkillsComponentGeneration(pool, {
       jobId: context.jobId,
       jobTitle: context.jobTitle,
       companyName: context.companyName,
@@ -44,7 +44,7 @@ const runSkillsComponentGenerationInBackground = (
       appendedPromptSections: context.appendedPromptSections,
     });
 
-    const graphic = await persistGeneratedJobGraphic(supabase, {
+    const graphic = await persistGeneratedJobGraphic(pool, {
       kind: "resume",
       jobId: context.jobId,
       jobTitle: context.jobTitle,
@@ -68,11 +68,11 @@ export const handleSkillsComponentGenerate = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const supabase = getSupabaseCrmMirrorClient();
-    if (!supabase) {
+    const pool = getManagedPgPool();
+    if (!pool) {
       return res.status(500).json({
         success: false,
-        error: "Supabase client not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
+        error: "Postgres not configured — set DATABASE_URL",
       });
     }
 
@@ -91,7 +91,7 @@ export const handleSkillsComponentGenerate = async (
     }
     const pointOfEmphasis = rawEmphasis || undefined;
 
-    const context = await loadJobGenerationContext(supabase, jobId);
+    const context = await loadJobGenerationContext(pool, jobId);
     assertHasActiveSkills(context);
     assertHasCandidateName(context);
 
@@ -101,7 +101,7 @@ export const handleSkillsComponentGenerate = async (
       }`,
     );
 
-    runSkillsComponentGenerationInBackground(supabase, context, pointOfEmphasis);
+    runSkillsComponentGenerationInBackground(pool, context, pointOfEmphasis);
 
     console.log(`📤 202 POST /api/data/skills-component/generate — queued job ${context.jobId}`);
     return res.status(202).json({ success: true, accepted: true, jobId: context.jobId });

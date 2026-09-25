@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { getCursorClient } from '../cursor';
 import { pollAgentStatus } from '../cursor/poll-agent-status';
 import { extractTsxFromConversation } from '../cursor/extract-tsx-from-conversation';
@@ -47,12 +47,12 @@ const TEAM_CONVERSATION_COMPONENT_NAME = 'GeneratedTeamConversationPreview';
 /**
  * Run the team-conversation generation pipeline: prompt → ledger → Cursor → extract TSX.
  *
- * @param supabase - Supabase service-role client for ledger writes
+ * @param pool - Supabase service-role client for ledger writes
  * @param input - Job context, background segments, optional skills
  * @returns Generated TSX string and ledger IDs
  */
 export const runTeamConversationGeneration = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: RunTeamConversationGenerationInput,
 ): Promise<RunTeamConversationGenerationResult> => {
   const {
@@ -80,7 +80,7 @@ export const runTeamConversationGeneration = async (
 
   try {
     const template = await loadCrmGenerationPromptTemplate(
-      supabase,
+      pool,
       CRM_AI_FLOW_PROMPT_FLOWS.TEAM_CONVERSATION_GENERATION,
     );
     const prompt = buildTeamConversationPromptFromTemplate(template, {
@@ -97,7 +97,7 @@ export const runTeamConversationGeneration = async (
       skills,
     });
 
-    await insertTeamConversationRequest(supabase, {
+    await insertTeamConversationRequest(pool, {
       id: requestId,
       jobId,
       skills,
@@ -117,7 +117,7 @@ export const runTeamConversationGeneration = async (
     exchangeId = randomUUID();
     const exchangeStartTime = Date.now();
 
-    await insertTeamConversationExchange(supabase, {
+    await insertTeamConversationExchange(pool, {
       id: exchangeId,
       jobId,
       requestId,
@@ -131,7 +131,7 @@ export const runTeamConversationGeneration = async (
     });
 
     const responseId = randomUUID();
-    await insertTeamConversationResponse(supabase, {
+    await insertTeamConversationResponse(pool, {
       id: responseId,
       tsxCode: tsx,
       agentSummary: finalRun.result ?? null,
@@ -139,7 +139,7 @@ export const runTeamConversationGeneration = async (
 
     const durationSeconds = Math.round((Date.now() - exchangeStartTime) / 1000);
 
-    await updateTeamConversationExchangeCompleted(supabase, {
+    await updateTeamConversationExchangeCompleted(pool, {
       id: exchangeId,
       responseId,
       inputTokens: 0,
@@ -147,7 +147,7 @@ export const runTeamConversationGeneration = async (
       modelUsed: agent.modelId,
     });
 
-    await updateTeamConversationRequestCompleted(supabase, requestId);
+    await updateTeamConversationRequestCompleted(pool, requestId);
 
     console.log(`✅ Team conversation generation complete (${durationSeconds}s)`);
 
@@ -157,9 +157,9 @@ export const runTeamConversationGeneration = async (
 
     try {
       if (exchangeId) {
-        await updateTeamConversationExchangeFailed(supabase, exchangeId, err.message);
+        await updateTeamConversationExchangeFailed(pool, exchangeId, err.message);
       }
-      await updateTeamConversationRequestFailed(supabase, requestId);
+      await updateTeamConversationRequestFailed(pool, requestId);
     } catch (updateError) {
       console.error('❌ Failed to update ledger on error:', updateError);
     }

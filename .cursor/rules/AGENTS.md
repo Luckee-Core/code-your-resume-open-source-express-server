@@ -8,7 +8,7 @@ BEFORE implementing ANY feature, you MUST:
 ## CRM and `/api/data` (canonical — see ADR 009)
 
 - **HTTP:** `src/api/data/{entity}/` — thin `createXRouter(): Router` factories; one handler per file (`list.ts`, `create.ts`, …).
-- **CRUD:** `src/data/{entity}/` — one Supabase CRUD function per file; handlers call data functions, never inline `.from(...)`.
+- **CRUD:** `src/data/{entity}/` — one Postgres CRUD function per file; handlers call data functions, never inline `pool.query` when a data function fits.
 - **Orchestration:** `src/services/{domain}/` for multi-step flows (job import, AI generation, website research).
 - Do **not** add `src/domains/` for CRM; action paths live under `/api/data/company/list`, `/api/data/job-questions/create`, etc.
 
@@ -19,7 +19,7 @@ BEFORE implementing ANY feature, you MUST:
 
 ## Handlers
 
-- MUST follow this order: (1) get Supabase client (`requireCrmSupabaseClient()` for CRM, or `getSupabaseCrmMirrorClient()` with null check), (2) validate request, (3) call data/service layer, (4) try/catch, (5) return response.
+- MUST follow this order: (1) get Postgres pool (`requireCrmPgPool()` for CRM, or `getManagedPgPool()` with null check), (2) validate request, (3) call data/service layer, (4) try/catch, (5) return response.
 - MUST add JSDoc to every router factory, handler, and business logic function.
 - MUST handle errors in handlers (not routers), log errors, and return `{ success: false, error }` with `500`.
 - MUST use status codes consistently: `200` success, `400` client error, `500` server error.
@@ -34,8 +34,8 @@ BEFORE implementing ANY feature, you MUST:
 
 ## Services
 
-- CRM Supabase: `requireCrmSupabaseClient()` / `getSupabaseCrmMirrorClient()` from `src/services/supabase/` (initialized at startup).
-- NEVER call `createClient()` in handlers or data functions except inside the managed wrapper.
+- CRM Postgres: `requireCrmPgPool()` / `getManagedPgPool()` from `src/services/postgres/` (initialized at startup).
+- NEVER call `new Pool()` in handlers or data functions except inside the managed wrapper.
 - Supabase edge functions MUST ONLY call Railway endpoints and NEVER include CRUD or business logic.
 
 ## Logging
@@ -58,5 +58,6 @@ BEFORE implementing ANY feature, you MUST:
 - Managed clients & startup init → `.cursor/architecture/004-managed-clients-and-startup-init.md`
 - Edge functions Railway-only → `.cursor/architecture/005-edge-functions-railway-only.md`
 - Logging & error response standards → `.cursor/architecture/006-logging-and-error-response-standards.md`
-- **`/api/data` entity routers (CRM + Supabase)** → `.cursor/architecture/009-api-data-entity-routers.md`
+- **`/api/data` entity routers (CRM + Postgres)** → `.cursor/architecture/009-api-data-entity-routers.md`
+- Local Postgres data layer → `.cursor/architecture/012-local-postgres-data-layer.md`
 - Error log persistence → `.cursor/architecture/010-error-log-persistence.md`

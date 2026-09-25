@@ -57,7 +57,7 @@ setupErrorHandling(app);
 import { startServer } from "./src/services/server";
 import { ensureCrmDataDirAtStartup } from "./src/services/crm";
 import { ensureJobListingDataDirAtStartup } from "./src/services/job/ensure-job-listing-data-dir-at-startup";
-import { getSupabaseCrmMirrorClient } from "./src/services/supabase/get-supabase-crm-mirror-client";
+import { initializeManagedPgPool, getManagedPgPool } from "./src/services/postgres";
 
 void (async () => {
   try {
@@ -67,14 +67,13 @@ void (async () => {
     console.error("❌ Failed to initialize CRM / job-listing data directories:", err);
     process.exit(1);
   }
-  const supabase = getSupabaseCrmMirrorClient();
-  if (!supabase) {
-    console.error(
-      "❌ SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required — CRM always uses Supabase.",
-    );
+  initializeManagedPgPool();
+  const pool = getManagedPgPool();
+  if (!pool) {
+    console.error("❌ DATABASE_URL is required — CRM always uses local Postgres.");
     process.exit(1);
   }
-  console.log("✅ Supabase configured (CRM, graphics, technical skills, job studio, …)");
+  console.log("✅ Postgres configured (CRM, graphics, technical skills, job studio, …)");
   startServer(app, {
     port: PORT,
     environment: process.env.NODE_ENV || "development",

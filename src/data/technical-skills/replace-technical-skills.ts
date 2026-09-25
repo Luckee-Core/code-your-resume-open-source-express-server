@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRows } from '../../utils/postgres';
 
 export type TechnicalSkillInsert = {
   id: string;
@@ -13,13 +14,14 @@ export type TechnicalSkillInsert = {
  * Replace all technical skill rows with the provided set (full sync from client).
  */
 export const replaceTechnicalSkills = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   items: TechnicalSkillInsert[],
 ): Promise<void> => {
-  const { error: delErr } = await supabase.from('technical_skills').delete().neq('id', '');
-  if (delErr) {
-    console.error('❌ replaceTechnicalSkills delete:', delErr);
-    throw new Error(delErr.message);
+  try {
+    await pool.query('DELETE FROM technical_skills');
+  } catch (error) {
+    console.error('❌ replaceTechnicalSkills delete:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
   if (items.length === 0) {
@@ -38,9 +40,10 @@ export const replaceTechnicalSkills = async (
     updated_at: now,
   }));
 
-  const { error: insErr } = await supabase.from('technical_skills').insert(rows);
-  if (insErr) {
-    console.error('❌ replaceTechnicalSkills insert:', insErr);
-    throw new Error(insErr.message);
+  try {
+    await insertRows(pool, 'technical_skills', rows);
+  } catch (error) {
+    console.error('❌ replaceTechnicalSkills insert:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

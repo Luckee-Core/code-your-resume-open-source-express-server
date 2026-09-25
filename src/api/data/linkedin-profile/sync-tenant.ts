@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { syncTenantLinkedInProfileFromApify } from "../../../services/linkedin-profile";
 
 /**
@@ -11,7 +11,7 @@ export const handleLinkedInProfileSyncTenant = async (
 ): Promise<void> => {
   console.log("📥 POST /api/data/linkedin-profile/sync-tenant");
   try {
-    const result = await syncTenantLinkedInProfileFromApify(requireCrmSupabaseClient());
+    const result = await syncTenantLinkedInProfileFromApify(requireCrmPgPool());
 
     if ("error" in result) {
       const status = result.error.includes("not configured") ? 400 : 500;

@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import {
   listTechnicalSkills,
   listTechnicalSkillsExchanges,
@@ -65,9 +65,9 @@ export type TechnicalSkillsPayload = {
  * Build the full technical skills studio payload: skill rows + chat history + pending suggestions.
  */
 export const loadTechnicalSkillsPayload = async (
-  supabase: SupabaseClient,
+  pool: Pool,
 ): Promise<TechnicalSkillsPayload> => {
-  const skillRows = await listTechnicalSkills(supabase);
+  const skillRows = await listTechnicalSkills(pool);
   const skills = skillRows.map((r: TechnicalSkillRow) => ({
     id: r.id,
     sortOrder: r.sort_order,
@@ -77,19 +77,19 @@ export const loadTechnicalSkillsPayload = async (
     sourceExchangeId: r.source_exchange_id,
   }));
 
-  const exchangeRows = await listTechnicalSkillsExchanges(supabase);
+  const exchangeRows = await listTechnicalSkillsExchanges(pool);
   const withResponse = exchangeRows.filter((ex) => ex.response_id);
   const requestIds = [...new Set(withResponse.map((ex) => ex.request_id))];
   const responseIds = withResponse.map((ex) => ex.response_id as string);
 
   const [reqRows, resRows] = await Promise.all([
-    listTechnicalSkillsRequestsByIds(supabase, requestIds),
-    listTechnicalSkillsResponsesByIds(supabase, responseIds),
+    listTechnicalSkillsRequestsByIds(pool, requestIds),
+    listTechnicalSkillsResponsesByIds(pool, responseIds),
   ]);
   const reqById = new Map(reqRows.map((r) => [r.id, r]));
   const resById = new Map(resRows.map((r) => [r.id, r]));
 
-  const suggestionRows = await listTechnicalSkillsSuggestionsByResponseIds(supabase, responseIds);
+  const suggestionRows = await listTechnicalSkillsSuggestionsByResponseIds(pool, responseIds);
   const pendingSuggestionsByResponse = new Map<
     string,
     {

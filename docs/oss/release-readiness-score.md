@@ -80,7 +80,7 @@ Scored against the [release readiness checklist](https://github.com/luckee/mento
 
 ## Manual verification
 
-- [ ] Express: `npm run dev` + `curl http://127.0.0.1:3053/api/health` (requires `SUPABASE_*` in `.env`)
+- [ ] Express: `npm run dev` + `curl http://127.0.0.1:3053/api/health` (requires `DATABASE_URL` in `.env`)
 - [ ] Web: `.env.local` + `npm run dev` + landing `/` and dashboard `/dashboard`
 
 ## Ship with debt (Rec items and documented forks)

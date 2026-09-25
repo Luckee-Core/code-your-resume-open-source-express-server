@@ -1,22 +1,23 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 /**
  * Persist parsed AI payload (content, coachSections, suggestedSkills, etc.).
  */
 export const insertTechnicalSkillsResponse = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   structured: unknown,
 ): Promise<void> => {
-  const { error } = await supabase.from('technical_skills_responses').insert({
-    id,
-    structured,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, 'technical_skills_responses', {
+      id,
+      structured,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  } catch (error) {
     console.error('❌ insertTechnicalSkillsResponse:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

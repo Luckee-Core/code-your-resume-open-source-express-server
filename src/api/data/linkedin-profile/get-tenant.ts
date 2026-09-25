@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { requireCrmSupabaseClient } from "../../../data/crm/require-crm-supabase-client";
+import { requireCrmPgPool } from "../../../data/crm/require-crm-pg-pool";
 import { getTenantLinkedInProfile } from "../../../data/linkedin-profiles";
 
 /**
@@ -11,7 +11,7 @@ export const handleLinkedInProfileGetTenant = async (
 ): Promise<void> => {
   console.log("📥 GET /api/data/linkedin-profile/get-tenant");
   try {
-    const data = await getTenantLinkedInProfile(requireCrmSupabaseClient());
+    const data = await getTenantLinkedInProfile(requireCrmPgPool());
     console.log("📤 200 GET /api/data/linkedin-profile/get-tenant");
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {

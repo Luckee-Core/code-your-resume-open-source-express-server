@@ -13,7 +13,7 @@ Thanks for helping improve the Code Your Resume Express API.
 
 - HTTP in `src/api/data/{entity}/` and `src/api/{feature}/`; CRUD in `src/data/{entity}/`.
 - Router factories: `createXRouter(): Router`; one handler per file.
-- Use `requireCrmSupabaseClient()` — never `createClient()` in handlers.
+- Use `requireCrmPgPool()` — never `new Pool()` in handlers.
 - Emoji logging and `{ success, error }` responses per ADR 006.
 
 ## Pull requests

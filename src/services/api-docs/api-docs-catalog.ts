@@ -97,10 +97,10 @@ const jobListingSectionExample = {
 const buildOverviewGroup = (): ApiDocsGroup => ({
   name: "Overview",
   description: [
-    "REST API for the open-source Code Your Resume app. Supabase stores CRM entities (companies, jobs), graphics, studio state, and error logs; this Express server exposes action routes over HTTP for the Next.js dashboard or any client.",
+    "REST API for the open-source Code Your Resume app. Local Postgres stores CRM entities (companies, jobs), graphics, studio state, and error logs; this Express server exposes action routes over HTTP for the Next.js dashboard or any client.",
     "Route layout: `/api/data/*` — CRM entity actions (`/list`, `/create`, `/update`, …); `/api/technical-skills/*`, `/api/voice-style/*`, `/api/job-studio/*`, `/api/user-background-studio/*` — studio coaches; `GET /api-docs.json` — this catalog. Standard CRM entities use GET list/get, POST create, PATCH update, DELETE delete. Exceptions (AI generation, job import, website research) are documented on their group.",
     "Typical flow: create companies → add jobs (optionally import listing URL) → use Technical Skills / Professional Background / Job Studio coaches → generate TSX skills components and cover letters per role.",
-    "Success JSON: `{ success: true, data?, count?, message? }`. Error JSON: `{ success: false, error: string }`. OSS default has no auth — bind to localhost or set optional `CRM_API_SECRET` shared with the Next.js BFF. Core CRM requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. AI features need `ANTHROPIC_API_KEY`; skills component generation may use `CURSOR_API_KEY`.",
+    "Success JSON: `{ success: true, data?, count?, message? }`. Error JSON: `{ success: false, error: string }`. OSS default has no auth — bind to localhost or set optional `CRM_API_SECRET` shared with the Next.js BFF. Core CRM requires `DATABASE_URL`. AI features need `ANTHROPIC_API_KEY`; skills component generation may use `CURSOR_API_KEY`.",
   ].join("\n\n"),
   endpoints: [],
 });

@@ -9,7 +9,7 @@ import { getActiveJobListingAiPrompt } from "../../data/job-listing-ai-prompt";
 import { insertJobListingAiExchange } from "../../data/job-listing-ai-exchanges";
 import { insertJobListingAiRequest } from "../../data/job-listing-ai-requests";
 import { insertJobListingAiResponse } from "../../data/job-listing-ai-responses";
-import { getSupabaseCrmMirrorClient } from "../supabase/get-supabase-crm-mirror-client";
+import { getManagedPgPool } from "../postgres";
 import { requireActivePromptText } from "../../utils/ai/require-active-prompt-text";
 import {
   extractJobListingWithAnthropic,
@@ -49,7 +49,7 @@ const mapPlainStringsToBulletRows = (params: {
 
 /**
  * Calls Anthropic with scraped job listing plain text, persists the request / response /
- * exchange ledger rows to Supabase, syncs structured bullet rows, and returns the
+ * exchange ledger rows to Postgres, syncs structured bullet rows, and returns the
  * exchange ID along with the extracted title and description.
  */
 export const persistJobListingAiLedger = async (params: {
@@ -71,14 +71,14 @@ export const persistJobListingAiLedger = async (params: {
     hasTitleHint: Boolean(hints.titleHint?.trim()),
   });
 
-  const mirror = getSupabaseCrmMirrorClient();
-  if (!mirror) {
-    return { ok: false, error: "Supabase CRM mirror client is not configured" };
+  const pool = getManagedPgPool();
+  if (!pool) {
+    return { ok: false, error: "Postgres is not configured" };
   }
 
   let systemPrompt: string;
   try {
-    const activePrompt = await getActiveJobListingAiPrompt(mirror);
+    const activePrompt = await getActiveJobListingAiPrompt(pool);
     systemPrompt = requireActivePromptText(activePrompt, "job_listing_ai_prompt");
   } catch (promptErr: unknown) {
     const msg = promptErr instanceof Error ? promptErr.message : String(promptErr);
@@ -129,7 +129,7 @@ export const persistJobListingAiLedger = async (params: {
   };
 
   try {
-    await insertJobListingAiRequest(mirror, requestRow);
+    await insertJobListingAiRequest(pool, requestRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistJobListingAiLedger: failed to persist AI request", err);
@@ -188,7 +188,7 @@ export const persistJobListingAiLedger = async (params: {
   }
 
   try {
-    await insertJobListingAiResponse(mirror, responseRow);
+    await insertJobListingAiResponse(pool, responseRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistJobListingAiLedger: failed to persist AI response", err);
@@ -206,7 +206,7 @@ export const persistJobListingAiLedger = async (params: {
   };
 
   try {
-    await insertJobListingAiExchange(mirror, exchangeRow);
+    await insertJobListingAiExchange(pool, exchangeRow);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("❌ persistJobListingAiLedger: failed to persist AI exchange", err);

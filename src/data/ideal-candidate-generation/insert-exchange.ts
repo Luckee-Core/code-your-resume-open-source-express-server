@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 export type InsertIdealCandidateExchangeInput = {
   id: string;
@@ -10,23 +11,24 @@ export type InsertIdealCandidateExchangeInput = {
 /**
  * Insert a new ideal candidate generation exchange record (status: running).
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Exchange fields
  */
 export const insertIdealCandidateExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: InsertIdealCandidateExchangeInput,
 ): Promise<void> => {
-  const { error } = await supabase.from('ideal_candidate_generation_exchanges').insert({
-    id: input.id,
-    job_id: input.jobId,
-    request_id: input.requestId,
-    agent_id: input.agentId,
-    status: 'running',
-  });
-
-  if (error) {
-    console.error('❌ insertIdealCandidateExchange:', error.message);
-    throw new Error(`Failed to insert ideal candidate exchange record: ${error.message}`);
+  try {
+    await insertRow(pool, 'ideal_candidate_generation_exchanges', {
+      id: input.id,
+      job_id: input.jobId,
+      request_id: input.requestId,
+      agent_id: input.agentId,
+      status: 'running',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ insertIdealCandidateExchange:', message);
+    throw new Error(`Failed to insert ideal candidate exchange record: ${message}`);
   }
 };

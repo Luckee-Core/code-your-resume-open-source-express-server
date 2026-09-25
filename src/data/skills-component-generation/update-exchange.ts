@@ -1,5 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { completeCursorGenerationExchange } from '../../utils/cursor-generation';
+import { updateRows } from '../../utils/postgres';
 
 export type UpdateSkillsComponentExchangeCompletedInput = {
   id: string;
@@ -12,14 +13,14 @@ export type UpdateSkillsComponentExchangeCompletedInput = {
 /**
  * Mark a skills component exchange as completed with token usage.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Completion data
  */
 export const updateSkillsComponentExchangeCompleted = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: UpdateSkillsComponentExchangeCompletedInput,
 ): Promise<void> => {
-  await completeCursorGenerationExchange(supabase, {
+  await completeCursorGenerationExchange(pool, {
     tableName: 'skills_component_generation_exchanges',
     id: input.id,
     responseId: input.responseId,
@@ -33,25 +34,28 @@ export const updateSkillsComponentExchangeCompleted = async (
 /**
  * Mark a skills component exchange as failed with an error message.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Exchange ID
  * @param errorMessage - Failure reason
  */
 export const updateSkillsComponentExchangeFailed = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   errorMessage: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('skills_component_generation_exchanges')
-    .update({
-      status: 'failed',
-      error_message: errorMessage,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateSkillsComponentExchangeFailed:', error.message);
+  try {
+    await updateRows(
+      pool,
+      'skills_component_generation_exchanges',
+      {
+        status: 'failed',
+        error_message: errorMessage,
+        updated_at: new Date().toISOString(),
+      },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateSkillsComponentExchangeFailed:', message);
   }
 };

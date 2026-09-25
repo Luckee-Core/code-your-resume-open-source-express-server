@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { insertRow } from "../../utils/postgres";
 import type { CreateJobNewsletterSourceInput, JobNewsletterSource } from "./types";
 import { normalizeSenderEmail } from "./get-by-sender-email";
 
@@ -6,27 +7,22 @@ import { normalizeSenderEmail } from "./get-by-sender-email";
  * Insert a job newsletter source configuration row.
  */
 export const createJobNewsletterSource = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: CreateJobNewsletterSourceInput,
 ): Promise<JobNewsletterSource> => {
   const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from("job_newsletter_sources")
-    .insert({
+  try {
+    return await insertRow<JobNewsletterSource>(pool, "job_newsletter_sources", {
       name: input.name.trim(),
       sender_email: normalizeSenderEmail(input.sender_email),
       enabled: input.enabled ?? true,
       parse_instructions: input.parse_instructions.trim(),
       created_at: now,
       updated_at: now,
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    console.error("❌ createJobNewsletterSource:", error.message);
-    throw new Error(error.message);
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ createJobNewsletterSource:", message);
+    throw new Error(message);
   }
-
-  return data as JobNewsletterSource;
 };

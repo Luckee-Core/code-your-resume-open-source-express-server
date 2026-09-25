@@ -1,10 +1,11 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 /**
  * Create exchange row linking request + response + token usage.
  */
 export const insertTechnicalSkillsExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     id: string;
     requestId: string;
@@ -18,22 +19,22 @@ export const insertTechnicalSkillsExchange = async (
   },
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from('technical_skills_exchanges').insert({
-    id: params.id,
-    request_id: params.requestId,
-    response_id: params.responseId,
-    input_tokens: params.inputTokens,
-    output_tokens: params.outputTokens,
-    total_tokens: params.totalTokens,
-    credits_used: params.creditsUsed,
-    model_used: params.modelUsed,
-    status: params.status,
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, 'technical_skills_exchanges', {
+      id: params.id,
+      request_id: params.requestId,
+      response_id: params.responseId,
+      input_tokens: params.inputTokens,
+      output_tokens: params.outputTokens,
+      total_tokens: params.totalTokens,
+      credits_used: params.creditsUsed,
+      model_used: params.modelUsed,
+      status: params.status,
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
     console.error('❌ insertTechnicalSkillsExchange:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

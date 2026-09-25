@@ -1,10 +1,11 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRow } from '../../utils/postgres';
 
 /**
  * Create exchange row linking request + response + token usage.
  */
 export const insertUserBackgroundStudioExchange = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   params: {
     id: string;
     userId: string;
@@ -20,24 +21,24 @@ export const insertUserBackgroundStudioExchange = async (
   },
 ): Promise<void> => {
   const now = new Date().toISOString();
-  const { error } = await supabase.from('user_background_studio_exchanges').insert({
-    id: params.id,
-    user_id: params.userId,
-    profile_id: params.profileId,
-    request_id: params.requestId,
-    response_id: params.responseId,
-    input_tokens: params.inputTokens,
-    output_tokens: params.outputTokens,
-    total_tokens: params.totalTokens,
-    credits_used: params.creditsUsed,
-    model_used: params.modelUsed,
-    status: params.status,
-    created_at: now,
-    updated_at: now,
-  });
-
-  if (error) {
+  try {
+    await insertRow(pool, 'user_background_studio_exchanges', {
+      id: params.id,
+      user_id: params.userId,
+      profile_id: params.profileId,
+      request_id: params.requestId,
+      response_id: params.responseId,
+      input_tokens: params.inputTokens,
+      output_tokens: params.outputTokens,
+      total_tokens: params.totalTokens,
+      credits_used: params.creditsUsed,
+      model_used: params.modelUsed,
+      status: params.status,
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
     console.error('❌ insertUserBackgroundStudioExchange:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

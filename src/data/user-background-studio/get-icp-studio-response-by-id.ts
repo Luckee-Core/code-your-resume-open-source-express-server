@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { selectOneFrom } from '../../utils/postgres';
 
 export type UserBackgroundStudioResponseRow = {
   id: string;
@@ -7,19 +8,16 @@ export type UserBackgroundStudioResponseRow = {
 };
 
 export const getUserBackgroundStudioResponseById = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   responseId: string,
 ): Promise<UserBackgroundStudioResponseRow | null> => {
-  const { data, error } = await supabase
-    .from('user_background_studio_responses')
-    .select('id, structured, created_at')
-    .eq('id', responseId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    return await selectOneFrom<UserBackgroundStudioResponseRow>(pool, 'user_background_studio_responses', {
+      columns: 'id, structured, created_at',
+      eq: { id: responseId },
+    });
+  } catch (error) {
     console.error('❌ getUserBackgroundStudioResponseById:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return data as UserBackgroundStudioResponseRow | null;
 };

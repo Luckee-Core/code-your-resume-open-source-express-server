@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Pool } from "pg";
+import { selectOneFrom } from "../../utils/postgres";
 import {
   LINKEDIN_PROFILE_SELECT_COLUMNS,
   type LinkedInProfile,
@@ -10,20 +11,19 @@ import { mapLinkedInProfileRow } from "./map-linkedin-profile-row";
  * Loads one LinkedIn profile by id.
  */
 export const getLinkedInProfile = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
 ): Promise<LinkedInProfile | null> => {
-  const { data, error } = await supabase
-    .from("linkedin_profiles")
-    .select(LINKEDIN_PROFILE_SELECT_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("❌ getLinkedInProfile:", error.message);
-    throw new Error(error.message);
+  try {
+    const data = await selectOneFrom<LinkedInProfileRow>(pool, "linkedin_profiles", {
+      columns: LINKEDIN_PROFILE_SELECT_COLUMNS,
+      eq: { id },
+    });
+    if (!data) return null;
+    return mapLinkedInProfileRow(data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ getLinkedInProfile:", message);
+    throw new Error(message);
   }
-
-  if (!data) return null;
-  return mapLinkedInProfileRow(data as LinkedInProfileRow);
 };

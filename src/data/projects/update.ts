@@ -1,12 +1,13 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Project, UpdateProjectInput } from "./types";
+import type { Pool } from "pg";
+import type { Project, ProjectRow, UpdateProjectInput } from "./types";
 import { mapProjectRow } from "./map-project-row";
+import { selectOneFrom, updateRows } from "../../utils/postgres";
 
 /**
  * Update a project by id.
  */
 export const updateProject = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   input: UpdateProjectInput,
 ): Promise<Project> => {
@@ -24,16 +25,10 @@ export const updateProject = async (
       input.websiteResearchCompletedAt.trim() || null;
   }
 
-  const { data, error } = await supabase
-    .from("projects")
-    .update(updates)
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (error) {
-    console.error("❌ updateProject:", error.message);
-    throw new Error(error.message);
+  await updateRows(pool, "projects", updates, { id });
+  const data = await selectOneFrom<ProjectRow>(pool, "projects", { eq: { id } });
+  if (!data) {
+    throw new Error("Failed to load project after update");
   }
 
   return mapProjectRow(data);

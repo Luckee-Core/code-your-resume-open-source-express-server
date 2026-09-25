@@ -1,5 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
 import { completeCursorGenerationExchange } from '../../utils/cursor-generation';
+import { updateRows } from '../../utils/postgres';
 
 export type UpdateIdealCandidateExchangeCompletedInput = {
   id: string;
@@ -12,14 +13,14 @@ export type UpdateIdealCandidateExchangeCompletedInput = {
 /**
  * Mark an ideal candidate exchange as completed with token usage.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param input - Completion data
  */
 export const updateIdealCandidateExchangeCompleted = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   input: UpdateIdealCandidateExchangeCompletedInput,
 ): Promise<void> => {
-  await completeCursorGenerationExchange(supabase, {
+  await completeCursorGenerationExchange(pool, {
     tableName: 'ideal_candidate_generation_exchanges',
     id: input.id,
     responseId: input.responseId,
@@ -33,25 +34,28 @@ export const updateIdealCandidateExchangeCompleted = async (
 /**
  * Mark an ideal candidate exchange as failed with an error message.
  *
- * @param supabase - Supabase service-role client
+ * @param pool - Supabase service-role client
  * @param id - Exchange ID
  * @param errorMessage - Failure reason
  */
 export const updateIdealCandidateExchangeFailed = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   id: string,
   errorMessage: string,
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('ideal_candidate_generation_exchanges')
-    .update({
-      status: 'failed',
-      error_message: errorMessage,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id);
-
-  if (error) {
-    console.error('❌ updateIdealCandidateExchangeFailed:', error.message);
+  try {
+    await updateRows(
+      pool,
+      'ideal_candidate_generation_exchanges',
+      {
+        status: 'failed',
+        error_message: errorMessage,
+        updated_at: new Date().toISOString(),
+      },
+      { id },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ updateIdealCandidateExchangeFailed:', message);
   }
 };

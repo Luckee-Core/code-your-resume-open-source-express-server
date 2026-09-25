@@ -1,12 +1,12 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { batchFetchRowsByIds } from '../../utils/supabase/batch-fetch-rows-by-ids';
+import type { Pool } from 'pg';
+import { batchFetchRowsByIds } from '../../utils/postgres/batch-fetch-rows-by-ids';
 import type { RegistryExchangeSourceRow } from './list-exchange-rows-from-registry-entry';
 
 /**
  * Resolves human-readable context labels for registry exchange rows (job title, profile name, etc.).
  */
 export const enrichRegistryExchangeContextLabels = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   rows: RegistryExchangeSourceRow[],
 ): Promise<Map<string, string>> => {
   const labels = new Map<string, string>();
@@ -19,11 +19,11 @@ export const enrichRegistryExchangeContextLabels = async (
 
   try {
     if (jobIds.length > 0) {
-      jobById = await batchFetchRowsByIds(supabase, 'jobs', jobIds, 'id, title');
+      jobById = await batchFetchRowsByIds(pool, 'jobs', jobIds, 'id, title');
     }
     if (profileIds.length > 0) {
       profileById = await batchFetchRowsByIds(
-        supabase,
+        pool,
         'user_background_profiles',
         profileIds,
         'id, name',

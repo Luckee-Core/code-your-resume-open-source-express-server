@@ -1,4 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { Pool } from 'pg';
+import { insertRows } from '../../utils/postgres';
 
 export type SectionInput = {
   key: string;
@@ -12,7 +13,7 @@ export type SectionInput = {
  * Insert section rows for a new user_background_versions row.
  */
 export const insertUserBackgroundVersionSectionsBulk = async (
-  supabase: SupabaseClient,
+  pool: Pool,
   icpVersionId: string,
   sections: SectionInput[],
 ): Promise<void> => {
@@ -27,10 +28,10 @@ export const insertUserBackgroundVersionSectionsBulk = async (
     sort_order: s.sortOrder,
   }));
 
-  const { error } = await supabase.from('user_background_version_sections').insert(rows);
-
-  if (error) {
+  try {
+    await insertRows(pool, 'user_background_version_sections', rows);
+  } catch (error) {
     console.error('❌ insertUserBackgroundVersionSectionsBulk:', error);
-    throw new Error(error.message);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };
