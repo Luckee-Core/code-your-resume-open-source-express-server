@@ -75,10 +75,7 @@ export const scrapeJobListingUrl = async (params: {
     });
   }
 
-  const plain =
-    fetched.fetchMethod === "playwright"
-      ? fetched.bodyText.replace(/\s+/g, " ").trim()
-      : htmlJobListingToPlainText(fetched.bodyText);
+  const plain = htmlJobListingToPlainText(fetched.bodyText);
   const cappedPlain =
     plain.length > JOB_LISTING_MAX_PLAINTEXT_CHARS
       ? plain.slice(0, JOB_LISTING_MAX_PLAINTEXT_CHARS)
