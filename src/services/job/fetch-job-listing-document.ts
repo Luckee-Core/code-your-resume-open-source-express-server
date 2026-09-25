@@ -3,8 +3,6 @@ import {
   JOB_LISTING_FETCH_USER_AGENT,
   JOB_LISTING_MAX_RESPONSE_BYTES,
 } from "./job-listing-constants";
-import { fetchJobListingViaWebsiteScraper } from "./fetch-job-listing-via-website-scraper";
-import { getWebsiteScraperBaseUrl } from "./get-website-scraper-base-url";
 
 export type FetchJobListingDocumentResult =
   | {
@@ -12,7 +10,7 @@ export type FetchJobListingDocumentResult =
       httpStatus: number;
       bytesRead: number;
       bodyText: string;
-      fetchMethod: "http" | "playwright";
+      fetchMethod: "http";
       finalUrl?: string;
     }
   | { ok: false; httpStatus: number | null; error: string };
@@ -25,7 +23,10 @@ const bufferToUtf8 = (buf: ArrayBuffer): string => {
   }
 };
 
-const fetchJobListingDocumentViaHttp = async (
+/**
+ * Fetches job listing content with a plain HTTP GET (no JavaScript execution).
+ */
+export const fetchJobListingDocument = async (
   href: string
 ): Promise<FetchJobListingDocumentResult> => {
   console.log("📥 fetchJobListingDocument: GET (plain HTTP)", {
@@ -136,25 +137,4 @@ const fetchJobListingDocumentViaHttp = async (
     fetchMethod: "http",
     finalUrl,
   };
-};
-
-/**
- * Fetches job listing content. Uses Playwright website scraper when `WEBSITE_SCRAPER_URL`
- * is set; otherwise plain HTTP GET (no JS execution).
- */
-export const fetchJobListingDocument = async (
-  href: string
-): Promise<FetchJobListingDocumentResult> => {
-  if (getWebsiteScraperBaseUrl()) {
-    const scraped = await fetchJobListingViaWebsiteScraper(href);
-    if (scraped.ok) {
-      return scraped;
-    }
-    console.warn("⚠️ fetchJobListingDocument: Playwright scrape failed, falling back to HTTP", {
-      requestedUrl: href.slice(0, 200),
-      error: scraped.error,
-    });
-  }
-
-  return fetchJobListingDocumentViaHttp(href);
 };

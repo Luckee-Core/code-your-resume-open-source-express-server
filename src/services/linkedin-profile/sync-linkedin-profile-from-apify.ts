@@ -23,7 +23,7 @@ import {
   updateLinkedInProfile,
 } from "../../data/linkedin-profiles";
 import { mapApifyProfileToRows } from "../../utils/linkedin-profile";
-import { fetchLinkedInProfileFromScraper } from "./fetch-linkedin-profile-from-scraper";
+import { fetchLinkedInProfileFromApify } from "./fetch-linkedin-profile-from-apify";
 
 const LOG = "[linkedin-profile:sync-from-apify]";
 
@@ -52,7 +52,7 @@ export const syncTenantLinkedInProfileFromApify = async (
 
   console.log(`🚀 ${LOG} profileId=${tenant.id}`);
 
-  const scrapeResult = await fetchLinkedInProfileFromScraper(linkedinUrl);
+  const scrapeResult = await fetchLinkedInProfileFromApify(linkedinUrl);
   if ("error" in scrapeResult) {
     return { error: scrapeResult.error };
   }

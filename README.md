@@ -51,7 +51,7 @@ Set `DATABASE_URL` in `.env` (server only — never in the web app's `NEXT_PUBLI
 - **Bind:** `127.0.0.1` by default. Set `HOST=0.0.0.0` for Docker/Railway.
 - **`CRM_API_SECRET`:** Optional; clients send `X-CRM-API-Key` or `Authorization: Bearer`.
 - **CORS:** Production ignores `CORS_ORIGINS=*`; use explicit allowlist.
-- Server-only secrets: `DATABASE_URL`, `ANTHROPIC_API_KEY`, `CURSOR_API_KEY`.
+- Server-only secrets: `DATABASE_URL`, `ANTHROPIC_API_KEY`, `CURSOR_API_KEY`, `APIFY_API_TOKEN`.
 
 See [`SECURITY.md`](SECURITY.md).
 

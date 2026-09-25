@@ -1,4 +1,3 @@
-export { getLinkedInScraperExpressUrl } from "./get-linkedin-scraper-express-url";
-export { fetchLinkedInProfileFromScraper } from "./fetch-linkedin-profile-from-scraper";
+export { fetchLinkedInProfileFromApify } from "./fetch-linkedin-profile-from-apify";
 export { syncTenantLinkedInProfileFromApify } from "./sync-linkedin-profile-from-apify";
 export type { LinkedInProfileBundle } from "./sync-linkedin-profile-from-apify";

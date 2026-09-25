@@ -853,7 +853,7 @@ const buildUserBackgroundStudioGroup = (): ApiDocsGroup => ({
 const buildLinkedInProfileGroup = (): ApiDocsGroup => ({
   name: "LinkedIn profile",
   description:
-    "Tenant LinkedIn profile synced from Apify via linkedin-scraper-express-server. Normalized employment, education, and certification rows.",
+    "Tenant LinkedIn profile synced from Apify (harvestapi~linkedin-profile-scraper). Normalized employment, education, and certification rows.",
   endpoints: [
     {
       method: "GET",
